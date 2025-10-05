@@ -62,7 +62,7 @@ export default function TenantList() {
 
   const filteredTenants = tenants.filter(tenant => {
     const matchesSearch = tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         tenant.tenantCode.toLowerCase().includes(searchTerm.toLowerCase())
+                         tenant.code.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === 'all' || tenant.status === statusFilter
     const matchesType = typeFilter === 'all' || tenant.type === typeFilter
     
@@ -112,13 +112,13 @@ export default function TenantList() {
           <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
           <p className="text-gray-600">Manage tenant organizations and their access</p>
         </div>
-        <PermissionGuard permission="tenants:create">
+        <PermissionGuard permission="tenant:create">
           <Link
             to="/tenants/create"
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
           >
-            <Plus className="h-4 w-4" />
-            Add Tenant
+            <Building2 className="h-4 w-4" />
+            Create Tenant
           </Link>
         </PermissionGuard>
       </div>
@@ -187,7 +187,7 @@ export default function TenantList() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredTenants.map((tenant) => (
-                <tr key={tenant.tenantId} className="hover:bg-gray-50">
+                <tr key={tenant.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="bg-blue-100 p-2 rounded-full mr-3">
@@ -198,7 +198,7 @@ export default function TenantList() {
                           {tenant.name}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {tenant.tenantCode}
+                          {tenant.code}
                         </div>
                       </div>
                     </div>
@@ -218,9 +218,9 @@ export default function TenantList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <PermissionGuard permission="tenants:read">
+                      <PermissionGuard permission="tenant:read">
                         <Link
-                          to={`/tenants/${tenant.tenantId}`}
+                          to={`/tenants/${tenant.id}`}
                           className="text-blue-600 hover:text-blue-900 p-1 rounded"
                           title="View Details"
                         >
@@ -228,9 +228,9 @@ export default function TenantList() {
                         </Link>
                       </PermissionGuard>
                       
-                      <PermissionGuard permission="tenants:update">
+                      <PermissionGuard permission="tenant:update">
                         <Link
-                          to={`/tenants/${tenant.tenantId}/edit`}
+                          to={`/tenants/${tenant.id}/edit`}
                           className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
                           title="Edit"
                         >
@@ -238,7 +238,7 @@ export default function TenantList() {
                         </Link>
                       </PermissionGuard>
                       
-                      <PermissionGuard permission="tenants:update">
+                      <PermissionGuard permission="tenant:update">
                         <div className="relative group">
                           <button
                             className="text-gray-600 hover:text-gray-900 p-1 rounded"
@@ -248,38 +248,38 @@ export default function TenantList() {
                           </button>
                           <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                             <div className="py-1">
-                              <button
-                                onClick={() => handleStatusChange(tenant.tenantId, 'ACTIVE')}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                Set Active
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(tenant.tenantId, 'INACTIVE')}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                Set Inactive
-                              </button>
-                              <button
-                                onClick={() => handleStatusChange(tenant.tenantId, 'SUSPENDED')}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                Suspend
-                              </button>
-                            </div>
+                                <button
+                                  onClick={() => handleStatusChange(Number(tenant.id), 'ACTIVE')}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  Set Active
+                                </button>
+                                <button
+                                  onClick={() => handleStatusChange(Number(tenant.id), 'INACTIVE')}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  Set Inactive
+                                </button>
+                                <button
+                                  onClick={() => handleStatusChange(Number(tenant.id), 'SUSPENDED')}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  Suspend
+                                </button>
+                              </div>
                           </div>
                         </div>
                       </PermissionGuard>
                       
-                      <PermissionGuard permission="tenants:delete">
-                        <button
-                          onClick={() => handleDelete(tenant.tenantId)}
-                          className="text-red-600 hover:text-red-900 p-1 rounded"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </PermissionGuard>
+                      <PermissionGuard permission="tenant:delete">
+                           <button
+                             onClick={() => handleDelete(Number(tenant.id))}
+                             className="text-red-600 hover:text-red-900 p-1 rounded"
+                             title="Delete"
+                           >
+                             <Trash2 className="h-4 w-4" />
+                           </button>
+                         </PermissionGuard>
                     </div>
                   </td>
                 </tr>

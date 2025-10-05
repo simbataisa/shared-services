@@ -3,6 +3,9 @@ import { useAuth } from '../store/auth'
 import { usePermissions } from '../hooks/usePermissions'
 import { PermissionGuard } from '../components/PermissionGuard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { 
   Users, 
@@ -74,12 +77,12 @@ export default function Dashboard() {
     }
   }
 
-  const getHealthColor = (health: string) => {
+  const getHealthVariant = (health: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (health) {
-      case 'healthy': return 'text-green-600 bg-green-100'
-      case 'warning': return 'text-yellow-600 bg-yellow-100'
-      case 'critical': return 'text-red-600 bg-red-100'
-      default: return 'text-gray-600 bg-gray-100'
+      case 'healthy': return 'default'
+      case 'warning': return 'secondary'
+      case 'critical': return 'destructive'
+      default: return 'outline'
     }
   }
 
@@ -126,7 +129,7 @@ export default function Dashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <PermissionGuard permission="users:read">
+        <PermissionGuard permission="user:read">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -142,7 +145,7 @@ export default function Dashboard() {
           </Card>
         </PermissionGuard>
 
-        <PermissionGuard permission="tenants:read">
+        <PermissionGuard permission="tenant:read">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -158,7 +161,7 @@ export default function Dashboard() {
           </Card>
         </PermissionGuard>
 
-        <PermissionGuard permission="roles:read">
+        <PermissionGuard permission="role:read">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -179,9 +182,9 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">System Health</p>
-                <p className={`text-sm font-medium px-2 py-1 rounded-full inline-block mt-1 ${getHealthColor(stats.systemHealth)}`}>
+                <Badge variant={getHealthVariant(stats.systemHealth)} className="mt-1">
                   {stats.systemHealth.charAt(0).toUpperCase() + stats.systemHealth.slice(1)}
-                </p>
+                </Badge>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
                 <Activity className="h-6 w-6 text-orange-600" />
@@ -198,9 +201,9 @@ export default function Dashboard() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Recent Activities</CardTitle>
-                <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                <Button variant="ghost" size="sm">
                   View All
-                </button>
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -230,40 +233,32 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <PermissionGuard permission="users:create">
-                <button className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    <span className="text-sm font-medium">Add New User</span>
-                  </div>
-                </button>
+              <PermissionGuard permission="user:create">
+                <Button variant="outline" className="w-full justify-start h-auto p-3">
+                  <Users className="h-5 w-5 text-blue-600 mr-3" />
+                  <span className="text-sm font-medium">Add New User</span>
+                </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="tenants:create">
-                <button className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Building2 className="h-5 w-5 text-green-600" />
-                    <span className="text-sm font-medium">Create Tenant</span>
-                  </div>
-                </button>
+              <PermissionGuard permission="tenant:create">
+                <Button variant="outline" className="w-full justify-start h-auto p-3">
+                  <Building2 className="h-5 w-5 text-green-600 mr-3" />
+                  <span className="text-sm font-medium">Create Tenant</span>
+                </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="roles:create">
-                <button className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <Shield className="h-5 w-5 text-purple-600" />
-                    <span className="text-sm font-medium">Create Role</span>
-                  </div>
-                </button>
+              <PermissionGuard permission="role:create">
+                <Button variant="outline" className="w-full justify-start h-auto p-3">
+                  <Shield className="h-5 w-5 text-purple-600 mr-3" />
+                  <span className="text-sm font-medium">Create Role</span>
+                </Button>
               </PermissionGuard>
 
               <PermissionGuard permission="audit:read">
-                <button className="w-full text-left p-3 rounded-lg border border-border hover:bg-muted transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <BarChart3 className="h-5 w-5 text-orange-600" />
-                    <span className="text-sm font-medium">View Reports</span>
-                  </div>
-                </button>
+                <Button variant="outline" className="w-full justify-start h-auto p-3">
+                  <BarChart3 className="h-5 w-5 text-orange-600 mr-3" />
+                  <span className="text-sm font-medium">View Reports</span>
+                </Button>
               </PermissionGuard>
             </div>
           </CardContent>
@@ -272,31 +267,25 @@ export default function Dashboard() {
 
       {/* Pending Approvals */}
       {stats.pendingApprovals > 0 && (
-        <PermissionGuard permission="approvals:read">
-          <Card className="bg-yellow-50 border-yellow-200">
-            <CardContent className="p-4">
-              <div className="flex items-center">
-                <AlertTriangle className="h-5 w-5 text-yellow-600 mr-3" />
-                <div className="flex-1">
-                  <h3 className="text-sm font-medium text-yellow-800">
-                    Pending Approvals
-                  </h3>
-                  <p className="text-sm text-yellow-700">
-                    You have {stats.pendingApprovals} items waiting for approval.
-                  </p>
-                </div>
-                <button className="text-yellow-800 hover:text-yellow-900 text-sm font-medium">
-                  Review
-                </button>
+        <PermissionGuard permission="approval:read">
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <div>
+                <span className="font-medium">Pending Approvals: </span>
+                You have {stats.pendingApprovals} items waiting for approval.
               </div>
-            </CardContent>
-          </Card>
+              <Button variant="outline" size="sm">
+                Review
+              </Button>
+            </AlertDescription>
+          </Alert>
         </PermissionGuard>
       )}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PermissionGuard permission="analytics:read">
+        <PermissionGuard permission="analytic:read">
           <Card>
             <CardHeader>
               <CardTitle>User Growth</CardTitle>
@@ -312,7 +301,7 @@ export default function Dashboard() {
           </Card>
         </PermissionGuard>
 
-        <PermissionGuard permission="analytics:read">
+        <PermissionGuard permission="analytic:read">
           <Card>
             <CardHeader>
               <CardTitle>Permission Distribution</CardTitle>
@@ -330,4 +319,4 @@ export default function Dashboard() {
       </div>
     </div>
   )
-}
+  }

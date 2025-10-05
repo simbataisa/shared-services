@@ -4,16 +4,32 @@ import { LogOut, User, Settings, Shield, Users, Package, Layers, Key, Building, 
 import { useAuth } from '../store/auth'
 import { useNavigationPermissions } from '../hooks/usePermissions'
 import { PermissionGuard } from './PermissionGuard'
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
 import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from "@/components/ui/navigation-menu"
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "./ui/sidebar"
 
 interface LayoutProps {
   children: ReactNode
+}
+
+interface NavigationItem {
+  to: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  canAccess: boolean
 }
 
 export default function Layout({ children }: LayoutProps) {
@@ -26,7 +42,7 @@ export default function Layout({ children }: LayoutProps) {
     navigate('/login')
   }
 
-  const navigationItems = [
+  const navigationItems: NavigationItem[] = [
     {
       to: '/dashboard',
       label: 'Dashboard',
@@ -72,110 +88,107 @@ export default function Layout({ children }: LayoutProps) {
   ]
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="bg-primary text-primary-foreground p-4">
-        <nav className="flex justify-between items-center">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link to="/">Dashboard</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              {navPermissions.canAccessTenants && (
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to="/tenants">Tenants</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              )}
-              {navPermissions.canAccessProducts && (
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to="/products">Products</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              )}
-              {navPermissions.canAccessUsers && (
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link to="/user-groups">User Groups</Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              )}
-            </NavigationMenuList>
-          </NavigationMenu>
-          <div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <Sidebar variant="inset">
+          <SidebarHeader>
+            <div className="flex items-center gap-2 px-4 py-2">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Building className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">Shared Services</span>
+                <span className="truncate text-xs">{tenant?.name || 'Platform'}</span>
+              </div>
+            </div>
+          </SidebarHeader>
+          
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {navigationItems.map((item) => (
+                    <PermissionGuard key={item.to} fallback={null}>
+                      {item.canAccess && (
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={item.to}
+                              className={({ isActive }) =>
+                                `flex items-center gap-2 ${
+                                  isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                                }`
+                              }
+                            >
+                              <item.icon className="size-4" />
+                              <span>{item.label}</span>
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      )}
+                    </PermissionGuard>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          
+          <SidebarFooter>
+            {user && (
+              <div className="p-4">
+                <div className="rounded-lg border bg-sidebar-accent/50 p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <User className="size-4" />
+                    <span className="text-sm font-medium">{user.username}</span>
+                  </div>
+                  <div className="mb-3">
+                    <p className="text-xs text-muted-foreground mb-1">Your Roles:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {user.roles.map((role) => (
+                        <Badge key={role.id} variant="secondary" className="text-xs">
+                          {role.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleLogout}
+                    className="w-full"
+                  >
+                    <LogOut className="size-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              </div>
+            )}
+          </SidebarFooter>
+        </Sidebar>
+        
+        <main className="flex-1 flex flex-col">
+          {/* Header with sidebar trigger */}
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex-1" />
             {user ? (
-              <>
-                <span className="mr-4">{user.username}</span>
-                <Button variant="ghost" onClick={logout}>
-                  Logout
-                </Button>
-              </>
+              <span className="text-sm text-muted-foreground">
+                Welcome, {user.username}
+              </span>
             ) : (
               <Button variant="ghost" asChild>
                 <Link to="/login">Login</Link>
               </Button>
             )}
-          </div>
-        </nav>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <nav className="w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-73px)]">
-          <div className="p-4">
-            <ul className="space-y-2">
-              {navigationItems.map((item) => (
-                <PermissionGuard key={item.to} fallback={null}>
-                  {item.canAccess && (
-                    <li>
-                      <NavLink
-                        to={item.to}
-                        className={({ isActive }) =>
-                          `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                            isActive
-                              ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                              : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                          }`
-                        }
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                      </NavLink>
-                    </li>
-                  )}
-                </PermissionGuard>
-              ))}
-            </ul>
-          </div>
+          </header>
           
-          {/* User Role Information */}
-          {user && (
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs font-medium text-gray-700 mb-1">Your Roles:</p>
-                <div className="flex flex-wrap gap-1">
-                  {user.roles.map((role) => (
-                    <span
-                      key={role.roleId}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                    >
-                      {role.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </nav>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          {children}
+          {/* Main content area */}
+          <div className="flex-1 p-6">
+            {children}
+          </div>
         </main>
       </div>
-    </div>
+    </SidebarProvider>
   )
 }

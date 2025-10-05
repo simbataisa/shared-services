@@ -35,19 +35,27 @@ frontend/
 │   │   └── react.svg           # React logo asset
 │   ├── components/
 │   │   ├── ui/                 # Shadcn/UI component library
+│   │   │   ├── alert.tsx       # Alert component for notifications
+│   │   │   ├── badge.tsx       # Badge component for status indicators
 │   │   │   ├── button.tsx      # Button component
 │   │   │   ├── card.tsx        # Card component
 │   │   │   ├── dialog.tsx      # Dialog component
 │   │   │   ├── input.tsx       # Input component
 │   │   │   ├── label.tsx       # Label component
+│   │   │   ├── navigation-menu.tsx # Navigation menu component
 │   │   │   ├── select.tsx      # Select component
+│   │   │   ├── separator.tsx   # Separator component for visual division
+│   │   │   ├── sheet.tsx       # Sheet component for slide-out panels
+│   │   │   ├── sidebar.tsx     # Sidebar component for navigation layout
 │   │   │   ├── skeleton.tsx    # Skeleton loading component
 │   │   │   ├── table.tsx       # Table component
-│   │   │   └── textarea.tsx    # Textarea component
-│   │   ├── Layout.tsx          # Main application layout with navigation
+│   │   │   ├── textarea.tsx    # Textarea component
+│   │   │   └── tooltip.tsx     # Tooltip component for contextual information
+│   │   ├── Layout.tsx          # Main application layout with shadcn/ui Sidebar
 │   │   ├── PermissionGuard.tsx # Permission-based component guard
 │   │   └── ProtectedRoute.tsx  # Route-level permission protection
 │   ├── hooks/
+│   │   ├── use-mobile.tsx      # Hook for mobile device detection
 │   │   └── usePermissions.ts   # Custom hooks for permission management
 │   ├── lib/
 │   │   ├── api.ts              # Axios configuration with JWT interceptors
@@ -129,15 +137,22 @@ The application uses Shadcn/UI, a modern component library built on top of Radix
 ### Available Components
 
 #### Core UI Components
+- **Alert** (`src/components/ui/alert.tsx`): Alert component for displaying notifications and important messages with different variants (default, destructive)
+- **Badge** (`src/components/ui/badge.tsx`): Badge component for status indicators and labels with multiple variants (default, secondary, destructive, outline)
 - **Button** (`src/components/ui/button.tsx`): Versatile button component with multiple variants (default, destructive, outline, secondary, ghost, link) and sizes
 - **Card** (`src/components/ui/card.tsx`): Container component with header, content, and footer sections for organizing content
 - **Input** (`src/components/ui/input.tsx`): Form input component with consistent styling and validation states
 - **Label** (`src/components/ui/label.tsx`): Accessible form labels with proper association to form controls
+- **Navigation Menu** (`src/components/ui/navigation-menu.tsx`): Navigation menu component with dropdown support and keyboard navigation
+- **Separator** (`src/components/ui/separator.tsx`): Visual separator component for dividing content sections
 - **Skeleton** (`src/components/ui/skeleton.tsx`): Loading placeholder component for better user experience during data fetching
+- **Tooltip** (`src/components/ui/tooltip.tsx`): Contextual information component that appears on hover or focus
 
 #### Advanced Components
 - **Dialog** (`src/components/ui/dialog.tsx`): Modal dialog component for overlays and confirmations
 - **Select** (`src/components/ui/select.tsx`): Dropdown selection component with search and multi-select capabilities
+- **Sheet** (`src/components/ui/sheet.tsx`): Slide-out panel component for mobile-friendly navigation and content display
+- **Sidebar** (`src/components/ui/sidebar.tsx`): Comprehensive sidebar navigation component with collapsible functionality, mobile responsiveness, and keyboard shortcuts
 - **Table** (`src/components/ui/table.tsx`): Data table component with sorting, filtering, and pagination support
 - **Textarea** (`src/components/ui/textarea.tsx`): Multi-line text input component for longer content
 
@@ -180,6 +195,62 @@ The application uses Shadcn/UI, a modern component library built on top of Radix
 ) : (
   <p>{content}</p>
 )}
+
+// Sidebar Layout Implementation
+<SidebarProvider>
+  <Sidebar>
+    <SidebarHeader>
+      <h2 className="text-lg font-semibold">AHSS Shared Services</h2>
+    </SidebarHeader>
+    <SidebarContent>
+      <SidebarGroup>
+        <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {navigationItems.map((item) => (
+              <PermissionGuard key={item.path} permission={item.permission}>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link to={item.path}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </PermissionGuard>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+    <SidebarFooter>
+      <div className="flex items-center gap-2">
+        <Badge variant="secondary">{user.roles[0]?.name}</Badge>
+        <Button variant="ghost" onClick={logout}>
+          Logout
+        </Button>
+      </div>
+    </SidebarFooter>
+  </Sidebar>
+  <main className="flex-1">
+    <SidebarTrigger />
+    <Outlet />
+  </main>
+</SidebarProvider>
+
+// Badge usage for status indicators
+<Badge variant="default">Active</Badge>
+<Badge variant="destructive">Inactive</Badge>
+<Badge variant="outline">Pending</Badge>
+
+// Alert usage for notifications
+<Alert>
+  <AlertCircle className="h-4 w-4" />
+  <AlertTitle>Heads up!</AlertTitle>
+  <AlertDescription>
+    You can add components to your app using the cli.
+  </AlertDescription>
+</Alert>
 ```
 
 ## Application Entry Point
@@ -271,14 +342,31 @@ function App() {
 
 #### Layout Component (`components/Layout.tsx`)
 
-**Purpose**: Main application layout with navigation and user interface
+**Purpose**: Main application layout with modern sidebar navigation using shadcn/ui components
 
 **Features:**
-- Responsive navigation sidebar with permission-based menu items
-- User profile display with roles and tenant information
-- Dynamic navigation based on user permissions
-- Logout functionality with proper cleanup
-- Mobile-responsive design with collapsible navigation
+- **Modern Sidebar Navigation**: Built with shadcn/ui Sidebar components for a professional, consistent design
+- **Collapsible Functionality**: Sidebar can be collapsed/expanded with smooth animations and state persistence
+- **Mobile Responsiveness**: Automatically adapts to mobile devices with sheet-based navigation overlay
+- **Keyboard Shortcuts**: Built-in keyboard shortcut (Cmd+B / Ctrl+B) for toggling sidebar visibility
+- **Permission-based Navigation**: Dynamic menu items based on user permissions and roles
+- **User Profile Integration**: Displays user information, roles, and tenant context with Badge components
+- **Logout Functionality**: Secure logout with proper token cleanup and state management
+
+**Shadcn/UI Components Used:**
+- **SidebarProvider**: Context provider for managing sidebar state and mobile detection
+- **Sidebar**: Main sidebar container with collapsible behavior and responsive design
+- **SidebarHeader**: Header section with application branding and user information
+- **SidebarContent**: Main content area containing navigation groups and menu items
+- **SidebarGroup**: Logical grouping of related navigation items
+- **SidebarGroupLabel**: Section labels for navigation groups
+- **SidebarGroupContent**: Container for navigation menu items
+- **SidebarMenu**: Navigation menu container with proper accessibility
+- **SidebarMenuItem**: Individual navigation items with active state support
+- **SidebarMenuButton**: Interactive navigation buttons with icon and text support
+- **SidebarFooter**: Footer section for user profile and logout functionality
+- **SidebarTrigger**: Toggle button for sidebar visibility control
+- **Badge**: Status indicators for user roles and permissions
 
 **Key Navigation Items:**
 - Dashboard (always accessible to authenticated users)
@@ -288,6 +376,14 @@ function App() {
 - Roles (requires `role:read` permission)
 - Permissions (requires `permission:read` permission)
 - Tenants (requires `tenant:read` permission)
+
+**Implementation Highlights:**
+- **State Management**: Uses SidebarProvider context for consistent state across components
+- **Mobile Detection**: Integrates use-mobile hook for responsive behavior
+- **Permission Integration**: Each navigation item is wrapped with PermissionGuard for access control
+- **Active State**: Automatic highlighting of current page in navigation
+- **Icon Support**: Lucide React icons for visual navigation enhancement
+- **Accessibility**: Full keyboard navigation and screen reader support
 
 #### PermissionGuard Component (`components/PermissionGuard.tsx`)
 
