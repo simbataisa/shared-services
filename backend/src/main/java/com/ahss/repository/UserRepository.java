@@ -3,6 +3,7 @@ package com.ahss.repository;
 import com.ahss.entity.User;
 import com.ahss.entity.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,7 +21,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.email = :email")
     Optional<User> findByEmail(@Param("email") String email);
     
-    @Query("SELECT u FROM User u WHERE u.username = :username OR u.email = :email")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.username = :username OR u.email = :email")
     Optional<User> findByUsernameOrEmail(@Param("username") String username, @Param("email") String email);
     
     @Query("SELECT u FROM User u WHERE u.userStatus = :status")
@@ -41,7 +42,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.username = :username")
     Optional<User> findByUsernameWithRoles(@Param("username") String username);
     
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.email = :email")
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles r LEFT JOIN FETCH r.permissions WHERE u.email = :email")
     Optional<User> findByEmailWithRoles(@Param("email") String email);
     
     @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.username = :username")
@@ -73,4 +74,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "OR LOWER(u.username) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :searchTerm, '%'))")
     List<User> searchUsers(@Param("searchTerm") String searchTerm);
+    
+    @Modifying
+    @Query(value = "UPDATE users SET last_login = :lastLogin, failed_login_attempts = 0 WHERE user_id = :userId", nativeQuery = true)
+    void updateLastLoginNative(@Param("userId") Long userId, @Param("lastLogin") LocalDateTime lastLogin);
+    
+    @Modifying
+    @Query(value = "UPDATE users SET failed_login_attempts = 0 WHERE user_id = :userId", nativeQuery = true)
+    void resetFailedLoginAttemptsNative(@Param("userId") Long userId);
+    
+    @Modifying
+    @Query(value = "UPDATE users SET failed_login_attempts = :attempts, account_locked_until = :lockUntil WHERE user_id = :userId", nativeQuery = true)
+    void updateFailedLoginAttemptsNative(@Param("userId") Long userId, @Param("attempts") Integer attempts, @Param("lockUntil") LocalDateTime lockUntil);
 }

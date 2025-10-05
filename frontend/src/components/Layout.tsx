@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, Link } from 'react-router-dom'
 import { LogOut, User, Settings, Shield, Users, Package, Layers, Key, Building, BarChart3 } from 'lucide-react'
 import { useAuth } from '../store/auth'
 import { useNavigationPermissions } from '../hooks/usePermissions'
@@ -37,7 +37,7 @@ export default function Layout({ children }: LayoutProps) {
       to: '/user-groups',
       label: 'User Groups',
       icon: Users,
-      canAccess: navPermissions.canAccessUserGroups
+      canAccess: navPermissions.canAccessUsers
     },
     {
       to: '/products',
@@ -61,7 +61,7 @@ export default function Layout({ children }: LayoutProps) {
       to: '/permissions',
       label: 'Permissions',
       icon: Key,
-      canAccess: navPermissions.canAccessPermissions
+      canAccess: navPermissions.canAccessRoles
     },
     {
       to: '/tenants',
@@ -82,21 +82,21 @@ export default function Layout({ children }: LayoutProps) {
                   <Link to="/">Dashboard</Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-              {permissions.canViewTenants && (
+              {navPermissions.canAccessTenants && (
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link to="/tenants">Tenants</Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               )}
-              {permissions.canViewProducts && (
+              {navPermissions.canAccessProducts && (
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link to="/products">Products</Link>
                   </NavigationMenuLink>
                 </NavigationMenuItem>
               )}
-              {permissions.canViewUserGroups && (
+              {navPermissions.canAccessUsers && (
                 <NavigationMenuItem>
                   <NavigationMenuLink asChild>
                     <Link to="/user-groups">User Groups</Link>

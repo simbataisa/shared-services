@@ -159,8 +159,24 @@ The fix only required application-level changes. No database schema modification
 - **Testing & Validation**: Confirmed successful role creation and enum persistence
 - **Documentation**: Created this comprehensive guide
 
+## Related Issues and Fixes
+
+### Authentication Login Fix
+After resolving the PostgreSQL enum mapping issues, a separate authentication problem was discovered and resolved. The login system was failing due to password field exclusion in the UserDto mapping. See [Authentication Login Fix Documentation](./authentication-login-fix.md) for complete details.
+
+**Key Integration Points:**
+- Both fixes were required for full system functionality
+- The enum mapping fix enabled role creation and entity operations
+- The authentication fix enabled user login and session management
+- Combined, these fixes provide a fully functional backend system
+
 ## Status
 ✅ **RESOLVED** - All enum mapping issues have been fixed and tested successfully.
+✅ **SYSTEM INTEGRATION** - Works in conjunction with authentication login fix for complete functionality.
+
+## Cross-References
+- [Authentication Login Fix Documentation](./authentication-login-fix.md) - Related authentication system fix
+- Backend Technical Documentation - Overall system architecture
 
 ---
 *Document created: October 5, 2025*  

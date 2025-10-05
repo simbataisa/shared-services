@@ -1,8 +1,10 @@
 package com.ahss.service.impl;
 
+import com.ahss.dto.PermissionDto;
 import com.ahss.dto.RoleDto;
 import com.ahss.dto.UserDto;
 import com.ahss.dto.UserGroupDto;
+import com.ahss.entity.Permission;
 import com.ahss.entity.Role;
 import com.ahss.entity.User;
 import com.ahss.entity.UserGroup;
@@ -80,7 +82,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Optional<UserDto> getUserByUsernameOrEmail(String usernameOrEmail) {
         return userRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
-                .map(this::convertToDto);
+                .map(this::convertToDtoWithPassword);
     }
 
     @Override
@@ -209,9 +211,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
         
-        user.setLastLogin(LocalDateTime.now());
-        user.setFailedLoginAttempts(0); // Reset failed attempts on successful login
-        userRepository.save(user);
+        // Use native query to avoid enum casting issues
+        userRepository.updateLastLoginNative(id, LocalDateTime.now());
     }
 
     @Override
@@ -220,14 +221,16 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
         
         int attempts = user.getFailedLoginAttempts() != null ? user.getFailedLoginAttempts() : 0;
-        user.setFailedLoginAttempts(attempts + 1);
+        attempts++;
         
         // Lock account after 5 failed attempts for 30 minutes
-        if (user.getFailedLoginAttempts() >= 5) {
-            user.setAccountLockedUntil(LocalDateTime.now().plusMinutes(30));
+        LocalDateTime lockUntil = null;
+        if (attempts >= 5) {
+            lockUntil = LocalDateTime.now().plusMinutes(30);
         }
         
-        userRepository.save(user);
+        // Use native query to avoid enum casting issues
+        userRepository.updateFailedLoginAttemptsNative(id, attempts, lockUntil);
     }
 
     @Override
@@ -235,8 +238,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
         
-        user.setFailedLoginAttempts(0);
-        userRepository.save(user);
+        // Use native query to avoid enum casting issues
+        userRepository.resetFailedLoginAttemptsNative(id);
     }
 
     @Override
@@ -414,6 +417,46 @@ public class UserServiceImpl implements UserService {
         
         return dto;
     }
+    
+    // Special conversion method that includes password for authentication
+    private UserDto convertToDtoWithPassword(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setPassword(user.getPassword()); // Include password for authentication
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setUserStatus(user.getUserStatus());
+        dto.setEmailVerified(user.getEmailVerified());
+        dto.setLastLogin(user.getLastLogin());
+        dto.setFailedLoginAttempts(user.getFailedLoginAttempts());
+        dto.setAccountLockedUntil(user.getAccountLockedUntil());
+        dto.setPasswordChangedAt(user.getPasswordChangedAt());
+        dto.setCreatedAt(user.getCreatedAt());
+        dto.setUpdatedAt(user.getUpdatedAt());
+        dto.setCreatedBy(user.getCreatedBy());
+        dto.setUpdatedBy(user.getUpdatedBy());
+        
+        // Convert roles
+        if (user.getRoles() != null) {
+            List<RoleDto> roleDtos = user.getRoles().stream()
+                    .map(this::convertRoleToDto)
+                    .collect(Collectors.toList());
+            dto.setRoles(roleDtos);
+        }
+        
+        // Convert user groups
+        if (user.getUserGroups() != null) {
+            List<UserGroupDto> userGroupDtos = user.getUserGroups().stream()
+                    .map(this::convertUserGroupToDto)
+                    .collect(Collectors.toList());
+            dto.setUserGroups(userGroupDtos);
+        }
+        
+        return dto;
+    }
 
     private RoleDto convertRoleToDto(Role role) {
         RoleDto dto = new RoleDto();
@@ -427,6 +470,26 @@ public class UserServiceImpl implements UserService {
             dto.setModuleId(role.getModule().getId());
             dto.setModuleName(role.getModule().getName());
         }
+        
+        // Convert permissions
+        if (role.getPermissions() != null) {
+            List<PermissionDto> permissionDtos = role.getPermissions().stream()
+                    .map(this::convertPermissionToDto)
+                    .collect(Collectors.toList());
+            dto.setPermissions(permissionDtos);
+        }
+        
+        return dto;
+    }
+
+    private PermissionDto convertPermissionToDto(Permission permission) {
+        PermissionDto dto = new PermissionDto();
+        dto.setId(permission.getId());
+        dto.setName(permission.getName());
+        dto.setDescription(permission.getDescription());
+        dto.setIsActive(true); // Since Permission no longer has active field, default to true
+        dto.setCreatedAt(permission.getCreatedAt());
+        dto.setUpdatedAt(permission.getUpdatedAt());
         return dto;
     }
 

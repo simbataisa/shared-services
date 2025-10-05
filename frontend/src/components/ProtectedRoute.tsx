@@ -1,7 +1,6 @@
 import { type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../store/auth'
-import { usePermissions } from '../hooks/usePermissions'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -26,8 +25,7 @@ export default function ProtectedRoute({
   requireAll = false,
   redirectTo = '/login'
 }: ProtectedRouteProps) {
-  const { isAuthenticated } = useAuth()
-  const { can, hasRole, hasAnyRole, canAccess } = usePermissions()
+  const { isAuthenticated, hasPermission, hasRole, hasAnyRole, canAccessResource } = useAuth()
   const location = useLocation()
 
   // Check authentication first
@@ -41,7 +39,7 @@ export default function ProtectedRoute({
   }
 
   // Check specific permission
-  if (permission && !can(permission)) {
+  if (permission && !hasPermission(permission)) {
     return <Navigate to="/unauthorized" replace />
   }
 
@@ -67,7 +65,7 @@ export default function ProtectedRoute({
   }
 
   // Check resource-based access
-  if (resource && action && !canAccess(resource, action)) {
+  if (resource && action && !canAccessResource(resource, action)) {
     return <Navigate to="/unauthorized" replace />
   }
 

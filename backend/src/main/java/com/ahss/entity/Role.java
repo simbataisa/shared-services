@@ -19,7 +19,7 @@ public class Role {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role_status", nullable = false, columnDefinition = "role_status")
+    @Column(name = "role_status", nullable = false)
     private RoleStatus roleStatus = RoleStatus.DRAFT;
 
     @Column(name = "created_at", nullable = false, updatable = false)

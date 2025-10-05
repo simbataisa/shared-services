@@ -22,7 +22,7 @@ public class Module {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "module_status", nullable = false, columnDefinition = "module_status")
+    @Column(name = "module_status", nullable = false)
     private ModuleStatus moduleStatus = ModuleStatus.DRAFT;
 
     @Column(name = "created_at", nullable = false, updatable = false)

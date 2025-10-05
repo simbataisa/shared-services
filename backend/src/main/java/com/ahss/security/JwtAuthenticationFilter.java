@@ -13,6 +13,7 @@ import io.jsonwebtoken.Claims;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
@@ -24,8 +25,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 Claims claims = JwtTokenProvider.parse(token);
                 String username = claims.getSubject();
-                var auth = new UsernamePasswordAuthenticationToken(username, null,
-                        List.of(new SimpleGrantedAuthority("USER")));
+                
+                // Extract roles from token claims
+                @SuppressWarnings("unchecked")
+                List<String> roles = (List<String>) claims.get("roles");
+                
+                // Convert roles to authorities
+                List<SimpleGrantedAuthority> authorities = roles != null ? 
+                    roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase().replace(" ", "_")))
+                        .collect(Collectors.toList()) :
+                    List.of(new SimpleGrantedAuthority("ROLE_USER"));
+                
+                var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (Exception ignored) {

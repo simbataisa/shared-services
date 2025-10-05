@@ -31,7 +31,7 @@ public class User {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_status", nullable = false, columnDefinition = "user_status")
+    @Column(name = "user_status", nullable = false)
     private UserStatus userStatus = UserStatus.ACTIVE;
 
     @Column(name = "email_verified", nullable = false)

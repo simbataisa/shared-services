@@ -19,6 +19,16 @@ public class ApiResponse<T> {
         return resp;
     }
 
+    public static <T> ApiResponse<T> notOk(T data, String message, String path) {
+        ApiResponse<T> resp = new ApiResponse<>();
+        resp.success = false;
+        resp.data = data;
+        resp.message = message;
+        resp.timestamp = Instant.now().toString();
+        resp.path = path;
+        return resp;
+    }
+
     public boolean isSuccess() { return success; }
     public T getData() { return data; }
     public String getMessage() { return message; }
