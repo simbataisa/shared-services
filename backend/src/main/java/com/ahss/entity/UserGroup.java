@@ -2,6 +2,7 @@ package com.ahss.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "user_group")
@@ -30,6 +31,15 @@ public class UserGroup {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    // Relationships
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_group_users",
+        joinColumns = @JoinColumn(name = "user_group_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> users;
 
     @PrePersist
     protected void onCreate() {
@@ -73,4 +83,7 @@ public class UserGroup {
     
     public LocalDateTime getDeletedAt() { return deletedAt; }
     public void setDeletedAt(LocalDateTime deletedAt) { this.deletedAt = deletedAt; }
+    
+    public List<User> getUsers() { return users; }
+    public void setUsers(List<User> users) { this.users = users; }
 }

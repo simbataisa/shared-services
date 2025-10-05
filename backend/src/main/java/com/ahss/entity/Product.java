@@ -22,7 +22,7 @@ public class Product {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "product_status", nullable = false)
+    @Column(name = "product_status", nullable = false, columnDefinition = "product_status")
     private ProductStatus productStatus = ProductStatus.DRAFT;
 
     @Column(name = "created_at", nullable = false, updatable = false)
