@@ -120,7 +120,7 @@ const UserGroups: React.FC = () => {
   const fetchGroups = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/user-groups");
+      const { data } = await api.get("/v1/user-groups");
       const list = data?.data?.content || data?.data || [];
       setGroups(list);
       setError(null);
@@ -134,7 +134,7 @@ const UserGroups: React.FC = () => {
   const createGroup = async () => {
     try {
       setLoading(true);
-      await api.post("/user-groups", createForm);
+      await api.post("/v1/user-groups", createForm);
       setCreateForm({ name: "", description: "" });
       setIsCreateDialogOpen(false);
       await fetchGroups();
@@ -150,7 +150,7 @@ const UserGroups: React.FC = () => {
 
     try {
       setLoading(true);
-      await api.put(`/user-groups/${editingGroup.userGroupId}`, editForm);
+      await api.put(`/v1/user-groups/${editingGroup.userGroupId}`, editForm);
       setEditForm({ name: "", description: "" });
       setEditingGroup(null);
       setIsEditDialogOpen(false);
@@ -165,7 +165,7 @@ const UserGroups: React.FC = () => {
   const deleteGroup = async (groupId: number) => {
     try {
       setLoading(true);
-      await api.delete(`/user-groups/${groupId}`);
+      await api.delete(`/v1/user-groups/${groupId}`);
       await fetchGroups();
     } catch (e) {
       setError("Failed to delete group");
@@ -211,7 +211,7 @@ const UserGroups: React.FC = () => {
 
     try {
       setRoleLoading(true);
-      await api.post(`/user-groups/${selectedGroup.userGroupId}/roles`, {
+      await api.post(`/v1/user-groups/${selectedGroup.userGroupId}/roles`, {
         moduleId: parseInt(selectedModule),
         roleIds: selectedRoles,
       });
@@ -232,7 +232,7 @@ const UserGroups: React.FC = () => {
   ) => {
     try {
       setLoading(true);
-      await api.delete(`/user-groups/${groupId}/roles`, {
+      await api.delete(`/v1/user-groups/${groupId}/roles`, {
         data: { roleAssignmentIds: [assignmentId] },
       });
       await fetchGroups();
