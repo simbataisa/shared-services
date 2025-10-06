@@ -1,31 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { PermissionGuard } from "./PermissionGuard";
-import { StatusBadge } from "./StatusBadge";
-import { usePermissions } from "../hooks/usePermissions";
-import { normalizeEntityStatus } from "../lib/status-colors";
-import api from "../lib/api";
+import { PermissionGuard } from "../PermissionGuard";
+import { StatusBadge } from "../StatusBadge";
+import { usePermissions } from "@/hooks/usePermissions";
+import { normalizeEntityStatus } from "@/lib/status-colors";
+import api from "@/lib/api";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
-import { Textarea } from "./ui/textarea";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "./ui/select";
-import { Alert, AlertDescription } from "./ui/alert";
-import { Skeleton } from "./ui/skeleton";
-import { Separator } from "./ui/separator";
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Edit, Trash2, Save, X } from "lucide-react";
 
 interface Module {

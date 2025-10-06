@@ -1,28 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { usePermissions } from "../hooks/usePermissions";
-import { PermissionGuard } from "../components/PermissionGuard";
-import api from "../lib/api";
-import type { Product, Module } from "../store/auth";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
-import { Badge } from "../components/ui/badge";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { Skeleton } from "../components/ui/skeleton";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGuard } from "@/components/PermissionGuard";
+import api from "@/lib/api";
+import type { Product, Module } from "@/store/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -78,8 +64,8 @@ export default function ProductList() {
       // Map backend response to frontend format
       const mappedProducts = response.data.map((product: any) => ({
         ...product,
-        status: product.isActive ? 'active' : 'inactive',
-        modules: product.modules || []
+        status: product.isActive ? "active" : "inactive",
+        modules: product.modules || [],
       }));
       setProducts(mappedProducts);
     } catch (err) {
@@ -92,7 +78,7 @@ export default function ProductList() {
 
   const handleStatusChange = async (productId: string, newStatus: string) => {
     try {
-      const endpoint = newStatus === 'active' ? 'activate' : 'deactivate';
+      const endpoint = newStatus === "active" ? "activate" : "deactivate";
       await api.patch(`/products/${productId}/${endpoint}`);
       setProducts(
         products.map((product) =>
@@ -180,14 +166,6 @@ export default function ProductList() {
             Manage your products and their modules
           </p>
         </div>
-        <PermissionGuard permission="product:create">
-          <Button asChild>
-            <Link to="/products/create">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Product
-            </Link>
-          </Button>
-        </PermissionGuard>
       </div>
 
       {error && (
@@ -267,12 +245,16 @@ export default function ProductList() {
                         </TableCell>
                         <TableCell>{product.version}</TableCell>
                         <TableCell>
-                          <Badge 
-                            variant={product.status === 'active' ? 'default' : 'secondary'}
+                          <Badge
+                            variant={
+                              product.status === "active"
+                                ? "default"
+                                : "secondary"
+                            }
                             className={
-                              product.status === 'active' 
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200 border-green-300' 
-                                : 'bg-red-100 text-red-800 hover:bg-red-200 border-red-300'
+                              product.status === "active"
+                                ? "bg-green-100 text-green-800 hover:bg-green-200 border-green-300"
+                                : "bg-red-100 text-red-800 hover:bg-red-200 border-red-300"
                             }
                           >
                             {product.status}

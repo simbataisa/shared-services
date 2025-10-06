@@ -25,9 +25,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { StatusBadge } from "@/components/StatusBadge";
-import RoleAssignment from "@/components/UserRoleAssignment";
-import UserGroupAssignment from "@/components/UserGroupAssignment";
+import { StatusBadge } from "../StatusBadge";
+import RoleAssignment from "./UserRoleAssignment";
+import UserGroupAssignment from "./UserGroupAssignment";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import {

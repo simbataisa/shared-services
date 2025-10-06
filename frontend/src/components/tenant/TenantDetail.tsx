@@ -13,17 +13,21 @@ import {
   Calendar,
   User,
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
-import { StatusBadge } from "./StatusBadge";
-import { PermissionGuard } from "../components/PermissionGuard";
-import { normalizeEntityStatus } from "../lib/status-colors";
-import api from "../lib/api";
-import { type Tenant } from "../store/auth";
+import { StatusBadge } from "../StatusBadge";
+import { PermissionGuard } from "../PermissionGuard";
+import { normalizeEntityStatus } from "../../lib/status-colors";
+import api from "../../lib/api";
+import { type Tenant } from "../../store/auth";
 
 interface TenantDetails extends Tenant {
   userCount?: number;
@@ -241,8 +245,8 @@ export default function TenantDetail() {
                   <Label>Status</Label>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(tenant.status)}
-                    <StatusBadge 
-                      status={normalizeEntityStatus('tenant', tenant.status)}
+                    <StatusBadge
+                      status={normalizeEntityStatus("tenant", tenant.status)}
                     />
                   </div>
                 </div>
@@ -261,9 +265,7 @@ export default function TenantDetail() {
                   <div className="bg-blue-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
                     <Users className="h-6 w-6 text-blue-600" />
                   </div>
-                  <p className="text-2xl font-bold">
-                    {tenant.userCount || 0}
-                  </p>
+                  <p className="text-2xl font-bold">{tenant.userCount || 0}</p>
                   <p className="text-sm text-muted-foreground">Users</p>
                 </div>
 
@@ -271,9 +273,7 @@ export default function TenantDetail() {
                   <div className="bg-purple-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
                     <Shield className="h-6 w-6 text-purple-600" />
                   </div>
-                  <p className="text-2xl font-bold">
-                    {tenant.roleCount || 0}
-                  </p>
+                  <p className="text-2xl font-bold">{tenant.roleCount || 0}</p>
                   <p className="text-sm text-muted-foreground">Roles</p>
                 </div>
 
@@ -360,7 +360,9 @@ export default function TenantDetail() {
 
               <PermissionGuard permission="tenants:suspend">
                 <Button
-                  variant={tenant.status === "SUSPENDED" ? "secondary" : "outline"}
+                  variant={
+                    tenant.status === "SUSPENDED" ? "secondary" : "outline"
+                  }
                   className="w-full justify-start"
                   onClick={() => handleStatusChange("SUSPENDED")}
                   disabled={updating || tenant.status === "SUSPENDED"}
@@ -372,7 +374,9 @@ export default function TenantDetail() {
 
               <PermissionGuard permission="tenants:deactivate">
                 <Button
-                  variant={tenant.status === "INACTIVE" ? "destructive" : "outline"}
+                  variant={
+                    tenant.status === "INACTIVE" ? "destructive" : "outline"
+                  }
                   className="w-full justify-start"
                   onClick={() => handleStatusChange("INACTIVE")}
                   disabled={updating || tenant.status === "INACTIVE"}

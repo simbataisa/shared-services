@@ -1,188 +1,201 @@
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { usePermissions } from '@/hooks/usePermissions'
-import { Search, Plus, Edit, Trash2, Shield } from 'lucide-react'
-import RoleDialog from '@/components/RoleDialog'
-import SearchAndFilter from '@/components/SearchAndFilter'
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Plus, Edit, Trash2, Shield } from "lucide-react";
+import RoleDialog from "@/components/role/RoleDialog";
+import SearchAndFilter from "@/components/SearchAndFilter";
 
 interface Role {
-  id: number
-  name: string
-  description: string
-  createdAt: string
-  updatedAt: string
-  permissions: Permission[]
+  id: number;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  permissions: Permission[];
 }
 
 interface Permission {
-  id: number
-  name: string
-  description: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
+  id: number;
+  name: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface CreateRoleForm {
-  name: string
-  description: string
-  permissionIds: number[]
+  name: string;
+  description: string;
+  permissionIds: number[];
 }
 
 const RoleList: React.FC = () => {
-  const [roles, setRoles] = useState<Role[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
-  const [saving, setSaving] = useState(false)
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const { canViewRoles, canManageRoles } = usePermissions()
+  const { canViewRoles, canManageRoles } = usePermissions();
 
   useEffect(() => {
     if (canViewRoles) {
-      fetchRoles()
-      fetchPermissions()
+      fetchRoles();
+      fetchPermissions();
     }
-  }, [canViewRoles])
+  }, [canViewRoles]);
 
   const fetchRoles = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/v1/roles', {
+      setLoading(true);
+      const response = await fetch("/api/v1/roles", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to fetch roles')
+        throw new Error("Failed to fetch roles");
       }
-      
-      const data = await response.json()
-      setRoles(data || [])
+
+      const data = await response.json();
+      setRoles(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch roles')
+      setError(err instanceof Error ? err.message : "Failed to fetch roles");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchPermissions = async () => {
     try {
-      const response = await fetch('/api/permissions', {
+      const response = await fetch("/api/permissions", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to fetch permissions')
+        throw new Error("Failed to fetch permissions");
       }
-      
-      const data = await response.json()
-      setPermissions(data || [])
+
+      const data = await response.json();
+      setPermissions(data || []);
     } catch (err) {
-      console.error('Failed to fetch permissions:', err)
+      console.error("Failed to fetch permissions:", err);
     }
-  }
+  };
 
   const handleCreateRole = async (form: CreateRoleForm) => {
     try {
-      setSaving(true)
-      const response = await fetch('/api/v1/roles', {
-        method: 'POST',
+      setSaving(true);
+      const response = await fetch("/api/v1/roles", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(form)
-      })
+        body: JSON.stringify(form),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create role')
+        throw new Error("Failed to create role");
       }
 
-      setIsCreateDialogOpen(false)
-      fetchRoles()
+      setIsCreateDialogOpen(false);
+      fetchRoles();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create role')
+      setError(err instanceof Error ? err.message : "Failed to create role");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleEditRole = (role: Role) => {
-    setSelectedRole(role)
-    setIsEditDialogOpen(true)
-  }
+    setSelectedRole(role);
+    setIsEditDialogOpen(true);
+  };
 
   const handleUpdateRole = async (form: CreateRoleForm) => {
-    if (!selectedRole) return
+    if (!selectedRole) return;
 
     try {
-      setSaving(true)
+      setSaving(true);
       const response = await fetch(`/api/v1/roles/${selectedRole.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(form)
-      })
+        body: JSON.stringify(form),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to update role')
+        throw new Error("Failed to update role");
       }
 
-      setIsEditDialogOpen(false)
-      setSelectedRole(null)
-      fetchRoles()
+      setIsEditDialogOpen(false);
+      setSelectedRole(null);
+      fetchRoles();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update role')
+      setError(err instanceof Error ? err.message : "Failed to update role");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleDeleteRole = async (roleId: number) => {
-    if (!confirm('Are you sure you want to delete this role?')) {
-      return
+    if (!confirm("Are you sure you want to delete this role?")) {
+      return;
     }
 
     try {
       const response = await fetch(`/api/v1/roles/${roleId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete role')
+        throw new Error("Failed to delete role");
       }
 
-      fetchRoles()
+      fetchRoles();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete role')
+      setError(err instanceof Error ? err.message : "Failed to delete role");
     }
-  }
+  };
 
-  const filteredRoles = roles.filter(role => {
-    const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         role.description.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    return matchesSearch
-  })
+  const filteredRoles = roles.filter((role) => {
+    const matchesSearch =
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+    return matchesSearch;
+  });
 
   if (!canViewRoles) {
     return (
@@ -194,7 +207,7 @@ const RoleList: React.FC = () => {
           </AlertDescription>
         </Alert>
       </div>
-    )
+    );
   }
 
   return (
@@ -253,9 +266,7 @@ const RoleList: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Roles</CardTitle>
-          <CardDescription>
-            A list of all roles in the system
-          </CardDescription>
+          <CardDescription>A list of all roles in the system</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -283,7 +294,11 @@ const RoleList: React.FC = () => {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {role.permissions?.slice(0, 3).map((permission) => (
-                          <Badge key={permission.id} variant="outline" className="text-xs">
+                          <Badge
+                            key={permission.id}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {permission.name}
                           </Badge>
                         ))}
@@ -326,7 +341,7 @@ const RoleList: React.FC = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default RoleList
+export default RoleList;

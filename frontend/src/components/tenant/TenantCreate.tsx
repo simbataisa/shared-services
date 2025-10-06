@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import api from "../lib/api";
+import api from "../../lib/api";
 
 interface TenantFormData {
   tenantCode: string;

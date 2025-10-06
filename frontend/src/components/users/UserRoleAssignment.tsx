@@ -14,7 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { PermissionGuard } from "../PermissionGuard";
 import { Shield, ChevronDown } from "lucide-react";
 
 interface Role {

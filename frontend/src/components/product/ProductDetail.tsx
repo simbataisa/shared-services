@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionGuard } from "../components/PermissionGuard";
-import { StatusBadge } from "../components/StatusBadge";
-import { usePermissions } from "../hooks/usePermissions";
-import { normalizeEntityStatus } from "../lib/status-colors";
-import type { Product, Module } from "../store/auth";
-import api from "../lib/api";
+import { PermissionGuard } from "../PermissionGuard";
+import { StatusBadge } from "../StatusBadge";
+import { usePermissions } from "@/hooks/usePermissions";
+import { normalizeEntityStatus } from "@/lib/status-colors";
+import type { Product, Module } from "@/store/auth";
+import api from "@/lib/api";
 
 interface ProductStats {
   totalModules: number;

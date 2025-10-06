@@ -14,7 +14,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { PermissionGuard } from "../PermissionGuard";
 import { Users, ChevronDown } from "lucide-react";
 
 interface UserGroup {
@@ -36,15 +36,21 @@ const UserGroupAssignment: React.FC<UserGroupAssignmentProps> = ({
   onUserGroupsUpdated,
   loading = false,
 }) => {
-  const [availableUserGroups, setAvailableUserGroups] = useState<UserGroup[]>([]);
-  const [selectedUserGroupIds, setSelectedUserGroupIds] = useState<number[]>([]);
+  const [availableUserGroups, setAvailableUserGroups] = useState<UserGroup[]>(
+    []
+  );
+  const [selectedUserGroupIds, setSelectedUserGroupIds] = useState<number[]>(
+    []
+  );
   const [isUserGroupsOpen, setIsUserGroupsOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   // Initialize selected user groups from current user groups
   useEffect(() => {
     if (currentUserGroups) {
-      setSelectedUserGroupIds(currentUserGroups.map((group) => group.userGroupId));
+      setSelectedUserGroupIds(
+        currentUserGroups.map((group) => group.userGroupId)
+      );
     }
   }, [currentUserGroups]);
 
@@ -99,25 +105,22 @@ const UserGroupAssignment: React.FC<UserGroupAssignmentProps> = ({
     if (checked) {
       setSelectedUserGroupIds([...selectedUserGroupIds, userGroupId]);
     } else {
-      setSelectedUserGroupIds(selectedUserGroupIds.filter((id) => id !== userGroupId));
+      setSelectedUserGroupIds(
+        selectedUserGroupIds.filter((id) => id !== userGroupId)
+      );
     }
   };
 
   return (
     <PermissionGuard permission="user:assign_groups">
-      <Collapsible
-        open={isUserGroupsOpen}
-        onOpenChange={setIsUserGroupsOpen}
-      >
+      <Collapsible open={isUserGroupsOpen} onOpenChange={setIsUserGroupsOpen}>
         <Card>
           <CollapsibleTrigger asChild>
             <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>User Groups</CardTitle>
-                  <CardDescription>
-                    Assign user to groups
-                  </CardDescription>
+                  <CardDescription>Assign user to groups</CardDescription>
                 </div>
                 <ChevronDown
                   className={`h-4 w-4 transition-transform ${
@@ -152,9 +155,7 @@ const UserGroupAssignment: React.FC<UserGroupAssignmentProps> = ({
                         className="flex-1"
                       >
                         <div>
-                          <div className="font-medium">
-                            {group.name}
-                          </div>
+                          <div className="font-medium">{group.name}</div>
                           <div className="text-sm text-muted-foreground">
                             {group.description}
                           </div>

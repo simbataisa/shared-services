@@ -1,16 +1,27 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Save, Package } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PermissionGuard } from "../components/PermissionGuard";
-import { usePermissions } from "../hooks/usePermissions";
-import api from "../lib/api";
+import { PermissionGuard } from "../PermissionGuard";
+import api from "@/lib/api";
 
 interface ProductFormData {
   name: string;
@@ -23,7 +34,6 @@ interface ProductFormData {
 
 const ProductCreate: React.FC = () => {
   const navigate = useNavigate();
-  const { canCreateProducts } = usePermissions();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -95,7 +105,9 @@ const ProductCreate: React.FC = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error when user starts typing
@@ -110,53 +122,58 @@ const ProductCreate: React.FC = () => {
     navigate("/products");
   };
 
-  if (!canCreateProducts) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Access Denied</CardTitle>
-            <CardDescription>
-              You don't have permission to create products.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/products")}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold">Create Product</h1>
-          <p className="text-muted-foreground">
-            Add a new product to the system
-          </p>
+    <PermissionGuard
+      permission="product:create"
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Access Denied</CardTitle>
+              <CardDescription>
+                You don't have permission to create products.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/dashboard")} className="w-full">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      }
+    >
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+              <Link to="/products" className="hover:text-gray-700">
+                Products
+              </Link>
+              <span>/</span>
+              <span className="text-gray-900">Create Product</span>
+            </nav>
 
-      {/* Form */}
-      <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Create Product
+                </h1>
+                <p className="mt-2 text-gray-600">
+                  Add a new product to the system
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Form */}
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Product Information
-            </CardTitle>
-            <CardDescription>
-              Enter the details for the new product
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </h2>
+
             <form onSubmit={handleSubmit} className="space-y-6">
               {Object.keys(errors).length > 0 && (
                 <Alert variant="destructive">
@@ -172,75 +189,85 @@ const ProductCreate: React.FC = () => {
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Product Name *</Label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Product Name *
+                  </label>
                   <Input
-                    id="name"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Enter product name"
-                    className={errors.name ? "border-destructive" : ""}
+                    className={`mt-1 ${errors.name ? "border-destructive" : ""}`}
                   />
                   {errors.name && (
-                    <p className="text-sm text-destructive">{errors.name}</p>
+                    <p className="mt-1 text-sm text-destructive">{errors.name}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="code">Product Code *</Label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Product Code *
+                  </label>
                   <Input
-                    id="code"
                     name="code"
                     value={formData.code}
                     onChange={handleInputChange}
                     placeholder="Enter product code (e.g., PROD_001)"
-                    className={errors.code ? "border-destructive" : ""}
+                    className={`mt-1 font-mono bg-gray-50 ${errors.code ? "border-destructive" : ""}`}
                   />
                   {errors.code && (
-                    <p className="text-sm text-destructive">{errors.code}</p>
+                    <p className="mt-1 text-sm text-destructive">{errors.code}</p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Category *
+                  </label>
                   <Input
-                    id="category"
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
                     placeholder="Enter category"
-                    className={errors.category ? "border-destructive" : ""}
+                    className={`mt-1 ${errors.category ? "border-destructive" : ""}`}
                   />
                   {errors.category && (
-                    <p className="text-sm text-destructive">{errors.category}</p>
+                    <p className="mt-1 text-sm text-destructive">
+                      {errors.category}
+                    </p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="version">Version *</Label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Version *
+                  </label>
                   <Input
-                    id="version"
                     name="version"
                     value={formData.version}
                     onChange={handleInputChange}
                     placeholder="Enter version (e.g., 1.0.0)"
-                    className={errors.version ? "border-destructive" : ""}
+                    className={`mt-1 font-mono ${errors.version ? "border-destructive" : ""}`}
                   />
                   {errors.version && (
-                    <p className="text-sm text-destructive">{errors.version}</p>
+                    <p className="mt-1 text-sm text-destructive">
+                      {errors.version}
+                    </p>
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Status
+                  </label>
                   <Select
                     value={formData.status}
                     onValueChange={(value: "active" | "inactive") =>
                       setFormData({ ...formData, status: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -251,19 +278,21 @@ const ProductCreate: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
                 <Textarea
-                  id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleInputChange}
                   placeholder="Enter product description"
                   rows={4}
+                  className="mt-1"
                 />
               </div>
 
-              <div className="flex justify-end gap-4 pt-6 border-t">
+              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
                 <Button
                   type="button"
                   variant="outline"
@@ -287,10 +316,10 @@ const ProductCreate: React.FC = () => {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </PermissionGuard>
   );
 };
 

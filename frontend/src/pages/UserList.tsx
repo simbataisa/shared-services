@@ -38,18 +38,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
-import UserEditDialog from "@/components/UserEditDialog";
+import UserEditDialog from "@/components/users/UserEditDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  Users,
-  Shield,
-  UserCheck,
-} from "lucide-react";
+import { Search, Plus, Edit, Trash2, Shield } from "lucide-react";
 
 interface User {
   id: number;
