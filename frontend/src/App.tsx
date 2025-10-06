@@ -8,8 +8,9 @@ import UserList from './pages/UserList'
 import RoleList from './pages/RoleList'
 import PermissionList from './pages/PermissionList'
 import TenantList from './pages/TenantList'
-import TenantCreate from './pages/TenantCreate'
-import TenantDetail from './pages/TenantDetail'
+import TenantCreate from './components/TenantCreate'
+import TenantEdit from './components/TenantEdit'
+import TenantDetail from './components/TenantDetail'
 import ProductList from './pages/ProductList'
 import ProductCreate from './pages/ProductCreate'
 import ProductDetail from './pages/ProductDetail'
@@ -73,6 +74,12 @@ function App() {
           <Route path="tenants/create" element={
             <ProtectedRoute permission="tenants:create">
               <TenantCreate />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="tenants/:id/edit" element={
+            <ProtectedRoute permission="tenants:update">
+              <TenantEdit />
             </ProtectedRoute>
           } />
           

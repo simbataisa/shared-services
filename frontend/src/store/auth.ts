@@ -22,7 +22,7 @@ export interface Tenant {
   name: string
   code: string
   type: 'enterprise' | 'standard' | 'basic'
-  status: 'active' | 'inactive' | 'suspended'
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'
   createdAt: string
   updatedAt: string
 }

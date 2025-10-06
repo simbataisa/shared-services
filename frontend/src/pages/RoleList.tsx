@@ -2,15 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
 import { usePermissions } from '@/hooks/usePermissions'
-import { Search, Plus, Edit, Trash2, Shield, Settings } from 'lucide-react'
+import { Search, Plus, Edit, Trash2, Shield } from 'lucide-react'
+import RoleDialog from '@/components/RoleDialog'
 
 interface Role {
   id: number
@@ -25,8 +23,9 @@ interface Permission {
   id: number
   name: string
   description: string
-  resource: string
-  action: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 interface CreateRoleForm {
@@ -44,11 +43,7 @@ const RoleList: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
-  const [createForm, setCreateForm] = useState<CreateRoleForm>({
-    name: '',
-    description: '',
-    permissionIds: []
-  })
+  const [saving, setSaving] = useState(false)
 
   const { canViewRoles, canManageRoles } = usePermissions()
 
@@ -62,7 +57,7 @@ const RoleList: React.FC = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/roles', {
+      const response = await fetch('/api/v1/roles', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -100,15 +95,16 @@ const RoleList: React.FC = () => {
     }
   }
 
-  const handleCreateRole = async () => {
+  const handleCreateRole = async (form: CreateRoleForm) => {
     try {
-      const response = await fetch('/api/roles', {
+      setSaving(true)
+      const response = await fetch('/api/v1/roles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(createForm)
+        body: JSON.stringify(form)
       })
 
       if (!response.ok) {
@@ -116,38 +112,31 @@ const RoleList: React.FC = () => {
       }
 
       setIsCreateDialogOpen(false)
-      setCreateForm({
-        name: '',
-        description: '',
-        permissionIds: []
-      })
       fetchRoles()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create role')
+    } finally {
+      setSaving(false)
     }
   }
 
   const handleEditRole = (role: Role) => {
     setSelectedRole(role)
-    setCreateForm({
-      name: role.name,
-      description: role.description,
-      permissionIds: role.permissions?.map(p => p.id) || []
-    })
     setIsEditDialogOpen(true)
   }
 
-  const handleUpdateRole = async () => {
+  const handleUpdateRole = async (form: CreateRoleForm) => {
     if (!selectedRole) return
 
     try {
-      const response = await fetch(`/api/roles/${selectedRole.id}`, {
+      setSaving(true)
+      const response = await fetch(`/api/v1/roles/${selectedRole.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify(createForm)
+        body: JSON.stringify(form)
       })
 
       if (!response.ok) {
@@ -156,14 +145,11 @@ const RoleList: React.FC = () => {
 
       setIsEditDialogOpen(false)
       setSelectedRole(null)
-      setCreateForm({
-        name: '',
-        description: '',
-        permissionIds: []
-      })
       fetchRoles()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update role')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -173,7 +159,7 @@ const RoleList: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/roles/${roleId}`, {
+      const response = await fetch(`/api/v1/roles/${roleId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -196,15 +182,6 @@ const RoleList: React.FC = () => {
     
     return matchesSearch
   })
-
-  const groupedPermissions = permissions.reduce((acc, permission) => {
-    const resource = permission.resource || 'General'
-    if (!acc[resource]) {
-      acc[resource] = []
-    }
-    acc[resource].push(permission)
-    return acc
-  }, {} as Record<string, Permission[]>)
 
   if (!canViewRoles) {
     return (
@@ -229,163 +206,32 @@ const RoleList: React.FC = () => {
           </p>
         </div>
         {canManageRoles && (
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Role
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Create New Role</DialogTitle>
-                <DialogDescription>
-                  Create a new role and assign permissions to it.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    value={createForm.name}
-                    onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={createForm.description}
-                    onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-start gap-4">
-                  <Label className="text-right mt-2">
-                    Permissions
-                  </Label>
-                  <div className="col-span-3 space-y-4 max-h-64 overflow-y-auto">
-                    {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
-                      <div key={resource} className="space-y-2">
-                        <h4 className="font-medium text-sm">{resource}</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {resourcePermissions.map((permission) => (
-                            <div key={permission.id} className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                id={`permission-${permission.id}`}
-                                checked={createForm.permissionIds.includes(permission.id)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setCreateForm({...createForm, permissionIds: [...createForm.permissionIds, permission.id]})
-                                  } else {
-                                    setCreateForm({...createForm, permissionIds: createForm.permissionIds.filter(id => id !== permission.id)})
-                                  }
-                                }}
-                                className="rounded border-gray-300"
-                              />
-                              <Label htmlFor={`permission-${permission.id}`} className="text-sm">
-                                {permission.name}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" onClick={handleCreateRole}>
-                  Create Role
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Role
+            </Button>
+            <RoleDialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+              onSave={handleCreateRole}
+              permissions={permissions}
+              loading={saving}
+            />
+          </>
         )}
       </div>
 
       {/* Edit Dialog */}
       {canManageRoles && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Edit Role</DialogTitle>
-              <DialogDescription>
-                Update the role and its permissions.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="edit-name"
-                  value={createForm.name}
-                  onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-description" className="text-right">
-                  Description
-                </Label>
-                <Textarea
-                  id="edit-description"
-                  value={createForm.description}
-                  onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-start gap-4">
-                <Label className="text-right mt-2">
-                  Permissions
-                </Label>
-                <div className="col-span-3 space-y-4 max-h-64 overflow-y-auto">
-                  {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
-                    <div key={resource} className="space-y-2">
-                      <h4 className="font-medium text-sm">{resource}</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {resourcePermissions.map((permission) => (
-                          <div key={permission.id} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              id={`edit-permission-${permission.id}`}
-                              checked={createForm.permissionIds.includes(permission.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setCreateForm({...createForm, permissionIds: [...createForm.permissionIds, permission.id]})
-                                } else {
-                                  setCreateForm({...createForm, permissionIds: createForm.permissionIds.filter(id => id !== permission.id)})
-                                }
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                            <Label htmlFor={`edit-permission-${permission.id}`} className="text-sm">
-                              {permission.name}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" onClick={handleUpdateRole}>
-                Update Role
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <RoleDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          role={selectedRole}
+          onSave={handleUpdateRole}
+          permissions={permissions}
+          loading={saving}
+        />
       )}
 
       {error && (
