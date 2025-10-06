@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import UserGroups from './pages/UserGroups'
 import UserList from './pages/UserList'
+import UserEdit from './pages/UserEdit'
 import RoleList from './pages/RoleList'
 import PermissionList from './pages/PermissionList'
 import TenantList from './pages/TenantList'
@@ -55,6 +56,12 @@ function App() {
           <Route path="users" element={
             <ProtectedRoute permission="user:read">
               <UserList />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="users/:id/edit" element={
+            <ProtectedRoute permission="user:update">
+              <UserEdit />
             </ProtectedRoute>
           } />
           

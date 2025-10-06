@@ -118,17 +118,21 @@ const UserGroups: React.FC = () => {
 
   // Filter groups based on search term and member count
   const filteredGroups = groups.filter((group) => {
-    const matchesSearch = 
+    const matchesSearch =
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       group.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesMemberCount = 
+
+    const matchesMemberCount =
       memberCountFilter === "all" ||
       (memberCountFilter === "empty" && group.memberCount === 0) ||
-      (memberCountFilter === "small" && group.memberCount > 0 && group.memberCount <= 5) ||
-      (memberCountFilter === "medium" && group.memberCount > 5 && group.memberCount <= 20) ||
+      (memberCountFilter === "small" &&
+        group.memberCount > 0 &&
+        group.memberCount <= 5) ||
+      (memberCountFilter === "medium" &&
+        group.memberCount > 5 &&
+        group.memberCount <= 20) ||
       (memberCountFilter === "large" && group.memberCount > 20);
-    
+
     return matchesSearch && matchesMemberCount;
   });
 
@@ -204,8 +208,8 @@ const UserGroups: React.FC = () => {
     try {
       setRoleLoading(true);
       const [modulesResponse, rolesResponse] = await Promise.all([
-        api.get("/modules"),
-        api.get("/roles"),
+        api.get("/v1/modules"),
+        api.get("/v1/roles"),
       ]);
       // API returns arrays directly, not nested in data.data.content
       setModules(modulesResponse.data || []);
@@ -362,11 +366,11 @@ const UserGroups: React.FC = () => {
               { value: "empty", label: "Empty (0 members)" },
               { value: "small", label: "Small (1-5 members)" },
               { value: "medium", label: "Medium (6-20 members)" },
-              { value: "large", label: "Large (20+ members)" }
+              { value: "large", label: "Large (20+ members)" },
             ],
             placeholder: "Filter by size",
-            width: "w-48"
-          }
+            width: "w-48",
+          },
         ]}
       />
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -37,6 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
+import UserEditDialog from "@/components/UserEditDialog";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import {
@@ -48,7 +50,6 @@ import {
   Shield,
   UserCheck,
 } from "lucide-react";
-import UserEdit from "@/components/UserEdit";
 
 interface User {
   id: number;
@@ -86,6 +87,7 @@ interface CreateUserForm {
 }
 
 const UserList: React.FC = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
@@ -95,7 +97,7 @@ const UserList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [createForm, setCreateForm] = useState<CreateUserForm>({
     username: "",
     email: "",
@@ -227,14 +229,8 @@ const UserList: React.FC = () => {
   };
 
   const handleEditUser = (user: User) => {
-    setSelectedUser(user);
+    setSelectedUserId(user.id);
     setIsEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false);
-    setSelectedUser(null);
-    setError(null);
   };
 
   const filteredUsers = users.filter((user) => {
@@ -494,11 +490,20 @@ const UserList: React.FC = () => {
         </CardContent>
       </Card>
 
-      <UserEdit
-        user={selectedUser}
-        isOpen={isEditDialogOpen}
-        onClose={handleCloseEditDialog}
-        onUserUpdated={fetchUsers}
+      {/* User Edit Dialog */}
+      <UserEditDialog
+        userId={selectedUserId}
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open);
+          if (!open) {
+            setSelectedUserId(null);
+          }
+        }}
+        onUserUpdated={() => {
+          // Refresh the users list when a user is updated
+          fetchUsers();
+        }}
       />
     </div>
   );

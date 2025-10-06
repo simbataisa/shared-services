@@ -36,7 +36,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.userGroups WHERE u.id = :id")
     Optional<User> findWithUserGroups(@Param("id") Long id);
     
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles LEFT JOIN FETCH u.userGroups WHERE u.id = :id")
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles WHERE u.id = :id")
     Optional<User> findWithRolesAndUserGroups(@Param("id") Long id);
     
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.username = :username")

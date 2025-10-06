@@ -60,8 +60,17 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDto> getUserById(Long id) {
-        return userRepository.findWithRolesAndUserGroups(id)
-                .map(this::convertToDto);
+        Optional<User> userOpt = userRepository.findWithRolesAndUserGroups(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            // Fetch user groups separately to avoid MultipleBagFetchException
+            Optional<User> userWithGroups = userRepository.findWithUserGroups(id);
+            if (userWithGroups.isPresent()) {
+                user.setUserGroups(userWithGroups.get().getUserGroups());
+            }
+            return Optional.of(convertToDto(user));
+        }
+        return Optional.empty();
     }
 
     @Override
