@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import {
   Building2,
   ArrowLeft,
@@ -12,7 +12,16 @@ import {
   Clock,
   Calendar,
   User,
+  Trash2,
 } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   Card,
   CardContent,
@@ -23,11 +32,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
-import { StatusBadge } from "../StatusBadge";
-import { PermissionGuard } from "../PermissionGuard";
-import { normalizeEntityStatus } from "../../lib/status-colors";
-import api from "../../lib/api";
-import { type Tenant } from "../../store/auth";
+import { StatusBadge } from "@/components/StatusBadge";
+import { PermissionGuard } from "@/components/PermissionGuard";
+import { usePermissions } from "@/hooks/usePermissions";
+import { normalizeEntityStatus } from "@/lib/status-colors";
+import api from "@/lib/api";
+import { type Tenant } from "@/store/auth";
 
 interface TenantDetails extends Tenant {
   userCount?: number;
@@ -40,25 +50,37 @@ interface TenantDetails extends Tenant {
 export default function TenantDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { canViewTenants, canDeleteTenants, canViewAuditLogs } =
+    usePermissions();
+
   const [tenant, setTenant] = useState<TenantDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Redirect if user doesn't have permission to view tenants
+  useEffect(() => {
+    if (!canViewTenants) {
+      navigate("/unauthorized");
+      return;
+    }
+  }, [canViewTenants, navigate]);
 
   useEffect(() => {
-    if (id) {
+    if (id && canViewTenants) {
       fetchTenantDetails();
     }
-  }, [id]);
+  }, [id, canViewTenants]);
 
   const fetchTenantDetails = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await api.get(`/v1/tenants/${id}`);
-      // Fix: Access the actual tenant data from the ApiResponse wrapper
-      setTenant(response.data.data || response.data);
+      setTenant(response.data);
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
-      navigate("/tenants");
+      setError("Failed to load tenant details");
     } finally {
       setLoading(false);
     }
@@ -69,7 +91,9 @@ export default function TenantDetail() {
 
     try {
       setUpdating(true);
-      await api.patch(`/v1/tenants/${tenant.id}/status`, { status: newStatus });
+      await api.patch(`/v1/tenants/${tenant.id}/status`, {
+        status: newStatus,
+      });
       setTenant((prev) =>
         prev ? { ...prev, status: newStatus as any } : null
       );
@@ -78,6 +102,38 @@ export default function TenantDetail() {
     } finally {
       setUpdating(false);
     }
+  };
+
+  const handleDeleteTenant = async () => {
+    if (!tenant || !canDeleteTenants) return;
+
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the tenant "${tenant.name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      setUpdating(true);
+      await api.delete(`/v1/tenants/${tenant.id}`);
+      navigate("/tenants");
+    } catch (error) {
+      console.error("Failed to delete tenant:", error);
+      setError("Failed to delete tenant");
+      setUpdating(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const getStatusIcon = (status: string) => {
@@ -96,24 +152,24 @@ export default function TenantDetail() {
   const getStatusVariant = (status: string) => {
     switch (status) {
       case "ACTIVE":
-        return "default";
+        return "success";
       case "INACTIVE":
         return "destructive";
       case "SUSPENDED":
-        return "secondary";
+        return "warning";
       default:
-        return "outline";
+        return "secondary";
     }
   };
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case "BUSINESS_IN":
-        return "Business Internal";
-      case "BUSINESS_OUT":
-        return "Business External";
-      case "INDIVIDUAL":
-        return "Individual";
+      case "ENTERPRISE":
+        return "Enterprise";
+      case "STANDARD":
+        return "Standard";
+      case "BASIC":
+        return "Basic";
       default:
         return type;
     }
@@ -121,41 +177,29 @@ export default function TenantDetail() {
 
   if (loading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="p-6">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10 rounded-lg" />
+          <Skeleton className="h-10 w-10" />
           <div className="space-y-2">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="h-4 w-32" />
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <Skeleton className="h-6 w-40" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-6 w-full" />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <Skeleton className="h-6 w-32" />
               </CardHeader>
-              <CardContent className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
-                ))}
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-8 w-full" />
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -164,22 +208,23 @@ export default function TenantDetail() {
     );
   }
 
-  if (!tenant) {
+  if (error || !tenant) {
     return (
       <div className="p-6">
-        <Card className="max-w-md mx-auto">
-          <CardContent className="pt-6 text-center">
-            <Building2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <CardTitle className="mb-2">Tenant not found</CardTitle>
-            <CardDescription className="mb-6">
-              The tenant you're looking for doesn't exist or you don't have
-              permission to view it.
-            </CardDescription>
-            <Button onClick={() => navigate("/tenants")}>
-              Back to Tenants
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center py-12">
+          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">
+            {error || "Tenant not found"}
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {error ||
+              "The tenant you're looking for doesn't exist or has been removed."}
+          </p>
+          <Button onClick={() => navigate("/tenants")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Tenants
+          </Button>
+        </div>
       </div>
     );
   }
@@ -187,35 +232,55 @@ export default function TenantDetail() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/tenants")}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+        <div className="mb-8">
+          <Breadcrumb className="mb-4">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/tenants">Tenants</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{tenant.name}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">{tenant.name}</h1>
-            <p className="text-muted-foreground">{tenant.code}</p>
+            <p className="text-muted-foreground">
+              Tenant Code: {tenant.code}
+            </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <PermissionGuard permission="tenants:update">
-            <Button asChild>
-              <Link to={`/tenants/${tenant.id}/edit`}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Tenant
-              </Link>
-            </Button>
-          </PermissionGuard>
+          <div className="flex items-center gap-3">
+            {getStatusIcon(tenant.status)}
+            <PermissionGuard permission="tenants:update">
+              <Button asChild size="sm">
+                <Link to={`/tenants/${tenant.id}/edit`}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Link>
+              </Button>
+            </PermissionGuard>
+            <PermissionGuard permission="tenants:delete">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteTenant}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </PermissionGuard>
+          </div>
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Info */}
+        {/* Left Column - Main Information */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Information */}
           <Card>
@@ -289,53 +354,51 @@ export default function TenantDetail() {
           </Card>
 
           {/* Audit Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Audit Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Created At</Label>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {tenant.createdAt
-                      ? new Date(tenant.createdAt).toLocaleDateString()
-                      : "N/A"}
+          <PermissionGuard permission="audit:read">
+            <Card>
+              <CardHeader>
+                <CardTitle>Audit Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Created At</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {tenant.createdAt ? formatDate(tenant.createdAt) : "N/A"}
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Updated At</Label>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Calendar className="h-4 w-4" />
-                    {tenant.updatedAt
-                      ? new Date(tenant.updatedAt).toLocaleDateString()
-                      : "N/A"}
+                  <div className="space-y-2">
+                    <Label>Updated At</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {tenant.updatedAt ? formatDate(tenant.updatedAt) : "N/A"}
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Created By</Label>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    {tenant.createdBy || "System"}
+                  <div className="space-y-2">
+                    <Label>Created By</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      {tenant.createdBy || "System"}
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>Updated By</Label>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <User className="h-4 w-4" />
-                    {tenant.updatedBy || "System"}
+                  <div className="space-y-2">
+                    <Label>Updated By</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      {tenant.updatedBy || "System"}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </PermissionGuard>
         </div>
 
-        {/* Sidebar */}
+        {/* Right Column - Actions */}
         <div className="space-y-6">
           {/* Status Management */}
           <Card>

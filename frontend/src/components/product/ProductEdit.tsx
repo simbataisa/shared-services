@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Save, Package, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, Package, Trash2, AlertCircle } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   Card,
   CardContent,
@@ -240,17 +248,25 @@ const ProductEdit: React.FC = () => {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-              <Link to="/products" className="hover:text-gray-700">
-                Products
-              </Link>
-              <span>/</span>
-              <Link to={`/products/${id}`} className="hover:text-gray-700">
-                {product?.name || "Product"}
-              </Link>
-              <span>/</span>
-              <span className="text-gray-900">Edit</span>
-            </nav>
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/products">Products</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to={`/products/${id}`}>{product?.name || "Product"}</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Edit</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
 
             <div className="flex items-center justify-between">
               <div>
