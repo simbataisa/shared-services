@@ -4,6 +4,7 @@ import com.ahss.dto.ProductDto;
 import com.ahss.entity.Product;
 import com.ahss.repository.ProductRepository;
 import com.ahss.service.ProductService;
+import com.ahss.service.ModuleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private ModuleService moduleService;
 
     @Override
     @Transactional(readOnly = true)
@@ -108,9 +112,15 @@ public class ProductServiceImpl implements ProductService {
         dto.setId(product.getId());
         dto.setName(product.getName());
         dto.setDescription(product.getDescription());
+        dto.setCode(product.getCode());
+        dto.setVersion("1.0.0"); // Default version for now
         dto.setIsActive(product.getProductStatus() == com.ahss.entity.ProductStatus.ACTIVE);
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
+        
+        // Fetch and set modules for this product
+        dto.setModules(moduleService.getModulesByProductId(product.getId()));
+        
         return dto;
     }
 

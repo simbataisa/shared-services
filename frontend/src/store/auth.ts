@@ -53,6 +53,7 @@ export interface Product {
   updatedAt: string
   createdBy: string
   updatedBy: string
+  modules?: Module[]
 }
 
 export interface Module {

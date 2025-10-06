@@ -15,6 +15,9 @@ public class ProductDto {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
     
+    private String code;
+    private String version;
+    
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -51,6 +54,22 @@ public class ProductDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
     public Boolean getIsActive() {

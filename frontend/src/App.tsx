@@ -12,8 +12,12 @@ import TenantCreate from './components/TenantCreate'
 import TenantEdit from './components/TenantEdit'
 import TenantDetail from './components/TenantDetail'
 import ProductList from './pages/ProductList'
-import ProductCreate from './pages/ProductCreate'
-import ProductDetail from './pages/ProductDetail'
+import ProductCreate from './components/ProductCreate'
+import ProductDetail from './components/ProductDetail'
+import ProductEdit from './components/ProductEdit'
+import ModuleList from './pages/ModuleList'
+import ModuleCreate from './pages/ModuleCreate'
+import ModuleDetail from './pages/ModuleDetail'
 import Unauthorized from './pages/Unauthorized'
 import { useAuth } from './store/auth'
 
@@ -104,6 +108,30 @@ function App() {
            <Route path="products/:id" element={
              <ProtectedRoute permission="product:read">
                <ProductDetail />
+             </ProtectedRoute>
+           } />
+           
+           <Route path="products/:id/edit" element={
+             <ProtectedRoute permission="product:update">
+               <ProductEdit />
+             </ProtectedRoute>
+           } />
+           
+           <Route path="modules" element={
+             <ProtectedRoute permission="module:read">
+               <ModuleList />
+             </ProtectedRoute>
+           } />
+           
+           <Route path="modules/create" element={
+             <ProtectedRoute permission="module:create">
+               <ModuleCreate />
+             </ProtectedRoute>
+           } />
+           
+           <Route path="modules/:id" element={
+             <ProtectedRoute permission="module:read">
+               <ModuleDetail />
              </ProtectedRoute>
            } />
         </Route>

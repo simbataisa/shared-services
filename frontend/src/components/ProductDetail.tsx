@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { ArrowLeft, Edit, Trash2, Package, Users, Activity, Calendar, Plus } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PermissionGuard } from '../components/PermissionGuard'
 import { usePermissions } from '../hooks/usePermissions'
 import type { Product, Module } from '../store/auth'
+import api from '../lib/api'
 
 interface ProductStats {
   totalModules: number
@@ -36,72 +45,54 @@ const ProductDetail: React.FC = () => {
     try {
       setLoading(true)
       
-      // Simulate API calls
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Fetch product data from API
+      const [productResponse, modulesResponse] = await Promise.all([
+        api.get(`/products/${id}`),
+        api.get(`/v1/modules/product/${id}`)
+      ])
       
-      // Mock product data
-      const mockProduct: Product = {
-        id: parseInt(id || '1'),
-        name: 'Customer Management System',
-        description: 'Comprehensive customer relationship management platform with advanced analytics and reporting capabilities.',
-        code: 'CMS_PLATFORM',
-        status: 'active',
-        category: 'web',
-        version: '2.1.0',
-        createdAt: '2024-01-15T10:30:00Z',
-        updatedAt: '2024-03-10T14:22:00Z',
-        createdBy: 'admin@company.com',
-        updatedBy: 'product.manager@company.com'
+      const productData = productResponse.data
+      const modulesData = modulesResponse.data || []
+
+      // Calculate stats
+      const stats: ProductStats = {
+        totalModules: modulesData.length,
+        activeModules: modulesData.filter((m: any) => m.isActive).length,
+        inactiveModules: modulesData.filter((m: any) => !m.isActive).length,
+        lastUpdated: productData.updatedAt
       }
 
-      // Mock modules data
-      const mockModules: Module[] = [
-        {
-          id: 1,
-          name: 'User Authentication',
-          description: 'Secure user login and registration system',
-          code: 'AUTH_MODULE',
-          status: 'active',
-          productId: mockProduct.id,
-          version: '1.5.0',
-          createdAt: '2024-01-15T10:30:00Z',
-          updatedAt: '2024-02-20T09:15:00Z'
-        },
-        {
-          id: 2,
-          name: 'Customer Dashboard',
-          description: 'Interactive dashboard for customer data visualization',
-          code: 'DASHBOARD_MODULE',
-          status: 'active',
-          productId: mockProduct.id,
-          version: '2.0.1',
-          createdAt: '2024-01-20T11:00:00Z',
-          updatedAt: '2024-03-05T16:30:00Z'
-        },
-        {
-          id: 3,
-          name: 'Reporting Engine',
-          description: 'Advanced reporting and analytics module',
-          code: 'REPORTS_MODULE',
-          status: 'inactive',
-          productId: mockProduct.id,
-          version: '1.2.0',
-          createdAt: '2024-02-01T14:15:00Z',
-          updatedAt: '2024-02-15T10:45:00Z'
-        }
-      ]
+      // Transform module data to match frontend interface
+      const transformedModules: Module[] = modulesData.map((module: any) => ({
+        id: module.id,
+        name: module.name,
+        description: module.description,
+        code: module.code || `MODULE_${module.id}`,
+        status: module.isActive ? 'active' : 'inactive',
+        productId: module.productId,
+        version: '1.0.0', // Default version if not provided
+        createdAt: module.createdAt,
+        updatedAt: module.updatedAt
+      }))
 
-      // Mock stats
-      const mockStats: ProductStats = {
-        totalModules: mockModules.length,
-        activeModules: mockModules.filter(m => m.status === 'active').length,
-        inactiveModules: mockModules.filter(m => m.status === 'inactive').length,
-        lastUpdated: mockProduct.updatedAt
+      // Transform product data to match frontend interface
+      const transformedProduct: Product = {
+        id: productData.id,
+        name: productData.name,
+        description: productData.description,
+        code: productData.productCode,
+        status: productData.productStatus?.toLowerCase() || 'active',
+        category: productData.category || 'general',
+        version: productData.version || '1.0.0',
+        createdAt: productData.createdAt,
+        updatedAt: productData.updatedAt,
+        createdBy: productData.createdBy || 'system',
+        updatedBy: productData.updatedBy || 'system'
       }
 
-      setProduct(mockProduct)
-      setModules(mockModules)
-      setStats(mockStats)
+      setProduct(transformedProduct)
+      setModules(transformedModules)
+      setStats(stats)
     } catch (error) {
       console.error('Error fetching product data:', error)
       setError('Failed to load product data')
@@ -160,41 +151,48 @@ const ProductDetail: React.FC = () => {
   }
 
   const getStatusBadge = (status: string) => {
-    const baseClasses = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium'
-    
     switch (status) {
       case 'active':
-        return `${baseClasses} bg-green-100 text-green-800`
+        return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
       case 'inactive':
-        return `${baseClasses} bg-red-100 text-red-800`
+        return <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-100">Inactive</Badge>
       default:
-        return `${baseClasses} bg-gray-100 text-gray-800`
+        return <Badge variant="outline">Unknown</Badge>
     }
   }
 
   if (!canViewProducts) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
-          <p className="text-gray-600 mb-4">You don't have permission to view products.</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>You don't have permission to view products.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate('/dashboard')} className="w-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading product details...</p>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-64" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+              <Skeleton className="h-32" />
+            </div>
+            <Skeleton className="h-64" />
+          </div>
         </div>
       </div>
     )
@@ -202,17 +200,19 @@ const ProductDetail: React.FC = () => {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h2>
-          <p className="text-gray-600 mb-4">{error || 'The requested product could not be found.'}</p>
-          <button
-            onClick={() => navigate('/products')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Back to Products
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Product Not Found</CardTitle>
+            <CardDescription>{error || 'The requested product could not be found.'}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate('/products')} className="w-full">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Products
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -235,47 +235,50 @@ const ProductDetail: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-3">
-              <span className={getStatusBadge(product.status)}>
-                {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
-              </span>
+              {getStatusBadge(product.status)}
               
               <PermissionGuard permission="product:update">
                 <div className="flex space-x-2">
                   {product.status === 'active' ? (
-                    <button
+                    <Button
                       onClick={() => handleStatusUpdate('inactive')}
                       disabled={updating}
-                      className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                      variant="destructive"
+                      size="sm"
                     >
                       Deactivate
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       onClick={() => handleStatusUpdate('active')}
                       disabled={updating}
-                      className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                      variant="default"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
                     >
                       Activate
-                    </button>
+                    </Button>
                   )}
                   
-                  <Link
-                    to={`/products/${product.id}/edit`}
-                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                  >
-                    Edit
-                  </Link>
+                  <Button asChild size="sm">
+                    <Link to={`/products/${product.id}/edit`}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Link>
+                  </Button>
                 </div>
               </PermissionGuard>
               
               <PermissionGuard permission="product:delete">
-                <button
+                <Button
                   onClick={handleDeleteProduct}
                   disabled={updating}
-                  className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                  variant="destructive"
+                  size="sm"
                 >
+                  <Trash2 className="mr-2 h-4 w-4" />
                   Delete
-                </button>
+                </Button>
               </PermissionGuard>
             </div>
           </div>
@@ -308,9 +311,7 @@ const ProductDetail: React.FC = () => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Status</label>
-                  <span className={getStatusBadge(product.status)}>
-                    {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
-                  </span>
+                  {getStatusBadge(product.status)}
                 </div>
                 
                 <div>
@@ -351,9 +352,7 @@ const ProductDetail: React.FC = () => {
                           <div className="flex-1">
                             <div className="flex items-center space-x-3">
                               <h3 className="text-lg font-medium text-gray-900">{module.name}</h3>
-                              <span className={getStatusBadge(module.status)}>
-                                {module.status.charAt(0).toUpperCase() + module.status.slice(1)}
-                              </span>
+                              {getStatusBadge(module.status)}
                               <span className="text-sm text-gray-500 font-mono">v{module.version}</span>
                             </div>
                             <p className="mt-1 text-sm text-gray-600">{module.description}</p>
