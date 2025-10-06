@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { usePermissions } from '@/hooks/usePermissions'
 import { Search, Plus, Edit, Trash2, Users, Shield, UserCheck } from 'lucide-react'
+import UserEdit from '@/components/UserEdit'
 
 interface User {
   id: number
@@ -56,6 +57,8 @@ const UserList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [createForm, setCreateForm] = useState<CreateUserForm>({
     username: '',
     email: '',
@@ -184,6 +187,17 @@ const UserList: React.FC = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete user')
     }
+  }
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false)
+    setSelectedUser(null)
+    setError(null)
   }
 
   const filteredUsers = users.filter(user => {
@@ -393,6 +407,14 @@ const UserList: React.FC = () => {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleEditUser(user)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleDeleteUser(user.id)}
                             className="text-red-600 hover:text-red-700"
                           >
@@ -408,6 +430,13 @@ const UserList: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <UserEdit
+        user={selectedUser}
+        isOpen={isEditDialogOpen}
+        onClose={handleCloseEditDialog}
+        onUserUpdated={fetchUsers}
+      />
     </div>
   )
 }
