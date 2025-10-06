@@ -112,7 +112,7 @@ export default function TenantList() {
           <h1 className="text-2xl font-bold text-gray-900">Tenants</h1>
           <p className="text-gray-600">Manage tenant organizations and their access</p>
         </div>
-        <PermissionGuard permission="tenant:create">
+        <PermissionGuard permission="tenants:create">
           <Link
             to="/tenants/create"
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -218,7 +218,7 @@ export default function TenantList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <PermissionGuard permission="tenant:read">
+                      <PermissionGuard permission="tenants:read">
                         <Link
                           to={`/tenants/${tenant.id}`}
                           className="text-blue-600 hover:text-blue-900 p-1 rounded"
@@ -228,7 +228,7 @@ export default function TenantList() {
                         </Link>
                       </PermissionGuard>
                       
-                      <PermissionGuard permission="tenant:update">
+                      <PermissionGuard permission="tenants:update">
                         <Link
                           to={`/tenants/${tenant.id}/edit`}
                           className="text-indigo-600 hover:text-indigo-900 p-1 rounded"
@@ -238,7 +238,7 @@ export default function TenantList() {
                         </Link>
                       </PermissionGuard>
                       
-                      <PermissionGuard permission="tenant:update">
+                      <PermissionGuard permission="tenants:update">
                         <div className="relative group">
                           <button
                             className="text-gray-600 hover:text-gray-900 p-1 rounded"
@@ -271,7 +271,7 @@ export default function TenantList() {
                         </div>
                       </PermissionGuard>
                       
-                      <PermissionGuard permission="tenant:delete">
+                      <PermissionGuard permission="tenants:delete">
                            <button
                              onClick={() => handleDelete(Number(tenant.id))}
                              className="text-red-600 hover:text-red-900 p-1 rounded"

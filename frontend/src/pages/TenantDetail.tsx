@@ -155,7 +155,7 @@ export default function TenantDetail() {
         </div>
 
         <div className="flex items-center gap-3">
-          <PermissionGuard permission="tenant:update">
+          <PermissionGuard permission="tenants:update">
             <Link
               to={`/tenants/${tenant.id}/edit`}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -297,7 +297,7 @@ export default function TenantDetail() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Status Management */}
-          <PermissionGuard permission="tenant:update">
+          <PermissionGuard permission="tenants:update">
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Status Management

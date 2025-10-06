@@ -5,6 +5,8 @@ import com.ahss.dto.response.ApiResponse;
 import com.ahss.entity.UserStatus;
 import com.ahss.security.JwtTokenProvider;
 import com.ahss.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +21,12 @@ import java.util.Optional;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     @Autowired
     private UserService userService;
     
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody Map<String, String> body) {
@@ -48,6 +52,8 @@ public class AuthController {
         // Validate password using BCrypt
         boolean isValidPassword = false;
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            log.info("Password from request: {}", password);
+            log.info("Password from database: {}", user.getPassword());
             isValidPassword = passwordEncoder.matches(password, user.getPassword());
         }
         

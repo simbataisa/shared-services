@@ -12,22 +12,22 @@
 
 INSERT INTO users (username, email, password, first_name, last_name, user_status, email_verified, created_by, updated_by) VALUES
 -- Admin Users
-('admin', 'admin@ahss.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfBPdkzjKWw0/0i', 'System', 'Administrator', 'ACTIVE', true, 'system', 'system'),
-('superadmin', 'superadmin@ahss.com', '$2a$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Super', 'Administrator', 'ACTIVE', true, 'system', 'system'),
+('admin', 'admin@ahss.com', '$2a$12$fe11/7dbJGWP.XSY6e7ISei4cF2hGtvC9bL35Is.oYiGdTCxmfhHa', 'System', 'Administrator', 'ACTIVE', true, 'system', 'system'),
+('superadmin', 'superadmin@ahss.com', '$2a$10$9qgUn7rhqgA4cF1zriweJ.zTciXnaEevRpS3kZ10JeShby4Yy8vwe', 'Super', 'Administrator', 'ACTIVE', true, 'system', 'system'),
 ('tenant.admin', 'tenant.admin@ahss.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfBPdkzjKWw0/0i', 'Tenant', 'Administrator', 'ACTIVE', true, 'system', 'system'),
 ('product.manager', 'product.manager@ahss.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfBPdkzjKWw0/0i', 'Product', 'Manager', 'ACTIVE', true, 'system', 'system'),
 ('role.manager', 'role.manager@ahss.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfBPdkzjKWw0/0i', 'Role', 'Manager', 'ACTIVE', true, 'system', 'system'),
 ('user.manager', 'user.manager@ahss.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewfBPdkzjKWw0/0i', 'User', 'Manager', 'ACTIVE', true, 'system', 'system'),
 
 -- Test Users
-('testuser', 'testuser@test.com', '$2a$12$4RWLuXXvfxe24piLxVlsH.VmllEqjWi/VpJd/E8RZt7wUhALn0aJy', 'Test', 'User', 'ACTIVE', true, 'system', 'system'),
-('demo', 'demo@demo.com', '$2a$12$ZeUwHfuS8yhs.rjid/31OOEkEGDh.nu/PiB13bLlyidQBhow4Es9O', 'Demo', 'User', 'ACTIVE', true, 'system', 'system'),
-('john.doe', 'john.doe@example.com', '$2a$12$4RWLuXXvfxe24piLxVlsH.VmllEqjWi/VpJd/E8RZt7wUhALn0aJy', 'John', 'Doe', 'ACTIVE', true, 'system', 'system'),
-('jane.smith', 'jane.smith@example.com', '$2a$12$4RWLuXXvfxe24piLxVlsH.VmllEqjWi/VpJd/E8RZt7wUhALn0aJy', 'Jane', 'Smith', 'ACTIVE', true, 'system', 'system'),
+('testuser', 'testuser@test.com', '$2a$12$0/jmU7PpLnF/QrcxUg2UfuLI7NjWz4sebrUMzj95zaim9MvyB4kEK', 'Test', 'User', 'ACTIVE', true, 'system', 'system'),
+('demo', 'demo@demo.com', '$2a$12$DSINAnFAV9WFn/R3gfceqOJJMvur6UexfeX1tn0UObxaj.5eZNTMi', 'Demo', 'User', 'ACTIVE', true, 'system', 'system'),
+('john.doe', 'john.doe@example.com', '$2a$12$0/jmU7PpLnF/QrcxUg2UfuLI7NjWz4sebrUMzj95zaim9MvyB4kEK', 'John', 'Doe', 'ACTIVE', true, 'system', 'system'),
+('jane.smith', 'jane.smith@example.com', '$2a$12$0/jmU7PpLnF/QrcxUg2UfuLI7NjWz4sebrUMzj95zaim9MvyB4kEK', 'Jane', 'Smith', 'ACTIVE', true, 'system', 'system'),
 
 -- Inactive/Test Status Users
-('inactive.user', 'inactive@test.com', '$2a$12$4RWLuXXvfxe24piLxVlsH.VmllEqjWi/VpJd/E8RZt7wUhALn0aJy', 'Inactive', 'User', 'INACTIVE', false, 'system', 'system'),
-('pending.user', 'pending@test.com', '$2a$12$4RWLuXXvfxe24piLxVlsH.VmllEqjWi/VpJd/E8RZt7wUhALn0aJy', 'Pending', 'User', 'PENDING_VERIFICATION', false, 'system', 'system');
+('inactive.user', 'inactive@test.com', '$2a$12$0/jmU7PpLnF/QrcxUg2UfuLI7NjWz4sebrUMzj95zaim9MvyB4kEK', 'Inactive', 'User', 'INACTIVE', false, 'system', 'system'),
+('pending.user', 'pending@test.com', '$2a$12$0/jmU7PpLnF/QrcxUg2UfuLI7NjWz4sebrUMzj95zaim9MvyB4kEK', 'Pending', 'User', 'PENDING_VERIFICATION', false, 'system', 'system');
 
 -- Assign roles to users
 -- Super Administrator gets Super Administrator role

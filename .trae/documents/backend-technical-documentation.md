@@ -185,6 +185,35 @@ spring:
 ### Authentication
 - **Base Path**: `/api/v1/auth`
 - **POST** `/login` - User authentication (returns JWT token)
+  - **Request Body**: `{"username": "string", "password": "string"}`
+  - **Response**: `{"data": {"token": "jwt_token"}, "message": "Login successful", "success": true}`
+  - **Status Codes**: 
+    - 200: Successful login
+    - 400: Invalid credentials or account locked
+    - 401: Invalid credentials
+    - 500: Internal server error
+
+### Users
+- **Base Path**: `/api/v1/users`
+- **GET** `/` - Get all active users (paginated)
+- **POST** `/` - Create new user
+- **GET** `/{id}` - Get user by ID
+- **PUT** `/{id}` - Update user
+- **DELETE** `/{id}` - Delete user (soft delete)
+- **PATCH** `/{id}/activate` - Activate user
+- **PATCH** `/{id}/deactivate` - Deactivate user
+- **PATCH** `/{id}/change-password` - Change user password
+- **GET** `/{id}/roles` - Get user roles
+- **POST** `/{id}/roles` - Assign role to user
+- **DELETE** `/{id}/roles/{roleId}` - Remove role from user
+
+### User Groups
+- **Base Path**: `/api/v1/user-groups`
+- **GET** `/` - Get paginated list of user groups
+- **POST** `/` - Create new user group
+- **GET** `/{id}` - Get user group by ID
+- **PUT** `/{id}` - Update user group
+- **DELETE** `/{id}` - Delete user group (soft delete)
 
 ### Products
 - **Base Path**: `/api/products`
@@ -231,13 +260,69 @@ spring:
 - **GET** `/` - Get paginated list of user groups
 - **POST** `/` - Create new user group
 
+### Dashboard
+- **Base Path**: `/api/v1/dashboard`
+- **GET** `/stats` - Get dashboard statistics (total counts, active entities, etc.)
+- **GET** `/recent-activities` - Get recent activities and changes in the system
+
+### Tenants (Multi-tenant Support)
+- **Base Path**: `/api/v1/tenants` (Note: Controller not yet implemented)
+- **Planned Endpoints**:
+  - **GET** `/` - Get all active tenants
+  - **POST** `/` - Create new tenant
+  - **GET** `/{id}` - Get tenant by ID
+  - **PUT** `/{id}` - Update tenant
+  - **DELETE** `/{id}` - Delete tenant
+  - **PATCH** `/{id}/activate` - Activate tenant
+  - **PATCH** `/{id}/deactivate` - Deactivate tenant
+
 ## Security Configuration
 
 ### JWT Authentication
 - **Token Provider**: `JwtTokenProvider`
 - **Secret Key**: Static key for development (should be externalized)
 - **Expiration**: 1 day (86400000 ms)
-- **Algorithm**: HS512
+- **Algorithm**: HS256
+- **Token Structure**:
+  ```json
+  {
+    "sub": "user@example.com",
+    "userId": 1,
+    "username": "username",
+    "firstName": "John",
+    "lastName": "Doe",
+    "roles": ["System Administrator", "Super Administrator"],
+    "permissions": ["users:read", "users:create", "tenants:read", "tenants:create", ...],
+    "isAdmin": true,
+    "isSuperAdmin": true,
+    "iat": 1234567890,
+    "exp": 1234567890
+  }
+  ```
+
+### Permission System
+The application uses a comprehensive permission-based access control system:
+
+#### Permission Naming Convention
+- **Format**: `{resource}:{action}`
+- **Resources**: users, tenants, roles, permissions, modules, products, audit, system
+- **Actions**: read, create, update, delete, admin
+
+#### Current Permissions
+- **User Management**: `users:read`, `users:create`, `users:update`, `users:delete`, `users:admin`
+- **Tenant Management**: `tenants:read`, `tenants:create`, `tenants:update`, `tenants:delete`, `tenants:admin`
+- **Role Management**: `role:read`, `role:create`, `role:update`, `role:delete`, `role:admin`
+- **Permission Management**: `permission:read`, `permission:create`, `permission:update`, `permission:delete`
+- **Module Management**: `module:read`, `module:create`, `module:update`, `module:delete`
+- **Product Management**: `product:read`, `product:create`, `product:update`, `product:delete`
+- **User Groups**: `user-groups:read`, `user-groups:create`, `user-groups:update`, `user-groups:delete`
+- **Audit**: `audit:read`
+- **System**: `system:read`, `system:admin`
+
+#### Recent Permission Updates
+- **V5 Migration**: Added plural tenant permissions (`tenants:*`) to match frontend expectations
+- **Frontend Compatibility**: Both singular (`tenant:*`) and plural (`tenants:*`) permissions exist for backward compatibility
+- **User Groups**: Added complete CRUD permissions for user groups management
 
 ### Security Rules
 ```java
@@ -339,19 +424,46 @@ public class ApiResponse<T> {
 - Need to implement proper role-based access control
 - Missing comprehensive error handling
 
-### Recent Fixes
-- **Role Status Enum**: Fixed PostgreSQL enum mapping issue by using `@Enumerated(EnumType.STRING)` with `columnDefinition = "role_status"`
-- **Hibernate Configuration**: Added `hibernate.jdbc.lob.non_contextual_creation: true` for better PostgreSQL compatibility
-- **Role Endpoints**: All role management endpoints (CRUD, activation/deactivation) verified and working correctly
+### Recent Fixes and Updates
+
+#### Permission System Alignment (Latest)
+- **Issue**: Frontend permission checks were failing due to mismatch between singular (`tenant:read`) and plural (`tenants:read`) permission names
+- **Root Cause**: JWT tokens contained plural permissions (`tenants:*`) while frontend code expected singular (`tenant:*`)
+- **Solution**: 
+  - Updated frontend permission checks to use plural forms (`tenants:read`, `tenants:create`, `tenants:update`, `tenants:delete`)
+  - Added V5 migration to include both singular and plural tenant permissions for compatibility
+  - Updated `usePermissions.ts`, `Dashboard.tsx`, `TenantDetail.tsx`, and `TenantList.tsx` components
+- **Impact**: Fixed "Tenant" menu visibility for superadmin and admin users
+
+#### Authentication System
+- **JWT Token Generation**: Enhanced `JwtTokenProvider.generateTokenWithUserInfo()` to include comprehensive user information
+- **Token Claims**: Includes userId, username, firstName, lastName, roles, permissions, isAdmin, isSuperAdmin flags
+- **Login Endpoint**: `/api/v1/auth/login` with proper error handling and account status validation
+- **Security Filter**: `JwtAuthenticationFilter` processes Bearer tokens and sets Spring Security context
+
+#### Database Schema Updates
+- **V5 Migration**: Added missing permissions for frontend compatibility
+- **Tenant Permissions**: Added plural forms (`tenants:*`) alongside existing singular forms (`tenant:*`)
+- **User Groups**: Added complete CRUD permissions (`user-groups:*`)
+- **Role Assignments**: Automatically assigned new permissions to Super Administrator role
+
+### Known Issues
+- JWT secret should be externalized to environment variables
+- Security configuration is too permissive for production (currently all endpoints are open)
+- Tenant controller not yet implemented (only database schema exists)
+- Need to implement proper role-based access control at endpoint level
+- Missing comprehensive error handling and validation
+- JWT Authentication Filter is currently disabled in SecurityConfig for development
 
 ### Next Steps
-1. Implement proper security with role-based access
-2. Add comprehensive error handling and validation
-3. Implement audit logging
-4. Add API documentation with Swagger/OpenAPI
-5. Add comprehensive test coverage
-6. Implement caching with Redis
-7. Add monitoring and health checks
+1. **Implement Tenant Controller**: Create REST endpoints for tenant management
+2. **Enable JWT Security**: Uncomment JWT filter in SecurityConfig and implement proper endpoint security
+3. **Role-Based Access Control**: Implement `@PreAuthorize` annotations on controller methods
+4. **Environment Configuration**: Externalize JWT secret and database credentials
+5. **Error Handling**: Add comprehensive error handling with proper HTTP status codes
+6. **API Documentation**: Add Swagger/OpenAPI documentation
+7. **Testing**: Add comprehensive unit and integration tests
+8. **Monitoring**: Implement health checks and monitoring endpoints
 
 ## Build and Run
 

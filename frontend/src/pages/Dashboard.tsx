@@ -68,8 +68,8 @@ export default function Dashboard() {
         api.get('/dashboard/recent-activities')
       ])
       
-      setStats(statsResponse.data)
-      setRecentActivities(activitiesResponse.data)
+      setStats(statsResponse.data.data)
+      setRecentActivities(activitiesResponse.data.data)
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
     } finally {
@@ -145,7 +145,7 @@ export default function Dashboard() {
           </Card>
         </PermissionGuard>
 
-        <PermissionGuard permission="tenant:read">
+        <PermissionGuard permission="tenants:read">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -183,7 +183,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">System Health</p>
                 <Badge variant={getHealthVariant(stats.systemHealth)} className="mt-1">
-                  {stats.systemHealth.charAt(0).toUpperCase() + stats.systemHealth.slice(1)}
+                  {stats.systemHealth ? stats.systemHealth.charAt(0).toUpperCase() + stats.systemHealth.slice(1) : 'Unknown'}
                 </Badge>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
@@ -208,7 +208,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivities.map((activity) => (
+                {Array.isArray(recentActivities) && recentActivities.map((activity) => (
                   <div key={activity.id} className="flex items-start space-x-3">
                     <div className="bg-muted p-2 rounded-full">
                       {getActivityIcon(activity.type)}
@@ -221,6 +221,9 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+                {!Array.isArray(recentActivities) && (
+                  <p className="text-sm text-muted-foreground">No recent activities available</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -240,7 +243,7 @@ export default function Dashboard() {
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="tenant:create">
+              <PermissionGuard permission="tenants:create">
                 <Button variant="outline" className="w-full justify-start h-auto p-3">
                   <Building2 className="h-5 w-5 text-green-600 mr-3" />
                   <span className="text-sm font-medium">Create Tenant</span>
@@ -258,6 +261,16 @@ export default function Dashboard() {
                 <Button variant="outline" className="w-full justify-start h-auto p-3">
                   <BarChart3 className="h-5 w-5 text-orange-600 mr-3" />
                   <span className="text-sm font-medium">View Reports</span>
+                </Button>
+              </PermissionGuard>
+
+              <PermissionGuard permission="tenants:read">
+                <Button variant="outline" className="w-full justify-start h-auto p-3">
+                  <Building2 className="h-5 w-5 text-blue-600 mr-3" />
+                  <div className="text-left">
+                    <div className="font-medium">Manage Tenants</div>
+                    <div className="text-sm text-gray-500">View and manage tenant organizations</div>
+                  </div>
                 </Button>
               </PermissionGuard>
             </div>

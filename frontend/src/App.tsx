@@ -4,6 +4,9 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import UserGroups from './pages/UserGroups'
+import UserList from './pages/UserList'
+import RoleList from './pages/RoleList'
+import PermissionList from './pages/PermissionList'
 import TenantList from './pages/TenantList'
 import TenantCreate from './pages/TenantCreate'
 import TenantDetail from './pages/TenantDetail'
@@ -40,6 +43,24 @@ function App() {
           <Route path="user-groups" element={
             <ProtectedRoute permission="user-groups:read">
               <UserGroups />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="users" element={
+            <ProtectedRoute permission="user:read">
+              <UserList />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="roles" element={
+            <ProtectedRoute permission="role:read">
+              <RoleList />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="permissions" element={
+            <ProtectedRoute permission="permission:read">
+              <PermissionList />
             </ProtectedRoute>
           } />
           

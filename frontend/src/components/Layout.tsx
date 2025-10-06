@@ -56,16 +56,10 @@ export default function Layout({ children }: LayoutProps) {
       canAccess: navPermissions.canAccessUsers
     },
     {
-      to: '/products',
-      label: 'Products',
-      icon: Package,
-      canAccess: navPermissions.canAccessProducts
-    },
-    {
-      to: '/modules',
-      label: 'Modules',
-      icon: Layers,
-      canAccess: navPermissions.canAccessModules
+      to: '/users',
+      label: 'Users',
+      icon: User,
+      canAccess: navPermissions.canAccessUsers
     },
     {
       to: '/roles',
@@ -78,6 +72,18 @@ export default function Layout({ children }: LayoutProps) {
       label: 'Permissions',
       icon: Key,
       canAccess: navPermissions.canAccessRoles
+    },
+    {
+      to: '/products',
+      label: 'Products',
+      icon: Package,
+      canAccess: navPermissions.canAccessProducts
+    },
+    {
+      to: '/modules',
+      label: 'Modules',
+      icon: Layers,
+      canAccess: navPermissions.canAccessModules
     },
     {
       to: '/tenants',

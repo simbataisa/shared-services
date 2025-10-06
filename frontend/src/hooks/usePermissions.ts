@@ -11,10 +11,10 @@ export const usePermissions = () => {
   const canManageUsers = canCreateUsers || canUpdateUsers || canDeleteUsers
 
   // Tenant management permissions
-  const canViewTenants = hasPermission('tenant:read')
-  const canCreateTenants = hasPermission('tenant:create')
-  const canUpdateTenants = hasPermission('tenant:update')
-  const canDeleteTenants = hasPermission('tenant:delete')
+  const canViewTenants = hasPermission('tenants:read')
+  const canCreateTenants = hasPermission('tenants:create')
+  const canUpdateTenants = hasPermission('tenants:update')
+  const canDeleteTenants = hasPermission('tenants:delete')
   const canManageTenants = canCreateTenants || canUpdateTenants || canDeleteTenants
 
   // Role and permission management

@@ -121,6 +121,22 @@ Permission Guards → Component Level → PermissionGuard
 RBAC/ABAC Evaluation → Resource-Action-Condition Checks
 ```
 
+### Recent Permission System Updates
+
+**Tenant Permission Standardization (Latest Update)**
+- **Issue Fixed**: Mismatch between JWT token permissions and frontend permission checks
+- **Change**: Updated all tenant-related permissions from singular to plural form
+  - `tenant:read` → `tenants:read`
+  - `tenant:create` → `tenants:create`
+  - `tenant:update` → `tenants:update`
+  - `tenant:delete` → `tenants:delete`
+- **Files Updated**: 
+  - `usePermissions.ts` - Core permission hook definitions
+  - `Dashboard.tsx` - Dashboard permission guards
+  - `TenantDetail.tsx` - Tenant detail page permissions
+  - `TenantList.tsx` - Tenant listing permissions
+- **Impact**: Fixed "Tenant" menu item visibility issue for superadmin and admin users
+
 ### State Management Flow
 ```
 User Action → Component → Permission Check → API Call → Backend
@@ -739,11 +755,11 @@ const canCreateUsers = hasPermission('user:create')
 const canUpdateUsers = hasPermission('user:update')
 const canDeleteUsers = hasPermission('user:delete')
 
-// Tenant Management Permissions
-const canViewTenants = hasPermission('tenant:read')
-const canCreateTenants = hasPermission('tenant:create')
-const canUpdateTenants = hasPermission('tenant:update')
-const canDeleteTenants = hasPermission('tenant:delete')
+// Tenant Management Permissions (Updated to plural form)
+const canViewTenants = hasPermission('tenants:read')
+const canCreateTenants = hasPermission('tenants:create')
+const canUpdateTenants = hasPermission('tenants:update')
+const canDeleteTenants = hasPermission('tenants:delete')
 
 // Product and Module Permissions
 const canViewProducts = hasPermission('product:read')
@@ -755,6 +771,12 @@ const canDeleteProducts = hasPermission('product:delete')
 const canViewRoles = hasPermission('role:read')
 const canCreateRoles = hasPermission('role:create')
 const canAssignPermissions = hasPermission('permission:assign')
+
+// Admin and Multi-tenant Checks
+const isAdmin = hasRole('admin')
+const isSuperAdmin = hasRole('super_admin')
+const isSystemAdmin = hasAnyRole(['admin', 'super_admin', 'system_admin'])
+const canAccessMultipleTenants = hasPermission('multi_tenant:access')
 ```
 
 **Specialized Hooks:**
@@ -769,11 +791,14 @@ export const useCrudPermissions = (resource: string) => ({
 
 // Navigation permissions for menu items
 export const useNavigationPermissions = () => ({
-  canAccessDashboard: isAuthenticated,
-  canAccessUserGroups: hasPermission('user:read'),
-  canAccessProducts: hasPermission('product:read'),
-  canAccessTenants: hasPermission('tenant:read'),
-  canAccessRoles: hasPermission('role:read'),
+  canAccessDashboard: true, // Everyone can access dashboard
+  canAccessUsers: canViewUsers,
+  canAccessTenants: canViewTenants, // Updated to use plural permission
+  canAccessProducts: canViewProducts,
+  canAccessModules: canViewModules,
+  canAccessRoles: canViewRoles,
+  canAccessAuditLogs: canViewAuditLogs,
+  canAccessSystemSettings: isSystemAdmin,
 })
 ```
 

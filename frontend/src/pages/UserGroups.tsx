@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import api from '../lib/api'
 
 type UserGroup = {
-  userGroupId?: number
-  id?: number
+  userGroupId: number
   name: string
   description?: string
   memberCount?: number
@@ -60,7 +59,7 @@ export default function UserGroups() {
           <p className="p-4 text-gray-500">No groups yet.</p>
         )}
         {groups.map((g) => (
-          <div key={g.id || g.userGroupId} className="p-4 flex items-center justify-between">
+          <div key={g.userGroupId} className="p-4 flex items-center justify-between">
             <div>
               <p className="font-medium">{g.name}</p>
               {g.description && (
