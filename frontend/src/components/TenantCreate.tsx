@@ -68,7 +68,7 @@ export default function TenantCreate() {
 
     try {
       setLoading(true);
-      await api.post("/tenants", formData);
+      await api.post("/v1/tenants", formData);
       navigate("/tenants");
     } catch (error: any) {
       console.error("Failed to create tenant:", error);

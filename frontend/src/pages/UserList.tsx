@@ -1,215 +1,254 @@
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { usePermissions } from '@/hooks/usePermissions'
-import { Search, Plus, Edit, Trash2, Users, Shield, UserCheck } from 'lucide-react'
-import UserEdit from '@/components/UserEdit'
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { StatusBadge } from "@/components/StatusBadge";
+import { usePermissions } from "@/hooks/usePermissions";
+import { normalizeEntityStatus } from "@/lib/status-colors";
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  Users,
+  Shield,
+  UserCheck,
+} from "lucide-react";
+import UserEdit from "@/components/UserEdit";
 
 interface User {
-  id: number
-  username: string
-  email: string
-  firstName: string
-  lastName: string
-  userStatus: 'ACTIVE' | 'INACTIVE'
-  createdAt: string
-  updatedAt: string
-  roles: Role[]
-  userGroups: UserGroup[]
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  userStatus: "ACTIVE" | "INACTIVE";
+  createdAt: string;
+  updatedAt: string;
+  roles: Role[];
+  userGroups: UserGroup[];
 }
 
 interface Role {
-  id: number
-  name: string
-  description: string
+  id: number;
+  name: string;
+  description: string;
 }
 
 interface UserGroup {
-  userGroupId: number
-  name: string
-  description: string
+  userGroupId: number;
+  name: string;
+  description: string;
 }
 
 interface CreateUserForm {
-  username: string
-  email: string
-  firstName: string
-  lastName: string
-  password: string
-  roleIds: number[]
-  userGroupIds: number[]
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  roleIds: number[];
+  userGroupIds: number[];
 }
 
 const UserList: React.FC = () => {
-  const [users, setUsers] = useState<User[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
-  const [userGroups, setUserGroups] = useState<UserGroup[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [users, setUsers] = useState<User[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [createForm, setCreateForm] = useState<CreateUserForm>({
-    username: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    password: '',
+    username: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    password: "",
     roleIds: [],
-    userGroupIds: []
-  })
+    userGroupIds: [],
+  });
 
-  const { canViewUsers, canManageUsers } = usePermissions()
+  const { canViewUsers, canManageUsers } = usePermissions();
 
   useEffect(() => {
     if (canViewUsers) {
-      fetchUsers()
-      fetchRoles()
-      fetchUserGroups()
+      fetchUsers();
+      fetchRoles();
+      fetchUserGroups();
     }
-  }, [canViewUsers])
+  }, [canViewUsers]);
 
   const fetchUsers = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/v1/users', {
+      setLoading(true);
+      const response = await fetch("/api/v1/users", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to fetch users')
+        throw new Error("Failed to fetch users");
       }
-      
-      const data = await response.json()
-      setUsers(data.data || [])
+
+      const data = await response.json();
+      setUsers(data.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch users')
+      setError(err instanceof Error ? err.message : "Failed to fetch users");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch('/api/roles', {
+      const response = await fetch("/api/v1/roles", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       if (response.ok) {
-        const data = await response.json()
-        setRoles(data || [])
+        const data = await response.json();
+        setRoles(data || []);
       }
     } catch (err) {
-      console.error('Failed to fetch roles:', err)
+      console.error("Failed to fetch roles:", err);
     }
-  }
+  };
 
   const fetchUserGroups = async () => {
     try {
-      const response = await fetch('/api/v1/user-groups', {
+      const response = await fetch("/api/v1/user-groups", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       if (response.ok) {
-        const data = await response.json()
-        setUserGroups(data.data || [])
+        const data = await response.json();
+        setUserGroups(data.data || []);
       }
     } catch (err) {
-      console.error('Failed to fetch user groups:', err)
+      console.error("Failed to fetch user groups:", err);
     }
-  }
+  };
 
   const handleCreateUser = async () => {
     try {
-      const response = await fetch('/api/v1/users', {
-        method: 'POST',
+      const response = await fetch("/api/v1/users", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(createForm)
-      })
+        body: JSON.stringify(createForm),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create user')
+        throw new Error("Failed to create user");
       }
 
-      setIsCreateDialogOpen(false)
+      setIsCreateDialogOpen(false);
       setCreateForm({
-        username: '',
-        email: '',
-        firstName: '',
-        lastName: '',
-        password: '',
+        username: "",
+        email: "",
+        firstName: "",
+        lastName: "",
+        password: "",
         roleIds: [],
-        userGroupIds: []
-      })
-      fetchUsers()
+        userGroupIds: [],
+      });
+      fetchUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create user')
+      setError(err instanceof Error ? err.message : "Failed to create user");
     }
-  }
+  };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user?')) {
-      return
+    if (!confirm("Are you sure you want to delete this user?")) {
+      return;
     }
 
     try {
       const response = await fetch(`/api/v1/users/${userId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete user')
+        throw new Error("Failed to delete user");
       }
 
-      fetchUsers()
+      fetchUsers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete user')
+      setError(err instanceof Error ? err.message : "Failed to delete user");
     }
-  }
+  };
 
   const handleEditUser = (user: User) => {
-    setSelectedUser(user)
-    setIsEditDialogOpen(true)
-  }
+    setSelectedUser(user);
+    setIsEditDialogOpen(true);
+  };
 
   const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false)
-    setSelectedUser(null)
-    setError(null)
-  }
+    setIsEditDialogOpen(false);
+    setSelectedUser(null);
+    setError(null);
+  };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.lastName.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesStatus = statusFilter === 'all' || user.userStatus === statusFilter
-    
-    return matchesSearch && matchesStatus
-  })
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" || user.userStatus === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
 
   if (!canViewUsers) {
     return (
@@ -221,7 +260,7 @@ const UserList: React.FC = () => {
           </AlertDescription>
         </Alert>
       </div>
-    )
+    );
   }
 
   return (
@@ -234,7 +273,10 @@ const UserList: React.FC = () => {
           </p>
         </div>
         {canManageUsers && (
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <Dialog
+            open={isCreateDialogOpen}
+            onOpenChange={setIsCreateDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
@@ -256,7 +298,9 @@ const UserList: React.FC = () => {
                   <Input
                     id="username"
                     value={createForm.username}
-                    onChange={(e) => setCreateForm({...createForm, username: e.target.value})}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, username: e.target.value })
+                    }
                     className="col-span-3"
                   />
                 </div>
@@ -268,7 +312,9 @@ const UserList: React.FC = () => {
                     id="email"
                     type="email"
                     value={createForm.email}
-                    onChange={(e) => setCreateForm({...createForm, email: e.target.value})}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, email: e.target.value })
+                    }
                     className="col-span-3"
                   />
                 </div>
@@ -279,7 +325,12 @@ const UserList: React.FC = () => {
                   <Input
                     id="firstName"
                     value={createForm.firstName}
-                    onChange={(e) => setCreateForm({...createForm, firstName: e.target.value})}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        firstName: e.target.value,
+                      })
+                    }
                     className="col-span-3"
                   />
                 </div>
@@ -290,7 +341,9 @@ const UserList: React.FC = () => {
                   <Input
                     id="lastName"
                     value={createForm.lastName}
-                    onChange={(e) => setCreateForm({...createForm, lastName: e.target.value})}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, lastName: e.target.value })
+                    }
                     className="col-span-3"
                   />
                 </div>
@@ -302,7 +355,9 @@ const UserList: React.FC = () => {
                     id="password"
                     type="password"
                     value={createForm.password}
-                    onChange={(e) => setCreateForm({...createForm, password: e.target.value})}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, password: e.target.value })
+                    }
                     className="col-span-3"
                   />
                 </div>
@@ -326,9 +381,7 @@ const UserList: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>Users</CardTitle>
-          <CardDescription>
-            A list of all users in the system
-          </CardDescription>
+          <CardDescription>A list of all users in the system</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-4 mb-6">
@@ -375,18 +428,24 @@ const UserList: React.FC = () => {
               <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.username}</TableCell>
+                    <TableCell className="font-medium">
+                      {user.username}
+                    </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
                     <TableCell>
-                      <Badge variant={user.userStatus === 'ACTIVE' ? 'default' : 'secondary'}>
-                        {user.userStatus}
-                      </Badge>
+                      <StatusBadge
+                        status={normalizeEntityStatus("user", user.userStatus)}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {user.roles?.map((role) => (
-                          <Badge key={role.id} variant="outline" className="text-xs">
+                          <Badge
+                            key={role.id}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {role.name}
                           </Badge>
                         ))}
@@ -395,7 +454,11 @@ const UserList: React.FC = () => {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {user.userGroups?.map((group) => (
-                          <Badge key={group.userGroupId} variant="outline" className="text-xs">
+                          <Badge
+                            key={group.userGroupId}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {group.name}
                           </Badge>
                         ))}
@@ -438,7 +501,7 @@ const UserList: React.FC = () => {
         onUserUpdated={fetchUsers}
       />
     </div>
-  )
-}
+  );
+};
 
-export default UserList
+export default UserList;

@@ -21,7 +21,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StatusBadge } from '../components/StatusBadge'
 import { PermissionGuard } from '../components/PermissionGuard'
+import { normalizeEntityStatus } from '../lib/status-colors'
 import api from '../lib/api'
 import { type Tenant } from '../store/auth'
 import SearchAndFilter from '../components/SearchAndFilter'
@@ -40,7 +42,7 @@ export default function TenantList() {
   const fetchTenants = async () => {
     try {
       setLoading(true)
-      const response = await api.get('/tenants')
+      const response = await api.get('/v1/tenants')
       // Extract the actual tenant array from the ApiResponse wrapper
       setTenants(response.data.data || [])
     } catch (error) {
@@ -52,7 +54,7 @@ export default function TenantList() {
 
   const handleStatusChange = async (tenantId: number, newStatus: string) => {
     try {
-      await api.patch(`/tenants/${tenantId}/status`, { status: newStatus })
+      await api.patch(`/v1/tenants/${tenantId}/status`, { status: newStatus })
       await fetchTenants() // Refresh the list
     } catch (error) {
       console.error('Failed to update tenant status:', error)
@@ -62,7 +64,7 @@ export default function TenantList() {
   const handleDelete = async (tenantId: number) => {
     if (window.confirm('Are you sure you want to delete this tenant?')) {
       try {
-        await api.delete(`/tenants/${tenantId}`)
+        await api.delete(`/v1/tenants/${tenantId}`)
         await fetchTenants() // Refresh the list
       } catch (error) {
         console.error('Failed to delete tenant:', error)
@@ -254,9 +256,9 @@ export default function TenantList() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(tenant.status)}
-                      <Badge variant={getStatusVariant(tenant.status)}>
-                        {tenant.status}
-                      </Badge>
+                      <StatusBadge 
+                        status={normalizeEntityStatus('tenant', tenant.status)}
+                      />
                     </div>
                   </TableCell>
                   <TableCell className="text-right">

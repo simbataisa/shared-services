@@ -64,8 +64,8 @@ export default function Dashboard() {
       
       // Fetch dashboard statistics
       const [statsResponse, activitiesResponse] = await Promise.all([
-        api.get('/dashboard/stats'),
-        api.get('/dashboard/recent-activities')
+        api.get('/v1/dashboard/stats'),
+        api.get('/v1/dashboard/recent-activities')
       ])
       
       setStats(statsResponse.data.data)

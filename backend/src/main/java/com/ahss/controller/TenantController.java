@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -114,6 +115,46 @@ public class TenantController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/tenants/" + id));
+        }
+    }
+
+    // Update tenant status
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> updateTenantStatus(@PathVariable Long id, @RequestBody Map<String, String> statusRequest) {
+        try {
+            String status = statusRequest.get("status");
+            if (status == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.notOk(null, "Status is required", "/api/v1/tenants/" + id + "/status"));
+            }
+            
+            TenantStatus tenantStatus;
+            try {
+                tenantStatus = TenantStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.notOk(null, "Invalid status: " + status, "/api/v1/tenants/" + id + "/status"));
+            }
+            
+            switch (tenantStatus) {
+                case ACTIVE:
+                    tenantService.activateTenant(id);
+                    break;
+                case INACTIVE:
+                    tenantService.deactivateTenant(id);
+                    break;
+                case SUSPENDED:
+                    tenantService.suspendTenant(id);
+                    break;
+                default:
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(ApiResponse.notOk(null, "Unsupported status: " + status, "/api/v1/tenants/" + id + "/status"));
+            }
+            
+            return ResponseEntity.ok(ApiResponse.ok(null, "Tenant status updated successfully", "/api/v1/tenants/" + id + "/status"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/tenants/" + id + "/status"));
         }
     }
 

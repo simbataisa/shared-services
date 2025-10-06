@@ -1,66 +1,76 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, Package, Users, Activity, Calendar, Plus } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { PermissionGuard } from '../components/PermissionGuard'
-import { usePermissions } from '../hooks/usePermissions'
-import type { Product, Module } from '../store/auth'
-import api from '../lib/api'
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PermissionGuard } from "../components/PermissionGuard";
+import { StatusBadge } from "../components/StatusBadge";
+import { usePermissions } from "../hooks/usePermissions";
+import { normalizeEntityStatus } from "../lib/status-colors";
+import type { Product, Module } from "../store/auth";
+import api from "../lib/api";
 
 interface ProductStats {
-  totalModules: number
-  activeModules: number
-  inactiveModules: number
-  lastUpdated: string
+  totalModules: number;
+  activeModules: number;
+  inactiveModules: number;
+  lastUpdated: string;
 }
 
 const ProductDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const { canViewProducts, canUpdateProducts, canDeleteProducts, canViewModules, canCreateModules } = usePermissions()
-  
-  const [product, setProduct] = useState<Product | null>(null)
-  const [modules, setModules] = useState<Module[]>([])
-  const [stats, setStats] = useState<ProductStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [updating, setUpdating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const {
+    canViewProducts,
+    canUpdateProducts,
+    canDeleteProducts,
+    canViewModules,
+    canCreateModules,
+  } = usePermissions();
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [stats, setStats] = useState<ProductStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!canViewProducts) {
-      navigate('/unauthorized')
-      return
+      navigate("/unauthorized");
+      return;
     }
 
-    fetchProductData()
-  }, [id, canViewProducts, navigate])
+    fetchProductData();
+  }, [id, canViewProducts, navigate]);
 
   const fetchProductData = async () => {
     try {
-      setLoading(true)
-      
+      setLoading(true);
+
       // Fetch product data from API
       const [productResponse, modulesResponse] = await Promise.all([
         api.get(`/products/${id}`),
-        api.get(`/v1/modules/product/${id}`)
-      ])
-      
-      const productData = productResponse.data
-      const modulesData = modulesResponse.data || []
+        api.get(`/v1/modules/product/${id}`),
+      ]);
+
+      const productData = productResponse.data;
+      const modulesData = modulesResponse.data || [];
 
       // Calculate stats
       const stats: ProductStats = {
         totalModules: modulesData.length,
         activeModules: modulesData.filter((m: any) => m.isActive).length,
         inactiveModules: modulesData.filter((m: any) => !m.isActive).length,
-        lastUpdated: productData.updatedAt
-      }
+        lastUpdated: productData.updatedAt,
+      };
 
       // Transform module data to match frontend interface
       const transformedModules: Module[] = modulesData.map((module: any) => ({
@@ -68,12 +78,12 @@ const ProductDetail: React.FC = () => {
         name: module.name,
         description: module.description,
         code: module.code || `MODULE_${module.id}`,
-        status: module.isActive ? 'active' : 'inactive',
+        status: module.isActive ? "active" : "inactive",
         productId: module.productId,
-        version: '1.0.0', // Default version if not provided
+        version: "1.0.0", // Default version if not provided
         createdAt: module.createdAt,
-        updatedAt: module.updatedAt
-      }))
+        updatedAt: module.updatedAt,
+      }));
 
       // Transform product data to match frontend interface
       const transformedProduct: Product = {
@@ -81,85 +91,90 @@ const ProductDetail: React.FC = () => {
         name: productData.name,
         description: productData.description,
         code: productData.productCode,
-        status: productData.productStatus?.toLowerCase() || 'active',
-        category: productData.category || 'general',
-        version: productData.version || '1.0.0',
+        status: productData.productStatus?.toLowerCase() || "active",
+        category: productData.category || "general",
+        version: productData.version || "1.0.0",
         createdAt: productData.createdAt,
         updatedAt: productData.updatedAt,
-        createdBy: productData.createdBy || 'system',
-        updatedBy: productData.updatedBy || 'system'
-      }
+        createdBy: productData.createdBy || "system",
+        updatedBy: productData.updatedBy || "system",
+      };
 
-      setProduct(transformedProduct)
-      setModules(transformedModules)
-      setStats(stats)
+      setProduct(transformedProduct);
+      setModules(transformedModules);
+      setStats(stats);
     } catch (error) {
-      console.error('Error fetching product data:', error)
-      setError('Failed to load product data')
+      console.error("Error fetching product data:", error);
+      setError("Failed to load product data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleStatusUpdate = async (newStatus: 'active' | 'inactive') => {
-    if (!product || !canUpdateProducts) return
+  const handleStatusUpdate = async (newStatus: "active" | "inactive") => {
+    if (!product || !canUpdateProducts) return;
 
     try {
-      setUpdating(true)
-      
+      setUpdating(true);
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      setProduct(prev => prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : null)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      setProduct((prev) =>
+        prev
+          ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() }
+          : null
+      );
     } catch (error) {
-      console.error('Error updating product status:', error)
-      setError('Failed to update product status')
+      console.error("Error updating product status:", error);
+      setError("Failed to update product status");
     } finally {
-      setUpdating(false)
+      setUpdating(false);
     }
-  }
+  };
 
   const handleDeleteProduct = async () => {
-    if (!product || !canDeleteProducts) return
+    if (!product || !canDeleteProducts) return;
 
-    if (!window.confirm(`Are you sure you want to delete the product "${product.name}"? This action cannot be undone.`)) {
-      return
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the product "${product.name}"? This action cannot be undone.`
+      )
+    ) {
+      return;
     }
 
     try {
-      setUpdating(true)
-      
+      setUpdating(true);
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      navigate('/products')
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      navigate("/products");
     } catch (error) {
-      console.error('Error deleting product:', error)
-      setError('Failed to delete product')
-      setUpdating(false)
+      console.error("Error deleting product:", error);
+      setError("Failed to delete product");
+      setUpdating(false);
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
-      case 'inactive':
-        return <Badge variant="secondary" className="bg-red-100 text-red-800 hover:bg-red-100">Inactive</Badge>
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
+    const normalizedStatus = normalizeEntityStatus(
+      "product",
+      status.toUpperCase()
+    );
+    return <StatusBadge status={normalizedStatus} />;
+  };
 
   if (!canViewProducts) {
     return (
@@ -167,17 +182,19 @@ const ProductDetail: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
-            <CardDescription>You don't have permission to view products.</CardDescription>
+            <CardDescription>
+              You don't have permission to view products.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
+            <Button onClick={() => navigate("/dashboard")} className="w-full">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Button>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   if (loading) {
@@ -195,7 +212,7 @@ const ProductDetail: React.FC = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !product) {
@@ -204,17 +221,19 @@ const ProductDetail: React.FC = () => {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Product Not Found</CardTitle>
-            <CardDescription>{error || 'The requested product could not be found.'}</CardDescription>
+            <CardDescription>
+              {error || "The requested product could not be found."}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate('/products')} className="w-full">
+            <Button onClick={() => navigate("/products")} className="w-full">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Products
             </Button>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -223,25 +242,29 @@ const ProductDetail: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-            <Link to="/products" className="hover:text-gray-700">Products</Link>
+            <Link to="/products" className="hover:text-gray-700">
+              Products
+            </Link>
             <span>/</span>
             <span className="text-gray-900">{product.name}</span>
           </nav>
-          
+
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {product.name}
+              </h1>
               <p className="mt-2 text-gray-600">{product.description}</p>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {getStatusBadge(product.status)}
-              
+
               <PermissionGuard permission="product:update">
                 <div className="flex space-x-2">
-                  {product.status === 'active' ? (
+                  {product.status === "active" ? (
                     <Button
-                      onClick={() => handleStatusUpdate('inactive')}
+                      onClick={() => handleStatusUpdate("inactive")}
                       disabled={updating}
                       variant="destructive"
                       size="sm"
@@ -250,7 +273,7 @@ const ProductDetail: React.FC = () => {
                     </Button>
                   ) : (
                     <Button
-                      onClick={() => handleStatusUpdate('active')}
+                      onClick={() => handleStatusUpdate("active")}
                       disabled={updating}
                       variant="default"
                       size="sm"
@@ -259,7 +282,7 @@ const ProductDetail: React.FC = () => {
                       Activate
                     </Button>
                   )}
-                  
+
                   <Button asChild size="sm">
                     <Link to={`/products/${product.id}/edit`}>
                       <Edit className="mr-2 h-4 w-4" />
@@ -268,7 +291,7 @@ const ProductDetail: React.FC = () => {
                   </Button>
                 </div>
               </PermissionGuard>
-              
+
               <PermissionGuard permission="product:delete">
                 <Button
                   onClick={handleDeleteProduct}
@@ -289,41 +312,67 @@ const ProductDetail: React.FC = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Product Information */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Product Information</h2>
-              
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Product Information
+              </h2>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Product Code</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Product Code
+                  </label>
                   <p className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded">
                     {product.code}
                   </p>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Category</label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">{product.category}</p>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Category
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 capitalize">
+                    {product.category}
+                  </p>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Version</label>
-                  <p className="mt-1 text-sm text-gray-900 font-mono">{product.version}</p>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Version
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900 font-mono">
+                    {product.version}
+                  </p>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Status
+                  </label>
                   {getStatusBadge(product.status)}
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Created</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(product.createdAt)}</p>
-                  <p className="text-xs text-gray-500">by {product.createdBy}</p>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Created
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {formatDate(product.createdAt)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    by {product.createdBy}
+                  </p>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Last Updated</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatDate(product.updatedAt)}</p>
-                  <p className="text-xs text-gray-500">by {product.updatedBy}</p>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Last Updated
+                  </label>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {formatDate(product.updatedAt)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    by {product.updatedBy}
+                  </p>
                 </div>
               </div>
             </div>
@@ -332,7 +381,7 @@ const ProductDetail: React.FC = () => {
             <div className="bg-white shadow rounded-lg p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Modules</h2>
-                
+
                 <PermissionGuard permission="module:create">
                   <Link
                     to={`/products/${product.id}/modules/create`}
@@ -342,26 +391,36 @@ const ProductDetail: React.FC = () => {
                   </Link>
                 </PermissionGuard>
               </div>
-              
+
               {canViewModules ? (
                 <div className="space-y-4">
                   {modules.length > 0 ? (
                     modules.map((module) => (
-                      <div key={module.id} className="border border-gray-200 rounded-lg p-4">
+                      <div
+                        key={module.id}
+                        className="border border-gray-200 rounded-lg p-4"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3">
-                              <h3 className="text-lg font-medium text-gray-900">{module.name}</h3>
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {module.name}
+                              </h3>
                               {getStatusBadge(module.status)}
-                              <span className="text-sm text-gray-500 font-mono">v{module.version}</span>
+                              <span className="text-sm text-gray-500 font-mono">
+                                v{module.version}
+                              </span>
                             </div>
-                            <p className="mt-1 text-sm text-gray-600">{module.description}</p>
+                            <p className="mt-1 text-sm text-gray-600">
+                              {module.description}
+                            </p>
                             <p className="mt-2 text-xs text-gray-500">
-                              Code: <span className="font-mono">{module.code}</span> • 
+                              Code:{" "}
+                              <span className="font-mono">{module.code}</span> •
                               Updated: {formatDate(module.updatedAt)}
                             </p>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2">
                             <Link
                               to={`/modules/${module.id}`}
@@ -375,7 +434,9 @@ const ProductDetail: React.FC = () => {
                     ))
                   ) : (
                     <div className="text-center py-8">
-                      <p className="text-gray-500">No modules found for this product.</p>
+                      <p className="text-gray-500">
+                        No modules found for this product.
+                      </p>
                       {canCreateModules && (
                         <Link
                           to={`/products/${product.id}/modules/create`}
@@ -389,7 +450,9 @@ const ProductDetail: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-500">You don't have permission to view modules.</p>
+                  <p className="text-gray-500">
+                    You don't have permission to view modules.
+                  </p>
                 </div>
               )}
             </div>
@@ -400,27 +463,41 @@ const ProductDetail: React.FC = () => {
             {/* Statistics */}
             {stats && (
               <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistics</h3>
-                
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Statistics
+                </h3>
+
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Total Modules</span>
-                    <span className="text-sm font-medium text-gray-900">{stats.totalModules}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {stats.totalModules}
+                    </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Active Modules</span>
-                    <span className="text-sm font-medium text-green-600">{stats.activeModules}</span>
+                    <span className="text-sm text-gray-600">
+                      Active Modules
+                    </span>
+                    <span className="text-sm font-medium text-green-600">
+                      {stats.activeModules}
+                    </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Inactive Modules</span>
-                    <span className="text-sm font-medium text-red-600">{stats.inactiveModules}</span>
+                    <span className="text-sm text-gray-600">
+                      Inactive Modules
+                    </span>
+                    <span className="text-sm font-medium text-red-600">
+                      {stats.inactiveModules}
+                    </span>
                   </div>
-                  
+
                   <div className="pt-4 border-t border-gray-200">
                     <span className="text-sm text-gray-600">Last Updated</span>
-                    <p className="text-sm font-medium text-gray-900">{formatDate(stats.lastUpdated)}</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {formatDate(stats.lastUpdated)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -428,8 +505,10 @@ const ProductDetail: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-              
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Quick Actions
+              </h3>
+
               <div className="space-y-3">
                 <PermissionGuard permission="module:read">
                   <Link
@@ -439,7 +518,7 @@ const ProductDetail: React.FC = () => {
                     View All Modules
                   </Link>
                 </PermissionGuard>
-                
+
                 <PermissionGuard permission="module:create">
                   <Link
                     to={`/products/${product.id}/modules/create`}
@@ -448,7 +527,7 @@ const ProductDetail: React.FC = () => {
                     Add New Module
                   </Link>
                 </PermissionGuard>
-                
+
                 <PermissionGuard permission="product:update">
                   <Link
                     to={`/products/${product.id}/edit`}
@@ -457,7 +536,7 @@ const ProductDetail: React.FC = () => {
                     Edit Product
                   </Link>
                 </PermissionGuard>
-                
+
                 <Link
                   to="/products"
                   className="block w-full px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 text-center"
@@ -470,7 +549,7 @@ const ProductDetail: React.FC = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductDetail
+export default ProductDetail;

@@ -19,7 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
+import { StatusBadge } from "./StatusBadge";
 import { PermissionGuard } from "../components/PermissionGuard";
+import { normalizeEntityStatus } from "../lib/status-colors";
 import api from "../lib/api";
 import { type Tenant } from "../store/auth";
 
@@ -47,7 +49,7 @@ export default function TenantDetail() {
   const fetchTenantDetails = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/tenants/${id}`);
+      const response = await api.get(`/v1/tenants/${id}`);
       // Fix: Access the actual tenant data from the ApiResponse wrapper
       setTenant(response.data.data || response.data);
     } catch (error) {
@@ -63,7 +65,7 @@ export default function TenantDetail() {
 
     try {
       setUpdating(true);
-      await api.patch(`/tenants/${tenant.id}/status`, { status: newStatus });
+      await api.patch(`/v1/tenants/${tenant.id}/status`, { status: newStatus });
       setTenant((prev) =>
         prev ? { ...prev, status: newStatus as any } : null
       );
@@ -239,9 +241,9 @@ export default function TenantDetail() {
                   <Label>Status</Label>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(tenant.status)}
-                    <Badge variant={getStatusVariant(tenant.status)}>
-                      {tenant.status}
-                    </Badge>
+                    <StatusBadge 
+                      status={normalizeEntityStatus('tenant', tenant.status)}
+                    />
                   </div>
                 </div>
               </div>

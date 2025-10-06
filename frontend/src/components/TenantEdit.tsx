@@ -51,7 +51,7 @@ export default function TenantEdit() {
 
       try {
         setInitialLoading(true);
-        const response = await api.get(`/tenants/${id}`);
+        const response = await api.get(`/v1/tenants/${id}`);
         const tenant = response.data.data || response.data;
 
         setFormData({
@@ -100,7 +100,7 @@ export default function TenantEdit() {
 
     try {
       setLoading(true);
-      await api.put(`/tenants/${id}`, {
+      await api.put(`/v1/tenants/${id}`, {
         code: formData.tenantCode,
         name: formData.name,
         type: formData.type,
