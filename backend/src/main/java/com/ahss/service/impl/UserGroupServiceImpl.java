@@ -1,21 +1,27 @@
 package com.ahss.service.impl;
 
+import com.ahss.dto.GroupModuleRoleDto;
 import com.ahss.dto.request.CreateUserGroupRequest;
 import com.ahss.dto.request.UpdateUserGroupRequest;
 import com.ahss.dto.response.UserGroupResponse;
 import com.ahss.entity.UserGroup;
 import com.ahss.repository.UserGroupRepository;
+import com.ahss.service.GroupModuleRoleService;
 import com.ahss.service.UserGroupService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserGroupServiceImpl implements UserGroupService {
     private final UserGroupRepository repo;
+    private final GroupModuleRoleService groupModuleRoleService;
 
-    public UserGroupServiceImpl(UserGroupRepository repo) {
+    public UserGroupServiceImpl(UserGroupRepository repo, GroupModuleRoleService groupModuleRoleService) {
         this.repo = repo;
+        this.groupModuleRoleService = groupModuleRoleService;
     }
 
     @Override
@@ -29,7 +35,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     public Page<UserGroupResponse> list(Pageable pageable) {
         return repo.findAllWithUsers(pageable).map(ug -> {
             int memberCount = ug.getUsers() != null ? ug.getUsers().size() : 0;
-            return new UserGroupResponse(ug.getId(), ug.getName(), ug.getDescription(), memberCount);
+            List<GroupModuleRoleDto> roleAssignments = groupModuleRoleService.getActiveRoleAssignmentsByUserGroup(ug.getId());
+            return new UserGroupResponse(ug.getId(), ug.getName(), ug.getDescription(), memberCount, roleAssignments);
         });
     }
 
@@ -52,7 +59,11 @@ public class UserGroupServiceImpl implements UserGroupService {
                 .orElseThrow(() -> new IllegalArgumentException("User group not found with id: " + id));
         
         int memberCount = userGroup.getUsers() != null ? userGroup.getUsers().size() : 0;
-        return new UserGroupResponse(userGroup.getId(), userGroup.getName(), userGroup.getDescription(), memberCount);
+        List<GroupModuleRoleDto> roleAssignments = groupModuleRoleService.getActiveRoleAssignmentsByUserGroup(id);
+        
+        UserGroupResponse response = new UserGroupResponse(userGroup.getId(), userGroup.getName(), userGroup.getDescription(), memberCount);
+        response.setRoleAssignments(roleAssignments);
+        return response;
     }
 
     @Override

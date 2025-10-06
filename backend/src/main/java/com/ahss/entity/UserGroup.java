@@ -41,6 +41,9 @@ public class UserGroup {
     )
     private List<User> users;
 
+    @OneToMany(mappedBy = "userGroup", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<GroupModuleRole> groupModuleRoles;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -86,4 +89,7 @@ public class UserGroup {
     
     public List<User> getUsers() { return users; }
     public void setUsers(List<User> users) { this.users = users; }
+
+    public List<GroupModuleRole> getGroupModuleRoles() { return groupModuleRoles; }
+    public void setGroupModuleRoles(List<GroupModuleRole> groupModuleRoles) { this.groupModuleRoles = groupModuleRoles; }
 }
