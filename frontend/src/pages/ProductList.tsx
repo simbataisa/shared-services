@@ -269,47 +269,52 @@ export default function ProductList() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link
-                                  to={`/products/${product.id}`}
-                                  className="flex items-center"
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View
-                                </Link>
-                              </DropdownMenuItem>
-                              <PermissionGuard permission="product:update">
-                                <DropdownMenuItem asChild>
-                                  <Link
-                                    to={`/products/${product.id}/edit`}
-                                    className="flex items-center"
-                                  >
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit
-                                  </Link>
-                                </DropdownMenuItem>
-                              </PermissionGuard>
-                              <PermissionGuard permission="product:delete">
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    handleDeleteProduct(product.id.toString())
-                                  }
-                                  className="text-destructive focus:text-destructive"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </PermissionGuard>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            asChild
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Link
+                              to={`/products/${product.id}`}
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <PermissionGuard permission="product:update">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              asChild
+                              className="text-yellow-600 hover:text-yellow-700"
+                            >
+                              <Link
+                                to={`/products/${product.id}/edit`}
+                                className="flex items-center text-yellow-600 hover:text-yellow-700"
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                              </Link>
+                            </Button>
+                          </PermissionGuard>
+                          <PermissionGuard permission="product:delete">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              asChild
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() =>
+                                handleDeleteProduct(product.id.toString())
+                              }
+                            >
+                              <Link
+                                to={`#`}
+                                className="flex items-center text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                              </Link>
+                            </Button>
+                          </PermissionGuard>
                         </TableCell>
                       </TableRow>
                     </React.Fragment>

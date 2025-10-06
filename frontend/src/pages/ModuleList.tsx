@@ -253,14 +253,24 @@ const ModuleList: React.FC = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="sm" asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            asChild
+                            className="text-blue-600 hover:text-blue-700"
+                          >
                             <Link to={`/modules/${module.id}`}>
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
                           {canUpdateModules && (
                             <>
-                              <Button variant="ghost" size="sm" asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                                className="text-yellow-600 hover:text-yellow-700"
+                              >
                                 <Link to={`/modules/${module.id}/edit`}>
                                   <Edit className="h-4 w-4" />
                                 </Link>
@@ -284,6 +294,7 @@ const ModuleList: React.FC = () => {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleDelete(module.id)}
+                              className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

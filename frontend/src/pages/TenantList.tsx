@@ -291,7 +291,12 @@ export default function TenantList() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <PermissionGuard permission="tenants:read">
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          asChild
+                          className="text-blue-600 hover:text-blue-700"
+                        >
                           <Link
                             to={`/tenants/${tenant.id}`}
                             title="View Details"
@@ -302,13 +307,28 @@ export default function TenantList() {
                       </PermissionGuard>
 
                       <PermissionGuard permission="tenants:update">
-                        <Button variant="ghost" size="icon" asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          asChild
+                          className="text-yellow-600 hover:text-yellow-700"
+                        >
                           <Link to={`/tenants/${tenant.id}/edit`} title="Edit">
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
                       </PermissionGuard>
-
+                      <PermissionGuard permission="tenants:delete">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(Number(tenant.id))}
+                          title="Delete"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </PermissionGuard>
                       <PermissionGuard permission="tenants:update">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -349,17 +369,6 @@ export default function TenantList() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </PermissionGuard>
-
-                      <PermissionGuard permission="tenants:delete">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(Number(tenant.id))}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </PermissionGuard>
                     </div>
                   </TableCell>
