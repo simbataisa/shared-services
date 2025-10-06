@@ -53,7 +53,8 @@ frontend/
 │   │   │   └── tooltip.tsx     # Tooltip component for contextual information
 │   │   ├── Layout.tsx          # Main application layout with shadcn/ui Sidebar
 │   │   ├── PermissionGuard.tsx # Permission-based component guard
-│   │   └── ProtectedRoute.tsx  # Route-level permission protection
+│   │   ├── ProtectedRoute.tsx  # Route-level permission protection
+│   │   └── SearchAndFilter.tsx # Standardized search and filter component
 │   ├── hooks/
 │   │   ├── use-mobile.tsx      # Hook for mobile device detection
 │   │   └── usePermissions.ts   # Custom hooks for permission management
@@ -63,12 +64,15 @@ frontend/
 │   ├── pages/
 │   │   ├── Dashboard.tsx       # Main dashboard with statistics and quick actions
 │   │   ├── Login.tsx           # Authentication page
+│   │   ├── ModuleList.tsx      # Module listing with standardized search UI
+│   │   ├── PermissionList.tsx  # Permission listing with standardized search UI
 │   │   ├── ProductCreate.tsx   # Product creation form
 │   │   ├── ProductDetail.tsx   # Product details and module management
-│   │   ├── ProductList.tsx     # Product listing with hierarchical modules
+│   │   ├── ProductList.tsx     # Product listing with standardized search UI
+│   │   ├── RoleList.tsx        # Role listing with standardized search UI
 │   │   ├── TenantCreate.tsx    # Tenant creation form
 │   │   ├── TenantDetail.tsx    # Tenant details and management
-│   │   ├── TenantList.tsx      # Tenant listing and management
+│   │   ├── TenantList.tsx      # Tenant listing with standardized search UI
 │   │   ├── Unauthorized.tsx    # Access denied page
 │   │   └── UserGroups.tsx      # User groups management page
 │   ├── store/
@@ -137,6 +141,27 @@ RBAC/ABAC Evaluation → Resource-Action-Condition Checks
   - `TenantList.tsx` - Tenant listing permissions
 - **Impact**: Fixed "Tenant" menu item visibility issue for superadmin and admin users
 
+**Search UI Standardization (Latest Update)**
+- **Enhancement**: Created standardized search and filter component for consistent UI/UX across all list pages
+- **Component**: `SearchAndFilter.tsx` - Reusable component with configurable search, filters, and actions
+- **Features**:
+  - Consistent search input with debounced functionality
+  - Configurable filter dropdowns with type-safe options
+  - Flexible actions section for page-specific buttons
+  - Responsive design with mobile-friendly layout
+  - Accessibility features with proper ARIA labels
+- **Pages Updated**:
+  - `ProductList.tsx` - Product listing with status and type filters
+  - `TenantList.tsx` - Tenant listing with status and type filters
+  - `RoleList.tsx` - Role listing with search functionality
+  - `PermissionList.tsx` - Permission listing with resource and action filters
+  - `ModuleList.tsx` - Module listing with status and product filters
+- **Benefits**:
+  - Consistent user experience across all list pages
+  - Reduced code duplication and maintenance overhead
+  - Improved accessibility and responsive design
+  - Type-safe filter configurations
+
 ### State Management Flow
 ```
 User Action → Component → Permission Check → API Call → Backend
@@ -166,6 +191,7 @@ The application uses Shadcn/UI, a modern component library built on top of Radix
 
 #### Advanced Components
 - **Dialog** (`src/components/ui/dialog.tsx`): Modal dialog component for overlays and confirmations
+- **SearchAndFilter** (`src/components/SearchAndFilter.tsx`): Standardized search and filter component used across all list pages for consistent UI/UX
 - **Select** (`src/components/ui/select.tsx`): Dropdown selection component with search and multi-select capabilities
 - **Sheet** (`src/components/ui/sheet.tsx`): Slide-out panel component for mobile-friendly navigation and content display
 - **Sidebar** (`src/components/ui/sidebar.tsx`): Comprehensive sidebar navigation component with collapsible functionality, mobile responsiveness, and keyboard shortcuts
@@ -267,6 +293,32 @@ The application uses Shadcn/UI, a modern component library built on top of Radix
     You can add components to your app using the cli.
   </AlertDescription>
 </Alert>
+
+// SearchAndFilter component usage in list pages
+<SearchAndFilter
+  searchTerm={searchTerm}
+  onSearchChange={setSearchTerm}
+  searchPlaceholder="Search products..."
+  filters={[
+    {
+      key: "status",
+      label: "Status",
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: [
+        { value: "all", label: "All Statuses" },
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" }
+      ]
+    }
+  ]}
+  actions={
+    <Button onClick={() => setIsCreateDialogOpen(true)}>
+      <Plus className="h-4 w-4 mr-2" />
+      Create Product
+    </Button>
+  }
+/>
 ```
 
 ## Application Entry Point
@@ -1811,17 +1863,20 @@ VITE_API_BASE_URL=https://api.yourapp.com/api/v1
 ### Planned Features
 1. **Enhanced Authentication**: Multi-factor authentication
 2. **Real-time Updates**: WebSocket integration
-3. **Advanced UI**: Component library integration
-4. **Internationalization**: Multi-language support
-5. **Progressive Web App**: Offline capabilities
-6. **Advanced State Management**: React Query for server state
-7. **Testing Suite**: Comprehensive test coverage
-8. **Performance Monitoring**: Analytics integration
+3. **Internationalization**: Multi-language support
+4. **Progressive Web App**: Offline capabilities
+5. **Advanced State Management**: React Query for server state
+6. **Testing Suite**: Comprehensive test coverage
+7. **Performance Monitoring**: Analytics integration
+
+### Recently Completed Features
+1. **✅ Advanced UI**: Component library integration (Shadcn/UI fully integrated)
+2. **✅ Standardized Search UI**: Consistent search and filter components across all list pages
 
 ### Technical Debt
 - Add comprehensive error boundaries
-- Implement proper loading skeletons
+- Implement proper loading skeletons (partially completed with Skeleton components)
 - Add form validation with Zod schemas
 - Implement proper TypeScript strict mode
-- Add accessibility (a11y) improvements
+- Add accessibility (a11y) improvements (partially completed with SearchAndFilter component)
 - Implement proper SEO optimization

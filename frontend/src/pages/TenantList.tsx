@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PermissionGuard } from '../components/PermissionGuard'
 import api from '../lib/api'
 import { type Tenant } from '../store/auth'
+import SearchAndFilter from '../components/SearchAndFilter'
 
 export default function TenantList() {
   const [tenants, setTenants] = useState<Tenant[]>([])
@@ -172,58 +173,50 @@ export default function TenantList() {
           <h1 className="text-2xl font-bold">Tenants</h1>
           <p className="text-muted-foreground">Manage tenant organizations and their access</p>
         </div>
-        <PermissionGuard permission="tenants:create">
-          <Button asChild>
-            <Link to="/tenants/create">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Tenant
-            </Link>
-          </Button>
-        </PermissionGuard>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search tenants..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="BUSINESS_IN">Business Internal</SelectItem>
-                  <SelectItem value="BUSINESS_OUT">Business External</SelectItem>
-                  <SelectItem value="INDIVIDUAL">Individual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Search and Filters */}
+      <SearchAndFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search tenants by name or code..."
+        filters={[
+          {
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: "all", label: "All Status" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "INACTIVE", label: "Inactive" },
+              { value: "SUSPENDED", label: "Suspended" },
+            ],
+            width: "w-40",
+          },
+          {
+            label: "Type",
+            value: typeFilter,
+            onChange: setTypeFilter,
+            options: [
+              { value: "all", label: "All Types" },
+              { value: "BUSINESS_IN", label: "Business Internal" },
+              { value: "BUSINESS_OUT", label: "Business External" },
+              { value: "INDIVIDUAL", label: "Individual" },
+            ],
+            width: "w-48",
+          },
+        ]}
+        actions={
+          <PermissionGuard permission="tenants:create">
+            <Button asChild>
+              <Link to="/tenants/create">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Tenant
+              </Link>
+            </Button>
+          </PermissionGuard>
+        }
+      />
 
       {/* Tenants Table */}
       <Card>

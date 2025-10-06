@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import RoleAssignmentDialog from "@/components/RoleAssignmentDialog";
+import SearchAndFilter from "@/components/SearchAndFilter";
 
 interface RoleAssignment {
   id: number;
@@ -92,6 +93,8 @@ const UserGroups: React.FC = () => {
   const [groups, setGroups] = useState<UserGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [memberCountFilter, setMemberCountFilter] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<UserGroup | null>(null);
@@ -112,6 +115,22 @@ const UserGroups: React.FC = () => {
   const [selectedModule, setSelectedModule] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
   const [roleLoading, setRoleLoading] = useState(false);
+
+  // Filter groups based on search term and member count
+  const filteredGroups = groups.filter((group) => {
+    const matchesSearch = 
+      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesMemberCount = 
+      memberCountFilter === "all" ||
+      (memberCountFilter === "empty" && group.memberCount === 0) ||
+      (memberCountFilter === "small" && group.memberCount > 0 && group.memberCount <= 5) ||
+      (memberCountFilter === "medium" && group.memberCount > 5 && group.memberCount <= 20) ||
+      (memberCountFilter === "large" && group.memberCount > 20);
+    
+    return matchesSearch && matchesMemberCount;
+  });
 
   useEffect(() => {
     fetchGroups();
@@ -260,8 +279,8 @@ const UserGroups: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">User Groups</h1>
           <p className="text-muted-foreground">
@@ -328,8 +347,32 @@ const UserGroups: React.FC = () => {
         </Dialog>
       </div>
 
+      {/* Search and Filter */}
+      <SearchAndFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search user groups..."
+        filters={[
+          {
+            label: "Member Count",
+            value: memberCountFilter,
+            onChange: setMemberCountFilter,
+            options: [
+              { value: "all", label: "All Groups" },
+              { value: "empty", label: "Empty (0 members)" },
+              { value: "small", label: "Small (1-5 members)" },
+              { value: "medium", label: "Medium (6-20 members)" },
+              { value: "large", label: "Large (20+ members)" }
+            ],
+            placeholder: "Filter by size",
+            width: "w-48"
+          }
+        ]}
+      />
+
+      {/* Groups Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {groups.map((group) => (
+        {filteredGroups.map((group) => (
           <Card key={group.userGroupId} className="relative">
             <CardHeader>
               <div className="flex justify-between items-start">

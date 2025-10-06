@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { usePermissions } from '@/hooks/usePermissions'
 import { Search, Plus, Edit, Trash2, Shield } from 'lucide-react'
 import RoleDialog from '@/components/RoleDialog'
+import SearchAndFilter from '@/components/SearchAndFilter'
 
 interface Role {
   id: number
@@ -205,21 +206,6 @@ const RoleList: React.FC = () => {
             Manage roles and their associated permissions
           </p>
         </div>
-        {canManageRoles && (
-          <>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Role
-            </Button>
-            <RoleDialog
-              open={isCreateDialogOpen}
-              onOpenChange={setIsCreateDialogOpen}
-              onSave={handleCreateRole}
-              permissions={permissions}
-              loading={saving}
-            />
-          </>
-        )}
       </div>
 
       {/* Edit Dialog */}
@@ -240,6 +226,30 @@ const RoleList: React.FC = () => {
         </Alert>
       )}
 
+      {/* Search and Filters */}
+      <SearchAndFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search roles by name or description..."
+        actions={
+          canManageRoles && (
+            <>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Role
+              </Button>
+              <RoleDialog
+                open={isCreateDialogOpen}
+                onOpenChange={setIsCreateDialogOpen}
+                onSave={handleCreateRole}
+                permissions={permissions}
+                loading={saving}
+              />
+            </>
+          )
+        }
+      />
+
       <Card>
         <CardHeader>
           <CardTitle>Roles</CardTitle>
@@ -248,18 +258,6 @@ const RoleList: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search roles..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-          </div>
-
           {loading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (

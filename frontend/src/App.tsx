@@ -16,8 +16,9 @@ import ProductCreate from './components/ProductCreate'
 import ProductDetail from './components/ProductDetail'
 import ProductEdit from './components/ProductEdit'
 import ModuleList from './pages/ModuleList'
-import ModuleCreate from './pages/ModuleCreate'
-import ModuleDetail from './pages/ModuleDetail'
+import ModuleCreate from './components/ModuleCreate'
+import ModuleDetail from './components/ModuleDetail'
+import ModuleEdit from './components/ModuleEdit'
 import Unauthorized from './pages/Unauthorized'
 import { useAuth } from './store/auth'
 
@@ -132,6 +133,12 @@ function App() {
            <Route path="modules/:id" element={
              <ProtectedRoute permission="module:read">
                <ModuleDetail />
+             </ProtectedRoute>
+           } />
+           
+           <Route path="modules/:id/edit" element={
+             <ProtectedRoute permission="module:update">
+               <ModuleEdit />
              </ProtectedRoute>
            } />
         </Route>
