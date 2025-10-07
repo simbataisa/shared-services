@@ -23,8 +23,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  MoreHorizontal,
+  CheckCircle,
+} from "lucide-react";
 import api from "../lib/api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
 
 interface Module {
   id: number;
@@ -263,33 +276,19 @@ const ModuleList: React.FC = () => {
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
-                          {canUpdateModules && (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                asChild
-                                className="text-yellow-600 hover:text-yellow-700"
-                              >
-                                <Link to={`/modules/${module.id}/edit`}>
-                                  <Edit className="h-4 w-4" />
-                                </Link>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  handleStatusChange(
-                                    module.id,
-                                    !module.isActive
-                                  )
-                                }
-                              >
-                                {module.isActive ? "Deactivate" : "Activate"}
-                              </Button>
-                            </>
-                          )}
-                          {canDeleteModules && (
+                          <PermissionGuard permission="module:update">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              asChild
+                              className="text-yellow-600 hover:text-yellow-700"
+                            >
+                              <Link to={`/modules/${module.id}/edit`}>
+                                <Edit className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                          </PermissionGuard>
+                          <PermissionGuard permission="module:delete">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -298,7 +297,7 @@ const ModuleList: React.FC = () => {
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                          )}
+                          </PermissionGuard>
                         </div>
                       </TableCell>
                     </TableRow>

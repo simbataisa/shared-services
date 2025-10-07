@@ -10,6 +10,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import UserGroups from "./pages/UserGroups";
+import UserGroupDetail from "./components/user-groups/UserGroupDetail";
+import UserGroupCreate from "./components/user-groups/UserGroupCreate";
+import UserGroupEdit from "./components/user-groups/UserGroupEdit";
 import UserList from "./pages/UserList";
 import UserDetail from "./components/users/UserDetail";
 import RoleList from "./pages/RoleList";
@@ -64,6 +67,33 @@ function App() {
             element={
               <ProtectedRoute permission="user-groups:read">
                 <UserGroups />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="user-groups/create"
+            element={
+              <ProtectedRoute permission="user-groups:create">
+                <UserGroupCreate />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="user-groups/:id/edit"
+            element={
+              <ProtectedRoute permission="user-groups:update">
+                <UserGroupEdit />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="user-groups/:id"
+            element={
+              <ProtectedRoute permission="user-groups:read">
+                <UserGroupDetail />
               </ProtectedRoute>
             }
           />
