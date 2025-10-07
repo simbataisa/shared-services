@@ -8,20 +8,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -30,18 +19,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
+import SearchAndFilter from "@/components/SearchAndFilter";
 import UserEditDialog from "@/components/users/UserEditDialog";
+import UserCreate from "@/components/users/UserCreate";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
-import { Search, Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
+import { Edit, Trash2, Shield, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 interface User {
   id: number;
@@ -68,16 +54,6 @@ interface UserGroup {
   description: string;
 }
 
-interface CreateUserForm {
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  roleIds: number[];
-  userGroupIds: number[];
-}
-
 const UserList: React.FC = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
@@ -87,18 +63,8 @@ const UserList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [createForm, setCreateForm] = useState<CreateUserForm>({
-    username: "",
-    email: "",
-    firstName: "",
-    lastName: "",
-    password: "",
-    roleIds: [],
-    userGroupIds: [],
-  });
 
   const { canViewUsers, canManageUsers } = usePermissions();
 
@@ -166,37 +132,6 @@ const UserList: React.FC = () => {
     }
   };
 
-  const handleCreateUser = async () => {
-    try {
-      const response = await fetch("/api/v1/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(createForm),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create user");
-      }
-
-      setIsCreateDialogOpen(false);
-      setCreateForm({
-        username: "",
-        email: "",
-        firstName: "",
-        lastName: "",
-        password: "",
-        roleIds: [],
-        userGroupIds: [],
-      });
-      fetchUsers();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create user");
-    }
-  };
-
   const handleDeleteUser = async (userId: number) => {
     if (!confirm("Are you sure you want to delete this user?")) {
       return;
@@ -260,104 +195,6 @@ const UserList: React.FC = () => {
             Manage users, their roles, and permissions
           </p>
         </div>
-        {canManageUsers && (
-          <Dialog
-            open={isCreateDialogOpen}
-            onOpenChange={setIsCreateDialogOpen}
-          >
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add User
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-                <DialogDescription>
-                  Add a new user to the system with roles and permissions.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="username" className="text-right">
-                    Username
-                  </Label>
-                  <Input
-                    id="username"
-                    value={createForm.username}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, username: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={createForm.email}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, email: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="firstName" className="text-right">
-                    First Name
-                  </Label>
-                  <Input
-                    id="firstName"
-                    value={createForm.firstName}
-                    onChange={(e) =>
-                      setCreateForm({
-                        ...createForm,
-                        firstName: e.target.value,
-                      })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="lastName" className="text-right">
-                    Last Name
-                  </Label>
-                  <Input
-                    id="lastName"
-                    value={createForm.lastName}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, lastName: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="password" className="text-right">
-                    Password
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={createForm.password}
-                    onChange={(e) =>
-                      setCreateForm({ ...createForm, password: e.target.value })
-                    }
-                    className="col-span-3"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" onClick={handleCreateUser}>
-                  Create User
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
       </div>
 
       {error && (
@@ -372,27 +209,35 @@ const UserList: React.FC = () => {
           <CardDescription>A list of all users in the system</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SearchAndFilter
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search users by username, email, or name..."
+            filters={[
+              {
+                label: "Status",
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: "all", label: "All Status" },
+                  { value: "ACTIVE", label: "Active" },
+                  { value: "INACTIVE", label: "Inactive" },
+                ],
+                width: "w-40",
+              },
+            ]}
+            actions={[
+              <PermissionGuard permission="user:create">
+                <UserCreate
+                  roles={roles}
+                  userGroups={userGroups}
+                  onUserCreated={fetchUsers}
+                  onError={(error) => setError(error)}
+                />
+              </PermissionGuard>,
+            ]}
+            className="mb-6"
+          />
 
           {loading ? (
             <div className="space-y-2">
@@ -410,7 +255,7 @@ const UserList: React.FC = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Roles</TableHead>
                   <TableHead>User Groups</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

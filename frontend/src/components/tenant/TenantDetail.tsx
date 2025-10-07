@@ -35,7 +35,7 @@ import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus, getStatusVariant } from "@/lib/status-colors";
 import api from "@/lib/api";
 import { type Tenant } from "@/store/auth";
 
@@ -146,19 +146,6 @@ export default function TenantDetail() {
         return <Clock className="h-5 w-5 text-yellow-600" />;
       default:
         return <XCircle className="h-5 w-5 text-gray-600" />;
-    }
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return "success";
-      case "INACTIVE":
-        return "destructive";
-      case "SUSPENDED":
-        return "warning";
-      default:
-        return "secondary";
     }
   };
 

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import api from "@/lib/api";
 import SearchAndFilter from "@/components/SearchAndFilter";
-import UserGroupsGrid from "@/components/user-groups/UserGroupsGrid";
+import UserGroupsTable from "@/components/user-groups/UserGroupsTable";
 import { Button } from "@/components/ui/button";
 import { PermissionGuard } from "@/components/PermissionGuard";
 
@@ -220,14 +220,6 @@ const UserGroups: React.FC = () => {
             Manage permission groups and their members
           </p>
         </div>
-        <PermissionGuard permission="user-groups:create">
-          <Button asChild>
-            <Link to="/user-groups/create">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Group
-            </Link>
-          </Button>
-        </PermissionGuard>
       </div>
 
       {/* Search and Filter */}
@@ -251,10 +243,20 @@ const UserGroups: React.FC = () => {
             width: "w-48",
           },
         ]}
+        actions={
+          <PermissionGuard permission="user-groups:create">
+            <Button asChild>
+              <Link to="/user-groups/create">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Group
+              </Link>
+            </Button>
+          </PermissionGuard>
+        }
       />
 
       {/* Groups Grid */}
-      <UserGroupsGrid
+      <UserGroupsTable
         filteredGroups={filteredGroups}
         loading={loading}
         onDeleteGroup={deleteGroup}

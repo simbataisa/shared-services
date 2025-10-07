@@ -6,9 +6,6 @@ import {
   Trash2,
   Eye,
   MoreHorizontal,
-  CheckCircle,
-  XCircle,
-  Clock,
   Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,7 +27,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "../components/StatusBadge";
 import { PermissionGuard } from "../components/PermissionGuard";
-import { normalizeEntityStatus } from "../lib/status-colors";
+import { getStatusIcon } from "../lib/status-icons";
+import { normalizeEntityStatus, getStatusVariant } from "../lib/status-colors";
 import api from "../lib/api";
 import { type Tenant } from "../store/auth";
 import SearchAndFilter from "../components/SearchAndFilter";
@@ -90,31 +88,7 @@ export default function TenantList() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "INACTIVE":
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      case "SUSPENDED":
-        return <Clock className="h-4 w-4 text-yellow-600" />;
-      default:
-        return <XCircle className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case "ACTIVE":
-        return "default";
-      case "INACTIVE":
-        return "destructive";
-      case "SUSPENDED":
-        return "secondary";
-      default:
-        return "outline";
-    }
-  };
+  // Remove the local getStatusIcon function since it's now in the common utility
 
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -282,7 +256,6 @@ export default function TenantList() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {getStatusIcon(tenant.status)}
                       <StatusBadge
                         status={normalizeEntityStatus("tenant", tenant.status)}
                       />
@@ -342,8 +315,8 @@ export default function TenantList() {
                                 handleStatusChange(Number(tenant.id), "ACTIVE")
                               }
                             >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Set Active
+                              {getStatusIcon("ACTIVE")}
+                              <span className="ml-2">Set Active</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
@@ -353,8 +326,8 @@ export default function TenantList() {
                                 )
                               }
                             >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Set Inactive
+                              {getStatusIcon("INACTIVE")}
+                              <span className="ml-2">Set Inactive</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() =>
@@ -364,8 +337,8 @@ export default function TenantList() {
                                 )
                               }
                             >
-                              <Clock className="h-4 w-4 mr-2" />
-                              Suspend
+                              {getStatusIcon("SUSPENDED")}
+                              <span className="ml-2">Suspend</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

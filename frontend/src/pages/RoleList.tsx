@@ -22,6 +22,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Plus, Edit, Trash2, Shield } from "lucide-react";
 import RoleDialog from "@/components/role/RoleDialog";
 import SearchAndFilter from "@/components/SearchAndFilter";
+import { StatusBadge } from "@/components/StatusBadge";
+import { normalizeEntityStatus } from "@/lib/status-colors";
 
 interface Role {
   id: number;
@@ -30,6 +32,7 @@ interface Role {
   createdAt: string;
   updatedAt: string;
   permissions: Permission[];
+  status?: 'active' | 'inactive' | 'draft' | 'deprecated';
 }
 
 interface Permission {
@@ -281,6 +284,7 @@ const RoleList: React.FC = () => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Permissions</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
@@ -291,6 +295,11 @@ const RoleList: React.FC = () => {
                   <TableRow key={role.id}>
                     <TableCell className="font-medium">{role.name}</TableCell>
                     <TableCell>{role.description}</TableCell>
+                    <TableCell>
+                      <StatusBadge 
+                        status={normalizeEntityStatus('role', role.status || 'ACTIVE')}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {role.permissions?.slice(0, 3).map((permission) => (

@@ -17,26 +17,10 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import {
-  Plus,
-  Search,
-  ChevronDown,
-  ChevronRight,
-  Edit,
-  Trash2,
-  Package,
-  AlertCircle,
-  Eye,
-  MoreHorizontal,
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+import { Plus, Edit, Trash2, Package, AlertCircle, Eye } from "lucide-react";
 import SearchAndFilter from "../components/SearchAndFilter";
+import { StatusBadge } from "@/components/StatusBadge";
+import { normalizeEntityStatus } from "@/lib/status-colors";
 
 interface ProductWithModules extends Product {
   modules: Module[];
@@ -76,23 +60,6 @@ export default function ProductList() {
     }
   };
 
-  const handleStatusChange = async (productId: string, newStatus: string) => {
-    try {
-      const endpoint = newStatus === "active" ? "activate" : "deactivate";
-      await api.patch(`/products/${productId}/${endpoint}`);
-      setProducts(
-        products.map((product) =>
-          product.id.toString() === productId
-            ? { ...product, status: newStatus as "active" | "inactive" }
-            : product
-        )
-      );
-    } catch (err) {
-      setError("Failed to update product status");
-      console.error("Error updating product status:", err);
-    }
-  };
-
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
@@ -105,16 +72,6 @@ export default function ProductList() {
       setError("Failed to delete product");
       console.error("Error deleting product:", err);
     }
-  };
-
-  const toggleProductExpansion = (productId: string) => {
-    const newExpanded = new Set(expandedProducts);
-    if (newExpanded.has(productId)) {
-      newExpanded.delete(productId);
-    } else {
-      newExpanded.add(productId);
-    }
-    setExpandedProducts(newExpanded);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -245,20 +202,12 @@ export default function ProductList() {
                         </TableCell>
                         <TableCell>{product.version}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              product.status === "active"
-                                ? "default"
-                                : "secondary"
-                            }
-                            className={
-                              product.status === "active"
-                                ? "bg-green-100 text-green-800 hover:bg-green-200 border-green-300"
-                                : "bg-red-100 text-red-800 hover:bg-red-200 border-red-300"
-                            }
-                          >
-                            {product.status}
-                          </Badge>
+                          <StatusBadge
+                            status={normalizeEntityStatus(
+                              "product",
+                              product.status.toUpperCase()
+                            )}
+                          />
                         </TableCell>
                         <TableCell className="max-w-xs truncate">
                           {product.description || "-"}

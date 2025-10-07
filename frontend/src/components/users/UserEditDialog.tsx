@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -36,6 +37,8 @@ import {
   AlertTriangle,
   CheckCircle,
   X,
+  Shield,
+  Mail,
 } from "lucide-react";
 import api from "@/lib/api";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -226,11 +229,14 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <User className="h-5 w-5" />
-            {fetchLoading ? "Loading..." : user ? `Edit User: ${user.username}` : "User Not Found"}
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <User className="h-6 w-6" />
+            {fetchLoading ? "Loading..." : user ? `Edit User: ${user.firstName} ${user.lastName}` : "User Not Found"}
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-2 text-gray-600">
+            {user && `@${user.username} • ${user.email}`}
+          </p>
+          <p className="text-sm text-gray-500">
             Manage user status, password, roles, and permissions
           </p>
         </div>
@@ -254,9 +260,8 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
       {/* Error State */}
       {!fetchLoading && !user && (
         <div className="text-center py-8">
-          <AlertTriangle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium mb-2">User Not Found</h3>
-          <p className="text-sm text-muted-foreground">The requested user could not be found</p>
+          <User className="mx-auto h-12 w-12 text-gray-400" />
+          <p className="mt-2 text-gray-500">User not found or access denied.</p>
         </div>
       )}
 
@@ -265,16 +270,16 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
         <>
           {/* Alerts */}
           {error && (
-            <Alert className="border-destructive">
+            <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-destructive">{error}</AlertDescription>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           {success && (
-            <Alert className="border-green-500 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-600">{success}</AlertDescription>
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
 
@@ -292,37 +297,71 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
             <div className={`mt-4 ${isDesktop ? 'max-h-[60vh]' : 'max-h-[50vh]'} overflow-y-auto`}>
               <TabsContent value="profile" className="space-y-4 mt-0">
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">User Information</CardTitle>
-                    <CardDescription className="text-sm">Basic user details</CardDescription>
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
+                      <User className="mr-2 h-5 w-5" />
+                      User Information
+                    </CardTitle>
+                    <CardDescription>
+                      Basic user account information and details.
+                    </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <Label className="text-sm">Username</Label>
-                        <Input value={user.username} disabled className="text-sm" />
+                        <Label className="block text-sm font-medium text-gray-700">
+                          Username
+                        </Label>
+                        <p className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded">
+                          {user.username}
+                        </p>
                       </div>
+                      
                       <div>
-                        <Label className="text-sm">Email</Label>
-                        <Input value={user.email} disabled className="text-sm" />
+                        <Label className="block text-sm font-medium text-gray-700">
+                          Email Address
+                        </Label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {user.email}
+                        </p>
                       </div>
-                    </div>
-                    <div className={`grid ${isDesktop ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
+
                       <div>
-                        <Label className="text-sm">First Name</Label>
-                        <Input value={user.firstName} disabled className="text-sm" />
+                        <Label className="block text-sm font-medium text-gray-700">
+                          First Name
+                        </Label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {user.firstName}
+                        </p>
                       </div>
+
                       <div>
-                        <Label className="text-sm">Last Name</Label>
-                        <Input value={user.lastName} disabled className="text-sm" />
+                        <Label className="block text-sm font-medium text-gray-700">
+                          Last Name
+                        </Label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {user.lastName}
+                        </p>
                       </div>
-                    </div>
-                    <div>
-                      <Label className="text-sm">Current Status</Label>
-                      <div className="mt-2">
-                        <StatusBadge
-                          status={normalizeEntityStatus("user", user.userStatus)}
-                        />
+
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700">
+                          Status
+                        </Label>
+                        <div className="mt-1">
+                          <StatusBadge
+                            status={normalizeEntityStatus("user", user.userStatus)}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="block text-sm font-medium text-gray-700">
+                          Created
+                        </Label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {new Date(user.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -331,23 +370,28 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
 
               <TabsContent value="status" className="space-y-4 mt-0">
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">User Status Management</CardTitle>
-                    <CardDescription className="text-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
+                      <AlertTriangle className="mr-2 h-5 w-5" />
+                      User Status Management
+                    </CardTitle>
+                    <CardDescription>
                       Activate, deactivate, or suspend user account
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-sm">Current Status</h4>
-                        <p className="text-xs text-muted-foreground">
-                          User is currently {user.userStatus?.toLowerCase() || 'unknown'}
-                        </p>
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-gray-900">Current Status</h4>
+                          <p className="text-sm text-gray-600">
+                            User is currently {user.userStatus?.toLowerCase() || 'unknown'}
+                          </p>
+                        </div>
+                        <StatusBadge
+                          status={normalizeEntityStatus("user", user.userStatus)}
+                        />
                       </div>
-                      <StatusBadge
-                        status={normalizeEntityStatus("user", user.userStatus)}
-                      />
                     </div>
 
                     {canUpdateUsers && (
@@ -357,8 +401,7 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
                             onClick={() => handleStatusChange("INACTIVE")}
                             disabled={loading}
                             variant="destructive"
-                            className="w-full text-sm"
-                            size={isDesktop ? "default" : "sm"}
+                            className="w-full"
                           >
                             <AlertTriangle className="mr-2 h-4 w-4" />
                             Suspend User
@@ -367,8 +410,7 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
                           <Button
                             onClick={() => handleStatusChange("ACTIVE")}
                             disabled={loading}
-                            className="w-full text-sm"
-                            size={isDesktop ? "default" : "sm"}
+                            className="w-full"
                           >
                             <CheckCircle className="mr-2 h-4 w-4" />
                             Reactivate User
@@ -382,15 +424,20 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
 
               <TabsContent value="password" className="space-y-4 mt-0">
                 <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Change Password</CardTitle>
-                    <CardDescription className="text-sm">
-                      Set a new password for this user
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
+                      <Key className="mr-2 h-5 w-5" />
+                      Password Management
+                    </CardTitle>
+                    <CardDescription>
+                      Change the user's password
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="newPassword" className="text-sm">New Password</Label>
+                      <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700">
+                        New Password
+                      </Label>
                       <Input
                         id="newPassword"
                         type="password"
@@ -401,12 +448,14 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
                             newPassword: e.target.value,
                           })
                         }
+                        className="mt-1"
                         placeholder="Enter new password"
-                        className="text-sm"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
+                        Confirm Password
+                      </Label>
                       <Input
                         id="confirmPassword"
                         type="password"
@@ -417,44 +466,65 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
                             confirmPassword: e.target.value,
                           })
                         }
+                        className="mt-1"
                         placeholder="Confirm new password"
-                        className="text-sm"
                       />
                     </div>
-                    {canUpdateUsers && (
-                      <Button
-                        onClick={handlePasswordChange}
-                        disabled={
-                          loading ||
-                          !passwordForm.newPassword ||
-                          !passwordForm.confirmPassword
-                        }
-                        className="w-full text-sm"
-                        size={isDesktop ? "default" : "sm"}
-                      >
-                        <Key className="mr-2 h-4 w-4" />
-                        Change Password
-                      </Button>
-                    )}
+                    <Button
+                      onClick={handlePasswordChange}
+                      disabled={loading || !passwordForm.newPassword || !passwordForm.confirmPassword}
+                      className="w-full"
+                    >
+                      <Key className="mr-2 h-4 w-4" />
+                      Change Password
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="permissions" className="space-y-4 mt-0">
-                <div className="grid gap-4">
-                  <RoleAssignment
-                    userId={user.id}
-                    currentRoles={user.roles || []}
-                    onRolesUpdated={handleUserUpdated}
-                    loading={loading}
-                  />
+                <div className="space-y-6">
+                  {/* Roles Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
+                        <Shield className="mr-2 h-5 w-5" />
+                        Role Assignment
+                      </CardTitle>
+                      <CardDescription>
+                        Manage user roles and permissions
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <RoleAssignment
+                        userId={user.id}
+                        currentRoles={user.roles || []}
+                        onRolesUpdated={handleUserUpdated}
+                        loading={loading}
+                      />
+                    </CardContent>
+                  </Card>
 
-                  <UserGroupAssignment
-                    userId={user.id}
-                    currentUserGroups={user.userGroups || []}
-                    onUserGroupsUpdated={handleUserUpdated}
-                    loading={loading}
-                  />
+                  {/* User Groups Card */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
+                        <User className="mr-2 h-5 w-5" />
+                        User Group Assignment
+                      </CardTitle>
+                      <CardDescription>
+                        Manage user group memberships
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <UserGroupAssignment
+                        userId={user.id}
+                        currentUserGroups={user.userGroups || []}
+                        onUserGroupsUpdated={handleUserUpdated}
+                        loading={loading}
+                      />
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
             </div>

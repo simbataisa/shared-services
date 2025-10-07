@@ -163,10 +163,27 @@ export function getStatusTextColor(status: string): string {
 }
 
 /**
- * Utility function to get display label for a status
+ * Utility function to get status label for display
  */
 export function getStatusLabel(status: string): string {
   return getStatusConfig(status).label
+}
+
+/**
+ * Legacy utility function to get Badge variant directly from raw status string
+ * @deprecated Use getStatusBadgeVariant with normalizeEntityStatus instead
+ */
+export function getStatusVariant(status: string): BadgeVariant {
+  switch (status) {
+    case "ACTIVE":
+      return "default";
+    case "INACTIVE":
+      return "destructive";
+    case "SUSPENDED":
+      return "secondary";
+    default:
+      return "outline";
+  }
 }
 
 /**

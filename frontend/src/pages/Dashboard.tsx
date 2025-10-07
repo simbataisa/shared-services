@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../store/auth";
 import { usePermissions } from "../hooks/usePermissions";
 import { PermissionGuard } from "../components/PermissionGuard";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
