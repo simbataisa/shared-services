@@ -75,6 +75,7 @@ export interface UpdateUserRequest {
   email?: string;
   firstName?: string;
   lastName?: string;
+  phoneNumber?: string;
   roleIds?: number[];
   userGroupIds?: number[];
 }

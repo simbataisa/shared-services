@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import SearchAndFilter from "@/components/SearchAndFilter";
-import UserEditDialog from "@/components/users/UserEditDialog";
+
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { Edit, Trash2, Shield, Eye } from "lucide-react";
@@ -62,8 +62,6 @@ const UserList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
   const { canViewUsers, canManageUsers } = usePermissions();
 
@@ -155,8 +153,7 @@ const UserList: React.FC = () => {
   };
 
   const handleEditUser = (user: User) => {
-    setSelectedUserId(user.id);
-    setIsEditDialogOpen(true);
+    navigate(`/users/${user.id}/edit`);
   };
 
   const filteredUsers = users.filter((user) => {
@@ -328,22 +325,6 @@ const UserList: React.FC = () => {
           )}
         </CardContent>
       </Card>
-
-      {/* User Edit Dialog */}
-      <UserEditDialog
-        userId={selectedUserId}
-        open={isEditDialogOpen}
-        onOpenChange={(open) => {
-          setIsEditDialogOpen(open);
-          if (!open) {
-            setSelectedUserId(null);
-          }
-        }}
-        onUserUpdated={() => {
-          // Refresh the users list when a user is updated
-          fetchUsers();
-        }}
-      />
     </div>
   );
 };

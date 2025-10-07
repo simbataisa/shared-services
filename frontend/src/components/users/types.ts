@@ -62,10 +62,8 @@ export interface UserFormProps {
   onError: (error: string) => void;
 }
 
-export interface UserEditDialogProps {
+export interface UserEditProps {
   userId: number | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   onUserUpdated?: () => void;
 }
 
