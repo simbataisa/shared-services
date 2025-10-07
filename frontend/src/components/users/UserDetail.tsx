@@ -30,22 +30,24 @@ import {
   type User,
   type UserStats,
 } from "./index";
+import UserPasswordCard from "./UserPasswordCard";
+import UserRoleAssignment from "./UserRoleAssignment";
+import UserGroupAssignment from "./UserGroupAssignment";
+import type { PasswordChangeForm } from "./types";
 
 const UserDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const {
-    canViewUsers,
-    canUpdateUsers,
-    canDeleteUsers,
-    canManageUsers,
-  } = usePermissions();
+  const { canViewUsers, canUpdateUsers, canDeleteUsers, canManageUsers } =
+    usePermissions();
 
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableRoles, setAvailableRoles] = useState<any[]>([]);
+  const [availableGroups, setAvailableGroups] = useState<any[]>([]);
 
   useEffect(() => {
     if (!canViewUsers) {
@@ -54,7 +56,37 @@ const UserDetail: React.FC = () => {
     }
 
     fetchUserData();
+    fetchAvailableRolesAndGroups();
   }, [id, canViewUsers, navigate]);
+
+  const fetchAvailableRolesAndGroups = async () => {
+    try {
+      const [rolesResponse, groupsResponse] = await Promise.all([
+        fetch("/api/v1/roles", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }),
+        fetch("/api/v1/user-groups", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }),
+      ]);
+
+      if (rolesResponse.ok) {
+        const rolesData = await rolesResponse.json();
+        setAvailableRoles(rolesData || []);
+      }
+
+      if (groupsResponse.ok) {
+        const groupsData = await groupsResponse.json();
+        setAvailableGroups(groupsData.data?.content || []);
+      }
+    } catch (error) {
+      console.error("Error fetching available roles and groups:", error);
+    }
+  };
 
   const fetchUserData = async () => {
     try {
@@ -73,16 +105,18 @@ const UserDetail: React.FC = () => {
         userStatus: userData.userStatus as "ACTIVE" | "INACTIVE",
         createdAt: userData.createdAt,
         updatedAt: userData.updatedAt,
-        roles: userData.roles?.map(role => ({
-          id: role.id,
-          name: role.name,
-          description: role.description || ""
-        })) || [],
-        userGroups: userData.userGroups?.map(group => ({
-          userGroupId: group.userGroupId,
-          name: group.name,
-          description: group.description || ""
-        })) || [],
+        roles:
+          userData.roles?.map((role) => ({
+            id: role.id,
+            name: role.name,
+            description: role.description || "",
+          })) || [],
+        userGroups:
+          userData.userGroups?.map((group) => ({
+            userGroupId: group.userGroupId,
+            name: group.name,
+            description: group.description || "",
+          })) || [],
         phoneNumber: userData.phoneNumber,
         emailVerified: userData.emailVerified,
         lastLogin: userData.lastLogin,
@@ -120,12 +154,181 @@ const UserDetail: React.FC = () => {
 
       setUser((prev) =>
         prev
-          ? { ...prev, userStatus: newStatus, updatedAt: new Date().toISOString() }
+          ? {
+              ...prev,
+              userStatus: newStatus,
+              updatedAt: new Date().toISOString(),
+            }
           : null
       );
     } catch (error) {
       console.error("Error updating user status:", error);
       setError("Failed to update user status");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleUserInfoUpdate = async (updatedUserData: any) => {
+    try {
+      // Update the local user state with the new data
+      setUser((prev) => (prev ? { ...prev, ...updatedUserData } : null));
+
+      // Optionally refresh the complete user data from the server
+      await fetchUserData();
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+    }
+  };
+
+  const handlePasswordChange = async (passwordData: PasswordChangeForm) => {
+    if (!user || !canUpdateUsers) return;
+
+    try {
+      setUpdating(true);
+
+      const response = await fetch(`/api/v1/users/${user.id}/change-password`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to change password");
+      }
+
+      // Update user's password changed timestamp
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              passwordChangedAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            }
+          : null
+      );
+    } catch (error) {
+      console.error("Error changing password:", error);
+      throw error; // Re-throw to let the component handle the error display
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleRolesUpdated = async () => {
+    try {
+      await fetchUserData();
+    } catch (error) {
+      console.error("Error refreshing user data after role update:", error);
+    }
+  };
+
+  const handleUserGroupsUpdated = async () => {
+    try {
+      await fetchUserData();
+    } catch (error) {
+      console.error(
+        "Error refreshing user data after user group update:",
+        error
+      );
+    }
+  };
+
+  const handleRoleAdd = async (roleId: string) => {
+    try {
+      setUpdating(true);
+      const response = await fetch(`/api/v1/users/${id}/roles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ roleIds: [parseInt(roleId)] }),
+      });
+
+      if (response.ok) {
+        await fetchUserData();
+      } else {
+        console.error("Failed to add role");
+      }
+    } catch (error) {
+      console.error("Error adding role:", error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleRoleRemove = async (roleId: string) => {
+    try {
+      setUpdating(true);
+      const response = await fetch(`/api/v1/users/${id}/roles/${roleId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (response.ok) {
+        await fetchUserData();
+      } else {
+        console.error("Failed to remove role");
+      }
+    } catch (error) {
+      console.error("Error removing role:", error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleGroupAdd = async (groupId: string) => {
+    try {
+      setUpdating(true);
+      const response = await fetch(`/api/v1/users/${id}/user-groups`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ userGroupIds: [parseInt(groupId)] }),
+      });
+
+      if (response.ok) {
+        await fetchUserData();
+      } else {
+        console.error("Failed to add user group");
+      }
+    } catch (error) {
+      console.error("Error adding user group:", error);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleGroupRemove = async (groupId: string) => {
+    try {
+      setUpdating(true);
+      const response = await fetch(
+        `/api/v1/users/${id}/user-groups/${groupId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        await fetchUserData();
+      } else {
+        console.error("Failed to remove user group");
+      }
+    } catch (error) {
+      console.error("Error removing user group:", error);
     } finally {
       setUpdating(false);
     }
@@ -240,51 +443,15 @@ const UserDetail: React.FC = () => {
           </Breadcrumb>
 
           <div className="flex items-center justify-between">
-            <div>
+            {/* <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {getFullName(user)}
               </h1>
               <p className="mt-2 text-gray-600">@{user.username}</p>
               <p className="text-gray-600">{user.email}</p>
-            </div>
+            </div> */}
 
-            <div className="flex items-center space-x-3">
-              <StatusBadge
-                status={normalizeEntityStatus("user", user.userStatus)}
-              />
-
-              <PermissionGuard permission="user:update">
-                <div className="flex space-x-2">
-                  {user.userStatus === "ACTIVE" ? (
-                    <Button
-                      onClick={() => handleStatusUpdate("INACTIVE")}
-                      disabled={updating}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      Deactivate
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => handleStatusUpdate("ACTIVE")}
-                      disabled={updating}
-                      variant="default"
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Activate
-                    </Button>
-                  )}
-
-                  <Button asChild size="sm">
-                    <Link to={`/users/${user.id}/edit`}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </Link>
-                  </Button>
-                </div>
-              </PermissionGuard>
-
+            {/* <div className="flex items-center space-x-3">
               <PermissionGuard permission="user:delete">
                 <Button
                   onClick={handleDeleteUser}
@@ -296,7 +463,7 @@ const UserDetail: React.FC = () => {
                   Delete
                 </Button>
               </PermissionGuard>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -304,11 +471,31 @@ const UserDetail: React.FC = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* User Information */}
-            <UserInfoCard user={user} showExtendedInfo={true} />
+            <UserInfoCard
+              user={user}
+              showExtendedInfo={true}
+              canUpdate={canUpdateUsers}
+              onUserUpdated={handleUserInfoUpdate}
+            />
+
+            {/* Password Management */}
+            <PermissionGuard permission="user:update">
+              <UserPasswordCard
+                onPasswordChange={handlePasswordChange}
+                loading={updating}
+                canUpdate={canUpdateUsers}
+              />
+            </PermissionGuard>
 
             {/* Roles & Groups */}
-            <UserRoleGroupCard 
+            <UserRoleGroupCard
               user={user}
+              availableRoles={availableRoles}
+              availableGroups={availableGroups}
+              onRoleAdd={handleRoleAdd}
+              onRoleRemove={handleRoleRemove}
+              onGroupAdd={handleGroupAdd}
+              onGroupRemove={handleGroupRemove}
               canUpdate={canManageUsers}
               loading={updating}
             />
@@ -348,10 +535,16 @@ const UserDetail: React.FC = () => {
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Account Status</span>
-                    <span className={`text-sm font-medium ${
-                      stats.accountStatus === "ACTIVE" ? "text-green-600" : "text-red-600"
-                    }`}>
+                    <span className="text-sm text-gray-600">
+                      Account Status
+                    </span>
+                    <span
+                      className={`text-sm font-medium ${
+                        stats.accountStatus === "ACTIVE"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
                       {stats.accountStatus}
                     </span>
                   </div>
@@ -373,37 +566,6 @@ const UserDetail: React.FC = () => {
                 </CardContent>
               </Card>
             )}
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <PermissionGuard permission="user:update">
-                  <Button asChild className="w-full" size="sm">
-                    <Link to={`/users/${user.id}/edit`}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit User
-                    </Link>
-                  </Button>
-                </PermissionGuard>
-
-                <Button
-                  asChild
-                  className="w-full"
-                  variant="outline"
-                  size="sm"
-                >
-                  <Link to="/users">
-                    <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Users
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

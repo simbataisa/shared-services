@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Users, Shield, Plus, X } from "lucide-react";
+import { Users, Shield, Plus, X, Edit, Save, XCircle } from "lucide-react";
 import type { User, Role, UserGroup } from "./types";
 
 interface UserRoleGroupCardProps {
@@ -37,6 +37,8 @@ const UserRoleGroupCard: React.FC<UserRoleGroupCardProps> = ({
   canUpdate = false,
   className = "",
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   const userRoleIds = user.roles?.map(role => role.id) || [];
   const userGroupIds = user.userGroups?.map(group => group.userGroupId) || [];
 
@@ -47,16 +49,71 @@ const UserRoleGroupCard: React.FC<UserRoleGroupCardProps> = ({
     group => !userGroupIds.includes(group.userGroupId)
   );
 
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
-          <Shield className="mr-2 h-5 w-5" />
-          Roles & Groups
-        </CardTitle>
-        <CardDescription>
-          Manage user permissions through roles and group memberships
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
+              <Shield className="mr-2 h-5 w-5" />
+              Roles & Groups
+            </CardTitle>
+            <CardDescription>
+              Manage user permissions through roles and group memberships
+            </CardDescription>
+          </div>
+          {canUpdate && (
+            <div className="flex items-center gap-2">
+              {!isEditing ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEdit}
+                  disabled={loading}
+                  className="flex items-center gap-1"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="flex items-center gap-1"
+                  >
+                    <Save className="h-4 w-4" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancel}
+                    disabled={loading}
+                    className="flex items-center gap-1"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Cancel
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Current Roles */}
@@ -73,7 +130,7 @@ const UserRoleGroupCard: React.FC<UserRoleGroupCardProps> = ({
                   className="flex items-center gap-1"
                 >
                   {role.name}
-                  {canUpdate && onRoleRemove && (
+                  {canUpdate && onRoleRemove && isEditing && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -92,12 +149,12 @@ const UserRoleGroupCard: React.FC<UserRoleGroupCardProps> = ({
           </div>
 
           {/* Add Role Buttons */}
-          {canUpdate && onRoleAdd && availableRolesToAdd.length > 0 && (
+          {canUpdate && onRoleAdd && availableRolesToAdd.length > 0 && isEditing && (
             <div className="mt-2">
               <Label className="block text-xs font-medium text-gray-600 mb-1">
                 Add Role:
               </Label>
-              <div className="flex flex-wrap gap-1">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
                 {availableRolesToAdd.map((role) => (
                   <Button
                     key={role.id}
@@ -131,7 +188,7 @@ const UserRoleGroupCard: React.FC<UserRoleGroupCardProps> = ({
                 >
                   <Users className="h-3 w-3" />
                   {group.name}
-                  {canUpdate && onGroupRemove && (
+                  {canUpdate && onGroupRemove && isEditing && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -150,12 +207,12 @@ const UserRoleGroupCard: React.FC<UserRoleGroupCardProps> = ({
           </div>
 
           {/* Add Group Buttons */}
-          {canUpdate && onGroupAdd && availableGroupsToAdd.length > 0 && (
+          {canUpdate && onGroupAdd && availableGroupsToAdd.length > 0 && isEditing && (
             <div className="mt-2">
               <Label className="block text-xs font-medium text-gray-600 mb-1">
                 Add to Group:
               </Label>
-              <div className="flex flex-wrap gap-1">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
                 {availableGroupsToAdd.map((group) => (
                   <Button
                     key={group.userGroupId}
