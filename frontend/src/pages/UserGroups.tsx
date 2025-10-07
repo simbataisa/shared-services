@@ -105,74 +105,6 @@ const UserGroups: React.FC = () => {
     }
   };
 
-  // Role assignment functions
-  const fetchModulesAndRoles = async () => {
-    try {
-      setRoleLoading(true);
-      const [modules, roles] = await Promise.all([
-        httpClient.getModules(),
-        httpClient.getRoles(),
-      ]);
-      setModules(modules || []);
-      setRoles(roles || []);
-    } catch (e) {
-      setError("Failed to fetch modules and roles");
-    } finally {
-      setRoleLoading(false);
-    }
-  };
-
-  const handleManageRoles = async (group: HttpUserGroup) => {
-    setSelectedGroup(group);
-    setSelectedModule("");
-    setSelectedRoles([]);
-    setIsRoleDialogOpen(true);
-    await fetchModulesAndRoles();
-  };
-
-  const assignRoles = async () => {
-    if (!selectedGroup || !selectedModule || selectedRoles.length === 0) return;
-
-    try {
-      setRoleLoading(true);
-      await httpClient.assignRolesToUserGroup(
-        selectedGroup.userGroupId,
-        selectedRoles
-      );
-      setIsRoleDialogOpen(false);
-      setSelectedModule("");
-      setSelectedRoles([]);
-      await fetchGroups();
-    } catch (e) {
-      setError("Failed to assign roles");
-    } finally {
-      setRoleLoading(false);
-    }
-  };
-
-  const removeRoleAssignment = async (
-    groupId: number,
-    assignmentId: number
-  ) => {
-    try {
-      setLoading(true);
-      await httpClient.removeRolesFromUserGroup(groupId, [assignmentId]);
-      await fetchGroups();
-    } catch (e) {
-      setError("Failed to remove role assignment");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRoleToggle = (roleId: number) => {
-    setSelectedRoles((prev) =>
-      prev.includes(roleId)
-        ? prev.filter((id) => id !== roleId)
-        : [...prev, roleId]
-    );
-  };
-
   if (loading && groups.length === 0) {
     return <div className="p-6">Loading...</div>;
   }
@@ -225,7 +157,7 @@ const UserGroups: React.FC = () => {
         }
       />
 
-      {/* Groups Grid */}
+      {/* Groups Table */}
       <UserGroupsTable
         filteredGroups={filteredGroups}
         loading={loading}

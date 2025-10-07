@@ -19,9 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "../PermissionGuard";
-import { StatusBadge } from "../StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-colors";
 import httpClient from "@/lib/httpClient";
 import {
   UserInfoCard,
@@ -31,8 +29,6 @@ import {
   type UserStats,
 } from "./index";
 import UserPasswordCard from "./UserPasswordCard";
-import UserRoleAssignment from "./UserRoleAssignment";
-import UserGroupAssignment from "./UserGroupAssignment";
 import type { PasswordChangeForm } from "./types";
 
 const UserDetail: React.FC = () => {

@@ -132,44 +132,6 @@ const UserGroupsTable: React.FC<UserGroupsTableProps> = ({
                       <Eye className="h-4 w-4" />
                     </Link>
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    asChild
-                    className="text-yellow-600 hover:text-yellow-700"
-                  >
-                    <Link to={`/user-groups/${group.userGroupId}/edit`}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Group</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete "{group.name}"? This
-                          action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => onDeleteGroup(group.userGroupId)}
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
               </TableCell>
             </TableRow>

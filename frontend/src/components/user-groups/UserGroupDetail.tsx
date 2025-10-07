@@ -3,16 +3,13 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import {
   Users,
   ArrowLeft,
-  Edit,
   Shield,
   Activity,
   CheckCircle,
   XCircle,
-  Clock,
   Calendar,
   User,
   Trash2,
-  Settings,
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -32,9 +29,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { StatusBadge } from "@/components/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
+import { BasicInformationCard } from "./BasicInformationCard";
+import { RoleAssignmentsCard } from "./RoleAssignmentsCard";
 import api from "@/lib/api";
 
 interface RoleAssignment {
@@ -69,6 +79,19 @@ interface UserGroupStats {
   lastActivity: string | null;
 }
 
+interface Module {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface Role {
+  id: number;
+  name: string;
+  description: string;
+  moduleId: number;
+}
+
 export default function UserGroupDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -79,6 +102,11 @@ export default function UserGroupDetail() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Role management state
+  const [availableModules, setAvailableModules] = useState<Module[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [roleLoading, setRoleLoading] = useState(false);
 
   // Redirect if user doesn't have permission to view user groups
   useEffect(() => {
@@ -91,6 +119,7 @@ export default function UserGroupDetail() {
   useEffect(() => {
     if (id && canViewUsers) {
       fetchUserGroupDetails();
+      fetchModulesAndRoles();
     }
   }, [id, canViewUsers]);
 
@@ -100,9 +129,9 @@ export default function UserGroupDetail() {
       setError(null);
       const response = await api.get(`/v1/user-groups/${id}`);
       const groupData = response.data.data; // Access the actual data from ApiResponse wrapper
-      
+
       setUserGroup(groupData);
-      
+
       // Calculate stats
       const groupStats: UserGroupStats = {
         totalMembers: groupData.memberCount || 0,
@@ -110,7 +139,7 @@ export default function UserGroupDetail() {
         activeRoles: groupData.roleAssignments?.length || 0,
         lastActivity: groupData.updatedAt || null,
       };
-      
+
       setStats(groupStats);
     } catch (error) {
       console.error("Failed to fetch user group details:", error);
@@ -120,16 +149,94 @@ export default function UserGroupDetail() {
     }
   };
 
+  const fetchModulesAndRoles = async () => {
+    try {
+      setRoleLoading(true);
+      const [modulesResponse, rolesResponse] = await Promise.all([
+        api.get("/v1/modules"),
+        api.get("/v1/roles"),
+      ]);
+
+      const modulesData = Array.isArray(modulesResponse.data)
+        ? modulesResponse.data
+        : modulesResponse.data.data || [];
+      const rolesData = Array.isArray(rolesResponse.data)
+        ? rolesResponse.data
+        : rolesResponse.data.data || [];
+
+      setAvailableModules(modulesData);
+      setAvailableRoles(rolesData);
+    } catch (error) {
+      console.error("Error fetching modules and roles:", error);
+    } finally {
+      setRoleLoading(false);
+    }
+  };
+
+  const handleBasicInfoUpdate = async (data: {
+    name: string;
+    description: string;
+  }) => {
+    if (!userGroup) return;
+
+    try {
+      setUpdating(true);
+      const response = await api.put(
+        `/v1/user-groups/${userGroup.userGroupId}`,
+        {
+          name: data.name,
+          description: data.description,
+        }
+      );
+
+      if (response.data) {
+        await fetchUserGroupDetails();
+      }
+    } catch (error) {
+      console.error("Failed to update user group:", error);
+      setError("Failed to update user group");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleAssignRoles = async (roleIds: number[]) => {
+    if (!userGroup || roleIds.length === 0) return;
+
+    try {
+      setUpdating(true);
+      await api.post(`/v1/user-groups/${userGroup.userGroupId}/roles`, {
+        roleIds: roleIds,
+      });
+
+      await fetchUserGroupDetails();
+    } catch (error) {
+      console.error("Failed to assign roles:", error);
+      setError("Failed to assign roles");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleRemoveRoleAssignment = async (assignmentId: number) => {
+    if (!userGroup) return;
+
+    try {
+      setUpdating(true);
+      await api.delete(
+        `/v1/user-groups/${userGroup.userGroupId}/role-assignments/${assignmentId}`
+      );
+      await fetchUserGroupDetails();
+    } catch (error) {
+      console.error("Failed to remove role assignment:", error);
+      setError("Failed to remove role assignment");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const handleDeleteUserGroup = async () => {
     if (!userGroup || !canManageUsers) return;
-
-    if (
-      !window.confirm(
-        `Are you sure you want to delete the user group "${userGroup.name}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
 
     try {
       setUpdating(true);
@@ -246,25 +353,33 @@ export default function UserGroupDetail() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {getStatusIcon(userGroup.memberCount)}
-            <PermissionGuard permission="user-groups:update">
-              <Button asChild size="sm">
-                <Link to={`/user-groups/${userGroup.userGroupId}/edit`}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Link>
-              </Button>
-            </PermissionGuard>
             <PermissionGuard permission="user-groups:delete">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDeleteUserGroup}
-                disabled={updating}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={updating}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete User Group</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete the user group "
+                      {userGroup.name}"? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-white"
+                      onClick={handleDeleteUserGroup}
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </PermissionGuard>
           </div>
         </div>
@@ -275,135 +390,26 @@ export default function UserGroupDetail() {
         {/* Left Column - Main Information */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Group Name</Label>
-                  <div className="text-sm">{userGroup.name}</div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Member Count</Label>
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <Badge variant="secondary">
-                      {userGroup.memberCount}{" "}
-                      {userGroup.memberCount === 1 ? "member" : "members"}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Description</Label>
-                  <div className="text-sm text-muted-foreground">
-                    {userGroup.description || "No description provided"}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <BasicInformationCard
+            userGroup={{
+              id: userGroup.userGroupId,
+              name: userGroup.name,
+              description: userGroup.description,
+              memberCount: userGroup.memberCount,
+            }}
+            onUpdate={handleBasicInfoUpdate}
+            updating={updating}
+          />
 
           {/* Role Assignments */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Role Assignments</CardTitle>
-              <CardDescription>
-                Roles assigned to this user group
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {userGroup.roleAssignments && userGroup.roleAssignments.length > 0 ? (
-                <div className="space-y-4">
-                  {userGroup.roleAssignments.map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <h3 className="text-lg font-medium text-gray-900">
-                              {assignment.roleName}
-                            </h3>
-                            <Badge variant="outline">{assignment.moduleName}</Badge>
-                          </div>
-                          <p className="mt-1 text-sm text-gray-600">
-                            {assignment.roleDescription}
-                          </p>
-                        </div>
-                        <PermissionGuard permission="user-groups:manage-roles">
-                          <Button variant="ghost" size="sm">
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                        </PermissionGuard>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Shield className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2 text-gray-500">
-                    No roles assigned to this user group.
-                  </p>
-                  <PermissionGuard permission="user-groups:manage-roles">
-                    <Button variant="outline" className="mt-4">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Assign Roles
-                    </Button>
-                  </PermissionGuard>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Audit Information */}
-          <PermissionGuard permission="audit:read">
-            <Card>
-              <CardHeader>
-                <CardTitle>Audit Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Created At</Label>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      {userGroup.createdAt ? formatDate(userGroup.createdAt) : "N/A"}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Updated At</Label>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      {userGroup.updatedAt ? formatDate(userGroup.updatedAt) : "N/A"}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Created By</Label>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      {userGroup.createdBy || "System"}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Updated By</Label>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      {userGroup.updatedBy || "System"}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </PermissionGuard>
+          <RoleAssignmentsCard
+            roleAssignments={userGroup.roleAssignments || []}
+            availableModules={availableModules}
+            availableRoles={availableRoles}
+            onAssignRoles={handleAssignRoles}
+            onRemoveRoleAssignment={handleRemoveRoleAssignment}
+            updating={updating}
+          />
         </div>
 
         {/* Right Column - Actions & Statistics */}
@@ -417,26 +423,36 @@ export default function UserGroupDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <PermissionGuard permission="user-groups:activate">
-                <Button
-                  variant={userGroup.memberCount > 0 ? "default" : "outline"}
-                  className="w-full justify-start"
-                  disabled={updating}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Active ({userGroup.memberCount} members)
-                </Button>
-              </PermissionGuard>
+              <div className="flex items-center gap-2">
+                {getStatusIcon(userGroup.memberCount)}
+                <StatusBadge
+                  status={userGroup.memberCount > 0 ? "active" : "inactive"}
+                />
+                <span className="text-sm text-gray-600">
+                  ({userGroup.memberCount} members)
+                </span>
+              </div>
 
-              <PermissionGuard permission="user-groups:deactivate">
-                <Button
-                  variant={userGroup.memberCount === 0 ? "destructive" : "outline"}
-                  className="w-full justify-start"
-                  disabled={updating}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Empty Group
-                </Button>
+              <PermissionGuard permission="user-groups:update">
+                {userGroup.memberCount > 0 ? (
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    disabled={updating}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Deactivate Group
+                  </Button>
+                ) : (
+                  <Button
+                    variant={userGroup.memberCount > 0 ? "default" : "outline"}
+                    className="w-full"
+                    disabled={updating}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Activate Group
+                  </Button>
+                )}
               </PermissionGuard>
             </CardContent>
           </Card>
@@ -479,8 +495,56 @@ export default function UserGroupDetail() {
             </Card>
           )}
 
+          {/* Audit Information */}
+          <PermissionGuard permission="audit:read">
+            <Card>
+              <CardHeader>
+                <CardTitle>Audit Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Created At</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {userGroup.createdAt
+                        ? formatDate(userGroup.createdAt)
+                        : "N/A"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Updated At</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Calendar className="h-4 w-4" />
+                      {userGroup.updatedAt
+                        ? formatDate(userGroup.updatedAt)
+                        : "N/A"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Created By</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      {userGroup.createdBy || "System"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Updated By</Label>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <User className="h-4 w-4" />
+                      {userGroup.updatedBy || "System"}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </PermissionGuard>
+
           {/* Quick Actions */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>
@@ -502,10 +566,7 @@ export default function UserGroupDetail() {
               </PermissionGuard>
 
               <PermissionGuard permission="user-groups:manage-roles">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                >
+                <Button variant="outline" className="w-full justify-start">
                   <Shield className="h-4 w-4 mr-2" />
                   Manage Roles ({userGroup.roleAssignments?.length || 0})
                 </Button>
@@ -524,7 +585,7 @@ export default function UserGroupDetail() {
                 </Button>
               </PermissionGuard>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
       </div>
     </div>

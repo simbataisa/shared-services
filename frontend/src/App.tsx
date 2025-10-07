@@ -12,7 +12,6 @@ import Dashboard from "./pages/Dashboard";
 import UserGroups from "./pages/UserGroups";
 import UserGroupDetail from "./components/user-groups/UserGroupDetail";
 import UserGroupCreate from "./components/user-groups/UserGroupCreate";
-import UserGroupEdit from "./components/user-groups/UserGroupEdit";
 import UserList from "./pages/UserList";
 import UserDetail from "./components/users/UserDetail";
 import UserCreate from "./components/users/UserCreate";
@@ -77,15 +76,6 @@ function App() {
             element={
               <ProtectedRoute permission="user-groups:create">
                 <UserGroupCreate />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="user-groups/:id/edit"
-            element={
-              <ProtectedRoute permission="user-groups:update">
-                <UserGroupEdit />
               </ProtectedRoute>
             }
           />
