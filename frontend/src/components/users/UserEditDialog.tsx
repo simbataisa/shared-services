@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -19,20 +23,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { StatusBadge } from "../StatusBadge";
 import RoleAssignment from "./UserRoleAssignment";
 import UserGroupAssignment from "./UserGroupAssignment";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-colors";
 import {
-  User,
+  User as UserIcon,
   Key,
   AlertTriangle,
   CheckCircle,
@@ -42,43 +37,14 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  userStatus: "ACTIVE" | "INACTIVE";
-  createdAt: string;
-  updatedAt: string;
-  roles: Role[];
-  userGroups: UserGroup[];
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface UserGroup {
-  userGroupId: number;
-  name: string;
-  description: string;
-}
-
-interface PasswordChangeForm {
-  newPassword: string;
-  confirmPassword: string;
-}
-
-interface UserEditDialogProps {
-  userId: number | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onUserUpdated?: () => void;
-}
+import {
+  UserInfoCard,
+  UserStatusCard,
+  UserPasswordCard,
+  type User,
+  type PasswordChangeForm,
+  type UserEditDialogProps,
+} from "./index";
 
 const UserEditDialog: React.FC<UserEditDialogProps> = ({
   userId,
@@ -230,7 +196,7 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <User className="h-6 w-6" />
+            <UserIcon className="h-6 w-6" />
             {fetchLoading ? "Loading..." : user ? `Edit User: ${user.firstName} ${user.lastName}` : "User Not Found"}
           </h2>
           <p className="mt-2 text-gray-600">
@@ -260,7 +226,7 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
       {/* Error State */}
       {!fetchLoading && !user && (
         <div className="text-center py-8">
-          <User className="mx-auto h-12 w-12 text-gray-400" />
+          <UserIcon className="mx-auto h-12 w-12 text-gray-400" />
           <p className="mt-2 text-gray-500">User not found or access denied.</p>
         </div>
       )}
@@ -296,190 +262,23 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
 
             <div className={`mt-4 ${isDesktop ? 'max-h-[60vh]' : 'max-h-[50vh]'} overflow-y-auto`}>
               <TabsContent value="profile" className="space-y-4 mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
-                      <User className="mr-2 h-5 w-5" />
-                      User Information
-                    </CardTitle>
-                    <CardDescription>
-                      Basic user account information and details.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700">
-                          Username
-                        </Label>
-                        <p className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded">
-                          {user.username}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700">
-                          Email Address
-                        </Label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.email}
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700">
-                          First Name
-                        </Label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.firstName}
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700">
-                          Last Name
-                        </Label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {user.lastName}
-                        </p>
-                      </div>
-
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700">
-                          Status
-                        </Label>
-                        <div className="mt-1">
-                          <StatusBadge
-                            status={normalizeEntityStatus("user", user.userStatus)}
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label className="block text-sm font-medium text-gray-700">
-                          Created
-                        </Label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <UserInfoCard user={user} showExtendedInfo />
               </TabsContent>
 
               <TabsContent value="status" className="space-y-4 mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
-                      <AlertTriangle className="mr-2 h-5 w-5" />
-                      User Status Management
-                    </CardTitle>
-                    <CardDescription>
-                      Activate, deactivate, or suspend user account
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h4 className="font-medium text-gray-900">Current Status</h4>
-                          <p className="text-sm text-gray-600">
-                            User is currently {user.userStatus?.toLowerCase() || 'unknown'}
-                          </p>
-                        </div>
-                        <StatusBadge
-                          status={normalizeEntityStatus("user", user.userStatus)}
-                        />
-                      </div>
-                    </div>
-
-                    {canUpdateUsers && (
-                      <div className="space-y-2">
-                        {user.userStatus === "ACTIVE" ? (
-                          <Button
-                            onClick={() => handleStatusChange("INACTIVE")}
-                            disabled={loading}
-                            variant="destructive"
-                            className="w-full"
-                          >
-                            <AlertTriangle className="mr-2 h-4 w-4" />
-                            Suspend User
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => handleStatusChange("ACTIVE")}
-                            disabled={loading}
-                            className="w-full"
-                          >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Reactivate User
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                <UserStatusCard
+                  user={user}
+                  onStatusChange={handleStatusChange}
+                  loading={loading}
+                />
               </TabsContent>
 
               <TabsContent value="password" className="space-y-4 mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
-                      <Key className="mr-2 h-5 w-5" />
-                      Password Management
-                    </CardTitle>
-                    <CardDescription>
-                      Change the user's password
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="newPassword" className="text-sm font-medium text-gray-700">
-                        New Password
-                      </Label>
-                      <Input
-                        id="newPassword"
-                        type="password"
-                        value={passwordForm.newPassword}
-                        onChange={(e) =>
-                          setPasswordForm({
-                            ...passwordForm,
-                            newPassword: e.target.value,
-                          })
-                        }
-                        className="mt-1"
-                        placeholder="Enter new password"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
-                        Confirm Password
-                      </Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        value={passwordForm.confirmPassword}
-                        onChange={(e) =>
-                          setPasswordForm({
-                            ...passwordForm,
-                            confirmPassword: e.target.value,
-                          })
-                        }
-                        className="mt-1"
-                        placeholder="Confirm new password"
-                      />
-                    </div>
-                    <Button
-                      onClick={handlePasswordChange}
-                      disabled={loading || !passwordForm.newPassword || !passwordForm.confirmPassword}
-                      className="w-full"
-                    >
-                      <Key className="mr-2 h-4 w-4" />
-                      Change Password
-                    </Button>
-                  </CardContent>
-                </Card>
+                <UserPasswordCard
+                  onPasswordChange={handlePasswordChange}
+                  loading={loading}
+                  canUpdate={canUpdateUsers}
+                />
               </TabsContent>
 
               <TabsContent value="permissions" className="space-y-4 mt-0">
@@ -509,7 +308,7 @@ const UserEditDialog: React.FC<UserEditDialogProps> = ({
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center text-lg font-semibold text-gray-900">
-                        <User className="mr-2 h-5 w-5" />
+                        <UserIcon className="mr-2 h-5 w-5" />
                         User Group Assignment
                       </CardTitle>
                       <CardDescription>

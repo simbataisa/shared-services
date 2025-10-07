@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -22,7 +22,6 @@ import {
 import { StatusBadge } from "@/components/StatusBadge";
 import SearchAndFilter from "@/components/SearchAndFilter";
 import UserEditDialog from "@/components/users/UserEditDialog";
-import UserCreate from "@/components/users/UserCreate";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { Edit, Trash2, Shield, Eye } from "lucide-react";
@@ -203,42 +202,35 @@ const UserList: React.FC = () => {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>A list of all users in the system</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <SearchAndFilter
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            searchPlaceholder="Search users by username, email, or name..."
-            filters={[
-              {
-                label: "Status",
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: [
-                  { value: "all", label: "All Status" },
-                  { value: "ACTIVE", label: "Active" },
-                  { value: "INACTIVE", label: "Inactive" },
-                ],
-                width: "w-40",
-              },
-            ]}
-            actions={[
-              <PermissionGuard permission="user:create">
-                <UserCreate
-                  roles={roles}
-                  userGroups={userGroups}
-                  onUserCreated={fetchUsers}
-                  onError={(error) => setError(error)}
-                />
-              </PermissionGuard>,
-            ]}
-            className="mb-6"
-          />
+      <SearchAndFilter
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search users by username, email, or name..."
+        filters={[
+          {
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: "all", label: "All Status" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "INACTIVE", label: "Inactive" },
+            ],
+            width: "w-40",
+          },
+        ]}
+        actions={[
+          <PermissionGuard key="create-user" permission="user:create">
+            <Button asChild>
+              <Link to="/users/create">Create New User</Link>
+            </Button>
+          </PermissionGuard>,
+        ]}
+        className="mb-6"
+      />
 
+      <Card>
+        <CardContent>
           {loading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (

@@ -1,46 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
+import type {
+  UserGroup as HttpUserGroup,
+  Role as HttpRole,
+  Module as HttpModule,
+} from "@/lib/httpClient";
 import SearchAndFilter from "@/components/SearchAndFilter";
 import UserGroupsTable from "@/components/user-groups/UserGroupsTable";
 import { Button } from "@/components/ui/button";
 import { PermissionGuard } from "@/components/PermissionGuard";
-
-interface RoleAssignment {
-  id: number;
-  userGroupId: number;
-  userGroupName: string;
-  moduleId: number;
-  moduleName: string;
-  roleId: number;
-  roleName: string;
-  roleDescription: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface UserGroup {
-  userGroupId: number;
-  name: string;
-  description: string;
-  memberCount: number;
-  roleAssignments?: RoleAssignment[];
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  moduleId: number;
-  moduleName: string;
-}
-
-interface Module {
-  id: number;
-  name: string;
-  description: string;
-}
 
 interface CreateGroupForm {
   name: string;
@@ -48,7 +18,7 @@ interface CreateGroupForm {
 }
 
 const UserGroups: React.FC = () => {
-  const [groups, setGroups] = useState<UserGroup[]>([]);
+  const [groups, setGroups] = useState<HttpUserGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,9 +31,11 @@ const UserGroups: React.FC = () => {
 
   // Role assignment state
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<UserGroup | null>(null);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<HttpUserGroup | null>(
+    null
+  );
+  const [modules, setModules] = useState<HttpModule[]>([]);
+  const [roles, setRoles] = useState<HttpRole[]>([]);
   const [selectedModule, setSelectedModule] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
   const [roleLoading, setRoleLoading] = useState(false);
@@ -72,7 +44,9 @@ const UserGroups: React.FC = () => {
   const filteredGroups = groups.filter((group) => {
     const matchesSearch =
       group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description.toLowerCase().includes(searchTerm.toLowerCase());
+      (group.description?.toLowerCase() || "").includes(
+        searchTerm.toLowerCase()
+      );
 
     const matchesMemberCount =
       memberCountFilter === "all" ||
@@ -95,9 +69,8 @@ const UserGroups: React.FC = () => {
   const fetchGroups = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/v1/user-groups");
-      const list = data?.data?.content || data?.data || [];
-      setGroups(list);
+      const groups = await httpClient.getUserGroups();
+      setGroups(groups);
       setError(null);
     } catch (e) {
       setError("Failed to fetch groups");
@@ -109,7 +82,7 @@ const UserGroups: React.FC = () => {
   const createGroup = async () => {
     try {
       setLoading(true);
-      await api.post("/v1/user-groups", createForm);
+      await httpClient.createUserGroup(createForm);
       setCreateForm({ name: "", description: "" });
       setIsCreateDialogOpen(false);
       await fetchGroups();
@@ -123,7 +96,7 @@ const UserGroups: React.FC = () => {
   const deleteGroup = async (groupId: number) => {
     try {
       setLoading(true);
-      await api.delete(`/v1/user-groups/${groupId}`);
+      await httpClient.deleteUserGroup(groupId);
       await fetchGroups();
     } catch (e) {
       setError("Failed to delete group");
@@ -136,13 +109,12 @@ const UserGroups: React.FC = () => {
   const fetchModulesAndRoles = async () => {
     try {
       setRoleLoading(true);
-      const [modulesResponse, rolesResponse] = await Promise.all([
-        api.get("/v1/modules"),
-        api.get("/v1/roles"),
+      const [modules, roles] = await Promise.all([
+        httpClient.getModules(),
+        httpClient.getRoles(),
       ]);
-      // API returns arrays directly, not nested in data.data.content
-      setModules(modulesResponse.data || []);
-      setRoles(rolesResponse.data || []);
+      setModules(modules || []);
+      setRoles(roles || []);
     } catch (e) {
       setError("Failed to fetch modules and roles");
     } finally {
@@ -150,7 +122,7 @@ const UserGroups: React.FC = () => {
     }
   };
 
-  const handleManageRoles = async (group: UserGroup) => {
+  const handleManageRoles = async (group: HttpUserGroup) => {
     setSelectedGroup(group);
     setSelectedModule("");
     setSelectedRoles([]);
@@ -163,10 +135,10 @@ const UserGroups: React.FC = () => {
 
     try {
       setRoleLoading(true);
-      await api.post(`/v1/user-groups/${selectedGroup.userGroupId}/roles`, {
-        moduleId: parseInt(selectedModule),
-        roleIds: selectedRoles,
-      });
+      await httpClient.assignRolesToUserGroup(
+        selectedGroup.userGroupId,
+        selectedRoles
+      );
       setIsRoleDialogOpen(false);
       setSelectedModule("");
       setSelectedRoles([]);
@@ -184,9 +156,7 @@ const UserGroups: React.FC = () => {
   ) => {
     try {
       setLoading(true);
-      await api.delete(`/v1/user-groups/${groupId}/roles`, {
-        data: { roleAssignmentIds: [assignmentId] },
-      });
+      await httpClient.removeRolesFromUserGroup(groupId, [assignmentId]);
       await fetchGroups();
     } catch (e) {
       setError("Failed to remove role assignment");

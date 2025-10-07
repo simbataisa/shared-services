@@ -41,10 +41,10 @@ interface RoleAssignment {
 interface UserGroup {
   userGroupId: number;
   name: string;
-  description: string;
+  description?: string;
   memberCount: number;
   roleAssignments?: RoleAssignment[];
-  status?: 'active' | 'inactive' | 'pending';
+  status?: "active" | "inactive" | "pending";
 }
 
 interface UserGroupsTableProps {
@@ -113,8 +113,11 @@ const UserGroupsTable: React.FC<UserGroupsTableProps> = ({
                 </Badge>
               </TableCell>
               <TableCell>
-                <StatusBadge 
-                  status={normalizeEntityStatus('role', group.status || 'ACTIVE')}
+                <StatusBadge
+                  status={normalizeEntityStatus(
+                    "role",
+                    group.status || "ACTIVE"
+                  )}
                 />
               </TableCell>
               <TableCell className="text-right">

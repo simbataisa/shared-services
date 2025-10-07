@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2, Shield, User, Mail, Calendar } from "lucide-react";
+import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,51 +17,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "../PermissionGuard";
 import { StatusBadge } from "../StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
-import api from "@/lib/api";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  userStatus: "ACTIVE" | "INACTIVE";
-  createdAt: string;
-  updatedAt: string;
-  roles: Role[];
-  userGroups: UserGroup[];
-  phoneNumber?: string;
-  emailVerified?: boolean;
-  lastLogin?: string;
-  failedLoginAttempts?: number;
-  createdBy?: string;
-  updatedBy?: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface UserGroup {
-  userGroupId: number;
-  name: string;
-  description: string;
-}
-
-interface UserStats {
-  totalRoles: number;
-  totalUserGroups: number;
-  lastLogin: string | null;
-  accountStatus: string;
-}
+import httpClient from "@/lib/httpClient";
+import {
+  UserInfoCard,
+  UserStatusCard,
+  UserRoleGroupCard,
+  type User,
+  type UserStats,
+} from "./index";
 
 const UserDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -93,8 +61,7 @@ const UserDetail: React.FC = () => {
       setLoading(true);
 
       // Fetch user data from API
-      const response = await api.get(`/v1/users/${id}`);
-      const userData = response.data;
+      const userData = await httpClient.getUserById(Number(id));
 
       // Transform user data to match frontend interface
       const transformedUser: User = {
@@ -103,11 +70,19 @@ const UserDetail: React.FC = () => {
         email: userData.email,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        userStatus: userData.userStatus,
+        userStatus: userData.userStatus as "ACTIVE" | "INACTIVE",
         createdAt: userData.createdAt,
         updatedAt: userData.updatedAt,
-        roles: userData.roles || [],
-        userGroups: userData.userGroups || [],
+        roles: userData.roles?.map(role => ({
+          id: role.id,
+          name: role.name,
+          description: role.description || ""
+        })) || [],
+        userGroups: userData.userGroups?.map(group => ({
+          userGroupId: group.userGroupId,
+          name: group.name,
+          description: group.description || ""
+        })) || [],
         phoneNumber: userData.phoneNumber,
         emailVerified: userData.emailVerified,
         lastLogin: userData.lastLogin,
@@ -141,7 +116,7 @@ const UserDetail: React.FC = () => {
       setUpdating(true);
 
       // API call to update user status
-      await api.put(`/v1/users/${user.id}/status`, { userStatus: newStatus });
+      await httpClient.updateUserStatus(user.id, newStatus);
 
       setUser((prev) =>
         prev
@@ -171,7 +146,7 @@ const UserDetail: React.FC = () => {
       setUpdating(true);
 
       // API call to delete user
-      await api.delete(`/v1/users/${user.id}`);
+      await httpClient.deleteUser(user.id);
 
       navigate("/users");
     } catch (error) {
@@ -179,25 +154,6 @@ const UserDetail: React.FC = () => {
       setError("Failed to delete user");
       setUpdating(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getStatusBadge = (status: string | undefined) => {
-    if (!status) return null;
-    const normalizedStatus = normalizeEntityStatus(
-      "user",
-      status.toUpperCase()
-    );
-    return <StatusBadge status={normalizedStatus} />;
   };
 
   const getFullName = (user: User) => {
@@ -293,7 +249,9 @@ const UserDetail: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              {getStatusBadge(user.userStatus)}
+              <StatusBadge
+                status={normalizeEntityStatus("user", user.userStatus)}
+              />
 
               <PermissionGuard permission="user:update">
                 <div className="flex space-x-2">
@@ -346,211 +304,35 @@ const UserDetail: React.FC = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* User Information */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                User Information
-              </h2>
+            <UserInfoCard user={user} showExtendedInfo={true} />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Username
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded">
-                    {user.username}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.email}
-                    {user.emailVerified && (
-                      <Badge variant="outline" className="ml-2 text-xs">
-                        Verified
-                      </Badge>
-                    )}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    First Name
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.firstName}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Last Name
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {user.lastName}
-                  </p>
-                </div>
-
-                {user.phoneNumber && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Phone Number
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {user.phoneNumber}
-                    </p>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Status
-                  </label>
-                  {getStatusBadge(user.userStatus)}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Created
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {formatDate(user.createdAt)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    by {user.createdBy}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Last Updated
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {formatDate(user.updatedAt)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    by {user.updatedBy}
-                  </p>
-                </div>
-
-                {user.lastLogin && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Last Login
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {formatDate(user.lastLogin)}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Roles Section */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Roles</h2>
-
-                <PermissionGuard permission="user:assign_roles">
-                  <Button size="sm" variant="outline">
-                    <Shield className="mr-2 h-4 w-4" />
-                    Manage Roles
-                  </Button>
-                </PermissionGuard>
-              </div>
-
-              <div className="space-y-4">
-                {user.roles.length > 0 ? (
-                  user.roles.map((role) => (
-                    <div
-                      key={role.id}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <h3 className="text-lg font-medium text-gray-900">
-                              {role.name}
-                            </h3>
-                            <Badge variant="outline">Role</Badge>
-                          </div>
-                          <p className="mt-1 text-sm text-gray-600">
-                            {role.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <Shield className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-gray-500">
-                      No roles assigned to this user.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* User Groups Section */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">User Groups</h2>
-
-                <PermissionGuard permission="user:assign_groups">
-                  <Button size="sm" variant="outline">
-                    <User className="mr-2 h-4 w-4" />
-                    Manage Groups
-                  </Button>
-                </PermissionGuard>
-              </div>
-
-              <div className="space-y-4">
-                {user.userGroups.length > 0 ? (
-                  user.userGroups.map((group) => (
-                    <div
-                      key={group.userGroupId}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <h3 className="text-lg font-medium text-gray-900">
-                              {group.name}
-                            </h3>
-                            <Badge variant="outline">Group</Badge>
-                          </div>
-                          <p className="mt-1 text-sm text-gray-600">
-                            {group.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <User className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-gray-500">
-                      No user groups assigned to this user.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Roles & Groups */}
+            <UserRoleGroupCard 
+              user={user}
+              canUpdate={canManageUsers}
+              loading={updating}
+            />
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* User Status Management */}
+            <UserStatusCard
+              user={user}
+              onStatusChange={handleStatusUpdate}
+              loading={updating}
+              canUpdate={canUpdateUsers}
+            />
+
             {/* Statistics */}
             {stats && (
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Statistics
-                </h3>
-
-                <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-gray-900">
+                    Statistics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Total Roles</span>
                     <span className="text-sm font-medium text-gray-900">
@@ -578,35 +360,28 @@ const UserDetail: React.FC = () => {
                     <div className="pt-4 border-t border-gray-200">
                       <span className="text-sm text-gray-600">Last Login</span>
                       <p className="text-sm font-medium text-gray-900">
-                        {formatDate(stats.lastLogin)}
+                        {new Date(stats.lastLogin).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Quick Actions */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Quick Actions
-              </h3>
-
-              <div className="space-y-3">
-                <PermissionGuard permission="user:assign_roles">
-                  <Button className="w-full" variant="outline" size="sm">
-                    <Shield className="mr-2 h-4 w-4" />
-                    Manage Roles
-                  </Button>
-                </PermissionGuard>
-
-                <PermissionGuard permission="user:assign_groups">
-                  <Button className="w-full" variant="outline" size="sm">
-                    <User className="mr-2 h-4 w-4" />
-                    Manage Groups
-                  </Button>
-                </PermissionGuard>
-
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 <PermissionGuard permission="user:update">
                   <Button asChild className="w-full" size="sm">
                     <Link to={`/users/${user.id}/edit`}>
@@ -627,8 +402,8 @@ const UserDetail: React.FC = () => {
                     Back to Users
                   </Link>
                 </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

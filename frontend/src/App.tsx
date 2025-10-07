@@ -15,6 +15,7 @@ import UserGroupCreate from "./components/user-groups/UserGroupCreate";
 import UserGroupEdit from "./components/user-groups/UserGroupEdit";
 import UserList from "./pages/UserList";
 import UserDetail from "./components/users/UserDetail";
+import UserCreate from "./components/users/UserCreate";
 import RoleList from "./pages/RoleList";
 import PermissionList from "./pages/PermissionList";
 import TenantList from "./pages/TenantList";
@@ -103,6 +104,15 @@ function App() {
             element={
               <ProtectedRoute permission="user:read">
                 <UserList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="users/create"
+            element={
+              <ProtectedRoute permission="user:create">
+                <UserCreate />
               </ProtectedRoute>
             }
           />
