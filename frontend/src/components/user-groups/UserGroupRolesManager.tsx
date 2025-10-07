@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Shield, ChevronDown, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Shield, ChevronDown, ChevronRight, Search, Filter, X } from "lucide-react";
 
 interface RoleAssignment {
   id: number;
@@ -58,6 +61,11 @@ const UserGroupRolesManager: React.FC<UserGroupRolesManagerProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<"all" | "assigned" | "unassigned">("all");
+  const [roleSearchTerms, setRoleSearchTerms] = useState<Record<number, string>>({});
 
   // Toggle individual module expansion
   const toggleModuleExpansion = (moduleId: number) => {
@@ -68,6 +76,21 @@ const UserGroupRolesManager: React.FC<UserGroupRolesManagerProps> = ({
       newExpanded.add(moduleId);
     }
     setExpandedModules(newExpanded);
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setFilterType("all");
+    setRoleSearchTerms({});
+  };
+
+  // Update role search term for specific module
+  const updateRoleSearchTerm = (moduleId: number, term: string) => {
+    setRoleSearchTerms(prev => ({
+      ...prev,
+      [moduleId]: term
+    }));
   };
   // Get assigned role IDs for quick lookup
   const getAssignedRoleIds = () => {
@@ -84,6 +107,42 @@ const UserGroupRolesManager: React.FC<UserGroupRolesManagerProps> = ({
     if (!group.roleAssignments) return null;
     const assignment = group.roleAssignments.find((a) => a.roleId === roleId);
     return assignment ? assignment.id : null;
+  };
+
+  // Filter modules based on search term and filter type
+  const filteredModules = useMemo(() => {
+    if (!modules) return [];
+    
+    return modules.filter(module => {
+      // Search term filter
+      const matchesSearch = searchTerm === "" || 
+        module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        module.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Assignment filter
+      if (filterType === "all") return matchesSearch;
+      
+      const moduleRoles = roles?.filter(role => role.moduleId === module.id) || [];
+      const hasAssignedRoles = moduleRoles.some(role => assignedRoleIds.has(role.id));
+      
+      if (filterType === "assigned") return matchesSearch && hasAssignedRoles;
+      if (filterType === "unassigned") return matchesSearch && !hasAssignedRoles;
+      
+      return matchesSearch;
+    });
+  }, [modules, roles, searchTerm, filterType, assignedRoleIds]);
+
+  // Filter roles within a module based on role search term
+  const getFilteredRolesForModule = (moduleId: number) => {
+    const moduleRoles = rolesByModule[moduleId] || [];
+    const roleSearchTerm = roleSearchTerms[moduleId] || "";
+    
+    if (roleSearchTerm === "") return moduleRoles;
+    
+    return moduleRoles.filter(role =>
+      role.name.toLowerCase().includes(roleSearchTerm.toLowerCase()) ||
+      role.description.toLowerCase().includes(roleSearchTerm.toLowerCase())
+    );
   };
 
   // Group roles by module
@@ -138,14 +197,52 @@ const UserGroupRolesManager: React.FC<UserGroupRolesManagerProps> = ({
       </CardHeader>
       {isExpanded && (
         <CardContent className="space-y-6">
-      {!modules || modules.length === 0 ? (
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 p-4 bg-muted/30 rounded-lg">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search modules by name or description..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Select value={filterType} onValueChange={(value: "all" | "assigned" | "unassigned") => setFilterType(value)}>
+                <SelectTrigger className="w-40">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Modules</SelectItem>
+                  <SelectItem value="assigned">With Roles</SelectItem>
+                  <SelectItem value="unassigned">Without Roles</SelectItem>
+                </SelectContent>
+              </Select>
+              {(searchTerm || filterType !== "all" || Object.keys(roleSearchTerms).length > 0) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="px-3"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+      {!filteredModules || filteredModules.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Shield className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>No modules available</p>
+          <p>{searchTerm || filterType !== "all" ? "No modules match your search criteria" : "No modules available"}</p>
         </div>
       ) : (
         <div className="space-y-6">
-          {modules.map((module) => {
+          {filteredModules.map((module) => {
             const moduleRoles = rolesByModule[module.id] || [];
             const assignedCount = moduleRoles.filter((role) =>
               assignedRoleIds.has(role.id)
@@ -180,41 +277,59 @@ const UserGroupRolesManager: React.FC<UserGroupRolesManagerProps> = ({
 
                 {expandedModules.has(module.id) && (
                   <div className="border rounded-lg p-4 ml-6">
-                  {moduleRoles.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {moduleRoles.map((role) => {
-                        const isAssigned = assignedRoleIds.has(role.id);
+                    {/* Role search within module */}
+                    {moduleRoles.length > 3 && (
+                      <div className="mb-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                             placeholder={`Search roles in ${module.name}...`}
+                             value={roleSearchTerms[module.id] || ""}
+                             onChange={(e) => updateRoleSearchTerm(module.id, e.target.value)}
+                             className="pl-10 h-8"
+                           />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {(() => {
+                      const filteredRoles = getFilteredRolesForModule(module.id);
+                      return filteredRoles.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {filteredRoles.map((role) => {
+                            const isAssigned = assignedRoleIds.has(role.id);
 
-                        return (
-                          <div
-                            key={role.id}
-                            className="flex items-start space-x-3 p-3 hover:bg-muted/50 rounded cursor-pointer"
-                            onClick={() => handleRoleToggle(role, isAssigned)}
-                          >
-                            <Checkbox
-                              checked={isAssigned}
-                              onChange={() =>
-                                handleRoleToggle(role, isAssigned)
-                              }
-                              disabled={isLoading}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium">
-                                {role.name}
+                            return (
+                              <div
+                                key={role.id}
+                                className="flex items-start space-x-3 p-3 hover:bg-muted/50 rounded cursor-pointer"
+                                onClick={() => handleRoleToggle(role, isAssigned)}
+                              >
+                                <Checkbox
+                                  checked={isAssigned}
+                                  onChange={() =>
+                                    handleRoleToggle(role, isAssigned)
+                                  }
+                                  disabled={isLoading}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium">
+                                    {role.name}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {role.description}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-xs text-muted-foreground">
-                                {role.description}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      <p>No roles available for this module</p>
-                    </div>
-                  )}
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <p>{roleSearchTerms[module.id] ? "No roles match your search" : "No roles available for this module"}</p>
+                        </div>
+                      );
+                    })()}
                 </div>
                 )}
               </div>
