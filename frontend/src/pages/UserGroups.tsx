@@ -2,23 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import httpClient from "@/lib/httpClient";
-import type {
-  UserGroup as HttpUserGroup,
-  Role as HttpRole,
-  Module as HttpModule,
-} from "@/lib/httpClient";
+import type { UserGroup, Role, Module, CreateGroupForm } from "@/types";
 import SearchAndFilter from "@/components/SearchAndFilter";
 import UserGroupsTable from "@/components/user-groups/UserGroupsTable";
 import { Button } from "@/components/ui/button";
 import { PermissionGuard } from "@/components/PermissionGuard";
 
-interface CreateGroupForm {
-  name: string;
-  description: string;
-}
-
 const UserGroups: React.FC = () => {
-  const [groups, setGroups] = useState<HttpUserGroup[]>([]);
+  const [groups, setGroups] = useState<UserGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,11 +22,11 @@ const UserGroups: React.FC = () => {
 
   // Role assignment state
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<HttpUserGroup | null>(
+  const [selectedGroup, setSelectedGroup] = useState<UserGroup | null>(
     null
   );
-  const [modules, setModules] = useState<HttpModule[]>([]);
-  const [roles, setRoles] = useState<HttpRole[]>([]);
+  const [modules, setModules] = useState<Module[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [selectedModule, setSelectedModule] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
   const [roleLoading, setRoleLoading] = useState(false);

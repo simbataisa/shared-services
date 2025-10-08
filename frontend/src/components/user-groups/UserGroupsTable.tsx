@@ -10,33 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { Edit, Trash2, Users, Eye } from "lucide-react";
-
-interface RoleAssignment {
-  id: number;
-  userGroupId: number;
-  userGroupName: string;
-  moduleId: number;
-  moduleName: string;
-  roleId: number;
-  roleName: string;
-  roleDescription: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { RoleAssignment } from "@/types";
 
 interface UserGroup {
   userGroupId: number;

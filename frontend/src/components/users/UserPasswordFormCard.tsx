@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Key, Eye, EyeOff } from "lucide-react";
-import type { CreateUserForm } from "./types";
+import type { CreateUserForm } from "@/types";
 
 interface UserPasswordFormCardProps {
   formData: CreateUserForm;

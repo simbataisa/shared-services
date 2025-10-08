@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Users, ArrowLeft, Plus } from "lucide-react";
+import { Users, Plus } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,12 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
+import type { UserGroupFormData } from "@/types";
 import api from "@/lib/api";
-
-interface UserGroupFormData {
-  name: string;
-  description: string;
-}
 
 export default function UserGroupCreate() {
   const navigate = useNavigate();
@@ -162,7 +158,9 @@ export default function UserGroupCreate() {
                       id="name"
                       type="text"
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       placeholder="Enter group name"
                       disabled={loading}
                       className={errors.name ? "border-red-500" : ""}
@@ -180,7 +178,9 @@ export default function UserGroupCreate() {
                     <Textarea
                       id="description"
                       value={formData.description}
-                      onChange={(e) => handleInputChange("description", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("description", e.target.value)
+                      }
                       placeholder="Enter group description (optional)"
                       disabled={loading}
                       rows={4}
@@ -244,9 +244,16 @@ export default function UserGroupCreate() {
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium">Best Practices</h4>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p>• Use descriptive names that reflect the group's purpose</p>
-                      <p>• Keep groups focused on specific roles or departments</p>
-                      <p>• Add clear descriptions to help others understand the group</p>
+                      <p>
+                        • Use descriptive names that reflect the group's purpose
+                      </p>
+                      <p>
+                        • Keep groups focused on specific roles or departments
+                      </p>
+                      <p>
+                        • Add clear descriptions to help others understand the
+                        group
+                      </p>
                       <p>• Review group membership regularly</p>
                     </div>
                   </div>
@@ -280,7 +287,7 @@ export default function UserGroupCreate() {
                       on creating and managing user groups.
                     </p>
                   </div>
-                  
+
                   <div className="text-sm">
                     <p className="font-medium mb-1">Support</p>
                     <p className="text-muted-foreground">

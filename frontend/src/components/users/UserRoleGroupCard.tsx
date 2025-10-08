@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Users, Shield, Plus, X, Edit, Save, XCircle } from "lucide-react";
-import type { User, Role, UserGroup } from "./types";
+import type { User, Role, UserGroup } from "@/types";
 
 interface UserRoleGroupCardProps {
   user: User;

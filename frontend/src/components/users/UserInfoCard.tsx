@@ -13,7 +13,7 @@ import {
 import { StatusBadge } from "../StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { User as UserIcon, Mail, Calendar, Edit, Save, X } from "lucide-react";
-import type { User as UserType } from "./types";
+import type { User as UserType } from "@/types";
 import httpClient from "@/lib/httpClient";
 
 interface UserInfoCardProps {

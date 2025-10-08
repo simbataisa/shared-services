@@ -13,22 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { usePermissions } from '@/hooks/usePermissions'
 import { Search, Plus, Edit, Trash2, Shield, Key } from 'lucide-react'
 import { SearchAndFilter } from '@/components/SearchAndFilter'
-
-interface Permission {
-  id: number
-  name: string
-  description: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
-
-interface CreatePermissionForm {
-  name: string
-  description: string
-  resource: string
-  action: string
-}
+import type { Permission, CreatePermissionForm } from "@/types";
 
 const PermissionList: React.FC = () => {
   const [permissions, setPermissions] = useState<Permission[]>([])

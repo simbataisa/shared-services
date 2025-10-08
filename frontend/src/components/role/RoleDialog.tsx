@@ -11,39 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
-interface Permission {
-  id: number;
-  name: string;
-  description: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  permissions: Permission[];
-}
-
-interface RoleForm {
-  name: string;
-  description: string;
-  permissionIds: number[];
-}
-
-interface RoleDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  role?: Role | null;
-  permissions: Permission[];
-  onSave: (form: RoleForm) => Promise<void>;
-  loading?: boolean;
-}
+import type { Permission, RoleFormData, RoleDialogProps } from "@/types";
 
 const RoleDialog: React.FC<RoleDialogProps> = ({
   open,
@@ -53,7 +21,7 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
   onSave,
   loading = false,
 }) => {
-  const [form, setForm] = useState<RoleForm>({
+  const [form, setForm] = useState<RoleFormData>({
     name: "",
     description: "",
     permissionIds: [],
@@ -61,11 +29,12 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
 
   const isEdit = !!role;
 
+  // Initialize form data when role or dialog state changes
   useEffect(() => {
     if (role) {
       setForm({
         name: role.name,
-        description: role.description,
+        description: role.description || "",
         permissionIds: role.permissions?.map((p) => p.id) || [],
       });
     } else {
@@ -77,8 +46,19 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
     }
   }, [role, open]);
 
+  // Event handlers
   const handleSave = async () => {
     await onSave(form);
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, name: e.target.value }));
+  };
+
+  const handleDescriptionChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    setForm((prev) => ({ ...prev, description: e.target.value }));
   };
 
   const handlePermissionChange = (permissionId: number, checked: boolean) => {
@@ -95,6 +75,10 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    onOpenChange(false);
+  };
+
   // Group permissions by resource (extracted from permission name)
   const groupedPermissions = permissions.reduce((acc, permission) => {
     const resource = permission.name.split(":")[0] || "General";
@@ -105,6 +89,9 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
     return acc;
   }, {} as Record<string, Permission[]>);
 
+  const isFormValid = form.name.trim().length > 0;
+
+  // Render method
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -116,7 +103,9 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
               : "Create a new role and assign permissions to it."}
           </DialogDescription>
         </DialogHeader>
+
         <div className="grid gap-4 py-4">
+          {/* Role Name Field */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
@@ -124,13 +113,14 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
             <Input
               id="name"
               value={form.name}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, name: e.target.value }))
-              }
+              onChange={handleNameChange}
               className="col-span-3"
               placeholder="Enter role name"
+              required
             />
           </div>
+
+          {/* Role Description Field */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Description
@@ -138,13 +128,13 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
             <Textarea
               id="description"
               value={form.description}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, description: e.target.value }))
-              }
+              onChange={handleDescriptionChange}
               className="col-span-3"
               placeholder="Enter role description"
             />
           </div>
+
+          {/* Permissions Section */}
           <div className="grid grid-cols-4 items-start gap-4">
             <Label className="text-right mt-2">Permissions</Label>
             <div className="col-span-3 space-y-4 max-h-64 overflow-y-auto">
@@ -187,11 +177,12 @@ const RoleDialog: React.FC<RoleDialogProps> = ({
             </div>
           </div>
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading || !form.name.trim()}>
+          <Button onClick={handleSave} disabled={loading || !isFormValid}>
             {loading ? "Saving..." : isEdit ? "Update Role" : "Create Role"}
           </Button>
         </DialogFooter>

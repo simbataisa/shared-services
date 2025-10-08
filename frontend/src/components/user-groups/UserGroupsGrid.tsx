@@ -21,19 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Users, Eye } from "lucide-react";
-
-interface RoleAssignment {
-  id: number;
-  userGroupId: number;
-  userGroupName: string;
-  moduleId: number;
-  moduleName: string;
-  roleId: number;
-  roleName: string;
-  roleDescription: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { RoleAssignment, Role, Module } from "@/types";
 
 interface UserGroup {
   userGroupId: number;
@@ -41,20 +29,6 @@ interface UserGroup {
   description: string;
   memberCount: number;
   roleAssignments?: RoleAssignment[];
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  moduleId: number;
-  moduleName: string;
-}
-
-interface Module {
-  id: number;
-  name: string;
-  description: string;
 }
 
 interface CreateGroupForm {

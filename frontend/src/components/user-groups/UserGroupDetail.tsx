@@ -45,52 +45,14 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
 import { BasicInformationCard } from "./BasicInformationCard";
 import { RoleAssignmentsCard } from "./RoleAssignmentsCard";
+import type {
+  RoleAssignment,
+  UserGroupDetails,
+  UserGroupStats,
+  Module,
+  Role,
+} from "@/types";
 import api from "@/lib/api";
-
-interface RoleAssignment {
-  id: number;
-  userGroupId: number;
-  userGroupName: string;
-  moduleId: number;
-  moduleName: string;
-  roleId: number;
-  roleName: string;
-  roleDescription: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface UserGroupDetails {
-  userGroupId: number;
-  name: string;
-  description: string;
-  memberCount: number;
-  roleAssignments?: RoleAssignment[];
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: string;
-  updatedBy?: string;
-}
-
-interface UserGroupStats {
-  totalMembers: number;
-  totalRoles: number;
-  activeRoles: number;
-  lastActivity: string | null;
-}
-
-interface Module {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  moduleId: number;
-}
 
 export default function UserGroupDetail() {
   const { id } = useParams<{ id: string }>();
@@ -393,6 +355,7 @@ export default function UserGroupDetail() {
           <BasicInformationCard
             userGroup={{
               id: userGroup.userGroupId,
+              userGroupId: userGroup.userGroupId,
               name: userGroup.name,
               description: userGroup.description,
               memberCount: userGroup.memberCount,

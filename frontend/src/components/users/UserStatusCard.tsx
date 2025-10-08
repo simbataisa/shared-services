@@ -11,7 +11,7 @@ import {
 import { StatusBadge } from "../StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { AlertTriangle, CheckCircle } from "lucide-react";
-import type { User } from "./types";
+import type { User } from "@/types";
 
 interface UserStatusCardProps {
   user: User;

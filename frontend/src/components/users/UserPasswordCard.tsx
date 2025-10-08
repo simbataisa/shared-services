@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Key, Eye, EyeOff } from "lucide-react";
-import type { PasswordChangeForm } from "./types";
+import type { PasswordChangeForm } from "@/types";
 
 interface UserPasswordCardProps {
   onPasswordChange?: (passwordData: PasswordChangeForm) => void;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Shield, Settings, Plus, X, Edit, Save } from "lucide-react";
 import {
   Card,
@@ -19,32 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PermissionGuard } from "@/components/PermissionGuard";
-
-interface RoleAssignment {
-  id: number;
-  userGroupId: number;
-  userGroupName: string;
-  moduleId: number;
-  moduleName: string;
-  roleId: number;
-  roleName: string;
-  roleDescription: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Module {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  moduleId: number;
-}
+import type { RoleAssignment, Module, Role } from "@/types";
 
 interface RoleAssignmentsCardProps {
   roleAssignments: RoleAssignment[];
@@ -171,7 +146,7 @@ export function RoleAssignmentsCard({
                     <div className="mt-2 space-y-2 max-h-32 overflow-y-auto">
                       {availableRoles
                         .filter(
-                          (role) => role.moduleId.toString() === selectedModule
+                          (role) => role.moduleId?.toString() === selectedModule
                         )
                         .map((role) => (
                           <div

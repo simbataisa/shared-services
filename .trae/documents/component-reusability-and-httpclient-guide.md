@@ -3,11 +3,13 @@
 ## Table of Contents
 1. [Overview](#overview)
 2. [Component Reusability Principles](#component-reusability-principles)
-3. [HttpClient Architecture and Usage](#httpclient-architecture-and-usage)
-4. [Best Practices](#best-practices)
-5. [Implementation Examples](#implementation-examples)
-6. [Maintenance Guidelines](#maintenance-guidelines)
-7. [Common Patterns](#common-patterns)
+3. [Card Components](#card-components)
+4. [Edit Toggle Functionality in Detail Pages](#edit-toggle-functionality-in-detail-pages)
+5. [HttpClient Architecture and Usage](#httpclient-architecture-and-usage)
+6. [Best Practices](#best-practices)
+7. [Implementation Examples](#implementation-examples)
+8. [Maintenance Guidelines](#maintenance-guidelines)
+9. [Common Patterns](#common-patterns)
 
 ## Overview
 
@@ -36,7 +38,312 @@ Build complex components by composing smaller, reusable components rather than c
 Design components to be configurable through props, making them adaptable to different use cases.
 
 **Key Props Patterns:**
-```typescript
+```
++ 
++ ## Edit Toggle Functionality in Detail Pages
++ 
++ Edit toggle functionality allows users to switch between view and edit modes within detail pages, providing a seamless user experience for data modification.
++ 
++ ### 1. Edit Toggle Pattern
++ 
++ The edit toggle pattern consists of three main states:
++ - **View Mode**: Display data in read-only format
++ - **Edit Mode**: Show form inputs for data modification
++ - **Saving State**: Indicate ongoing save operations
++ 
++ ### 2. Implementation Structure
++ 
++ #### Basic Edit Toggle Hook
++ ```typescript
++ interface UseEditToggleProps<T> {
++   initialData: T;
++   onSave: (data: T) => Promise<void>;
++   onCancel?: () => void;
++ }
++ 
++ export function useEditToggle<T>({ initialData, onSave, onCancel }: UseEditToggleProps<T>) {
++   const [isEditing, setIsEditing] = useState(false);
++   const [editData, setEditData] = useState<T>(initialData);
++   const [isSaving, setIsSaving] = useState(false);
++ 
++   const handleEditToggle = () => {
++     if (isEditing) {
++       // Cancel editing - reset data
++       setEditData(initialData);
++       onCancel?.();
++     }
++     setIsEditing(!isEditing);
++   };
++ 
++   const handleSave = async () => {
++     setIsSaving(true);
++     try {
++       await onSave(editData);
++       setIsEditing(false);
++     } catch (error) {
++       console.error('Save failed:', error);
++     } finally {
++       setIsSaving(false);
++     }
++   };
++ 
++   return {
++     isEditing,
++     editData,
++     isSaving,
++     setEditData,
++     handleEditToggle,
++     handleSave,
++   };
++ }
++ ```
++ 
++ #### Component Implementation
++ ```typescript
++ export const BasicInformationCard: React.FC<BasicInformationCardProps> = ({
++   userGroup,
++   onUpdate,
++   updating = false,
++ }) => {
++   const [isEditing, setIsEditing] = useState(false);
++   const [editForm, setEditForm] = useState({
++     name: userGroup.name,
++     description: userGroup.description || '',
++   });
++ 
++   const handleEditToggle = () => {
++     if (isEditing) {
++       // Cancel editing - reset form
++       setEditForm({
++         name: userGroup.name,
++         description: userGroup.description || '',
++       });
++     }
++     setIsEditing(!isEditing);
++   };
++ 
++   const handleSaveChanges = async () => {
++     if (!editForm.name.trim()) return;
++     
++     try {
++       if (onUpdate) {
++         await onUpdate({
++           name: editForm.name.trim(),
++           description: editForm.description.trim(),
++         });
++       }
++       setIsEditing(false);
++     } catch (error) {
++       console.error('Failed to update:', error);
++     }
++   };
++ 
++   return (
++     <Card>
++       <CardHeader>
++         <div className="flex items-center justify-between">
++           <CardTitle>Basic Information</CardTitle>
++           <PermissionGuard permission="user-groups:update">
++             {isEditing ? (
++               <div className="flex gap-2">
++                 <Button
++                   variant="outline"
++                   size="sm"
++                   onClick={handleSaveChanges}
++                   disabled={!editForm.name.trim() || updating}
++                 >
++                   <Save className="h-4 w-4 mr-2" />
++                   Save
++                 </Button>
++                 <Button
++                   variant="ghost"
++                   size="sm"
++                   onClick={handleEditToggle}
++                   disabled={updating}
++                 >
++                   <X className="h-4 w-4 mr-2" />
++                   Cancel
++                 </Button>
++               </div>
++             ) : (
++               <Button
++                 variant="outline"
++                 size="sm"
++                 onClick={handleEditToggle}
++               >
++                 <Edit className="h-4 w-4 mr-2" />
++                 Edit
++               </Button>
++             )}
++           </PermissionGuard>
++         </div>
++       </CardHeader>
++       <CardContent>
++         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
++           <div className="space-y-2">
++             <Label>Group Name</Label>
++             {isEditing ? (
++               <Input
++                 value={editForm.name}
++                 onChange={(e) =>
++                   setEditForm({ ...editForm, name: e.target.value })
++                 }
++                 placeholder="Enter group name"
++                 disabled={updating}
++               />
++             ) : (
++               <div className="text-sm">{userGroup.name}</div>
++             )}
++           </div>
++           
++           <div className="space-y-2 md:col-span-2">
++             <Label>Description</Label>
++             {isEditing ? (
++               <Textarea
++                 value={editForm.description}
++                 onChange={(e) =>
++                   setEditForm({ ...editForm, description: e.target.value })
++                 }
++                 placeholder="Enter description"
++                 rows={3}
++                 disabled={updating}
++               />
++             ) : (
++               <div className="text-sm text-muted-foreground">
++                 {userGroup.description || "No description provided"}
++               </div>
++             )}
++           </div>
++         </div>
++       </CardContent>
++     </Card>
++   );
++ };
++ ```
++ 
++ ### 3. Edit Toggle Best Practices
++ 
++ #### State Management
++ 1. **Reset on Cancel**: Always reset form data when canceling edits
++ 2. **Validation**: Implement client-side validation before saving
++ 3. **Loading States**: Show loading indicators during save operations
++ 4. **Error Handling**: Display error messages and maintain edit state on failure
++ 
++ #### User Experience
++ 1. **Clear Visual Indicators**: Use distinct styling for edit vs view modes
++ 2. **Keyboard Navigation**: Support Enter to save, Escape to cancel
++ 3. **Confirmation**: Ask for confirmation before discarding unsaved changes
++ 4. **Auto-save**: Consider implementing auto-save for long forms
++ 
++ #### Permission Integration
++ ```typescript
++ <PermissionGuard permission="resource:update">
++   {isEditing ? (
++     // Edit mode buttons
++   ) : (
++     // Edit button
++   )}
++ </PermissionGuard>
++ ```
++ 
++ #### Form Validation
++ ```typescript
++ const [errors, setErrors] = useState<Record<string, string>>({});
++ 
++ const validateForm = () => {
++   const newErrors: Record<string, string> = {};
++   
++   if (!editForm.name.trim()) {
++     newErrors.name = 'Name is required';
++   }
++   
++   if (editForm.name.length > 100) {
++     newErrors.name = 'Name must be less than 100 characters';
++   }
++   
++   setErrors(newErrors);
++   return Object.keys(newErrors).length === 0;
++ };
++ 
++ const handleSaveChanges = async () => {
++   if (!validateForm()) return;
++   
++   // Proceed with save
++ };
++ ```
++ 
++ ### 4. Advanced Edit Toggle Patterns
++ 
++ #### Inline Editing
++ For simple fields that can be edited individually:
++ 
++ ```typescript
++ const [editingField, setEditingField] = useState<string | null>(null);
++ 
++ const handleFieldEdit = (fieldName: string) => {
++   setEditingField(fieldName);
++ };
++ 
++ const handleFieldSave = async (fieldName: string, value: any) => {
++   await onUpdate({ [fieldName]: value });
++   setEditingField(null);
++ };
++ ```
++ 
++ #### Bulk Edit Mode
++ For editing multiple items simultaneously:
++ 
++ ```typescript
++ const [bulkEditMode, setBulkEditMode] = useState(false);
++ const [selectedItems, setSelectedItems] = useState<string[]>([]);
++ 
++ const handleBulkEdit = async (updates: Partial<T>) => {
++   await Promise.all(
++     selectedItems.map(id => onUpdate(id, updates))
++   );
++   setBulkEditMode(false);
++   setSelectedItems([]);
++ };
++ ```
++ 
++ ### 5. Testing Edit Toggle Components
++ 
++ ```typescript
++ describe('BasicInformationCard', () => {
++   it('should toggle between view and edit modes', () => {
++     render(<BasicInformationCard {...props} />);
++     
++     // Initially in view mode
++     expect(screen.getByText('Edit')).toBeInTheDocument();
++     
++     // Click edit button
++     fireEvent.click(screen.getByText('Edit'));
++     
++     // Should be in edit mode
++     expect(screen.getByText('Save')).toBeInTheDocument();
++     expect(screen.getByText('Cancel')).toBeInTheDocument();
++   });
++ 
++   it('should reset form data on cancel', () => {
++     render(<BasicInformationCard {...props} />);
++     
++     // Enter edit mode and modify data
++     fireEvent.click(screen.getByText('Edit'));
++     fireEvent.change(screen.getByDisplayValue('Original Name'), {
++       target: { value: 'Modified Name' }
++     });
++     
++     // Cancel editing
++     fireEvent.click(screen.getByText('Cancel'));
++     
++     // Should reset to original value
++     fireEvent.click(screen.getByText('Edit'));
++     expect(screen.getByDisplayValue('Original Name')).toBeInTheDocument();
++   });
++ });
++ ```
+ 
+  ## HttpClient Architecture and Usagetypescript
 interface ComponentProps {
   // Data props
   data: T[];
@@ -66,6 +373,172 @@ Maintain consistent prop naming and patterns across similar components.
 - `className` for custom styling
 - `onXxxChange` for event handlers
 - `selectedXxx` for selected state
+
+## Card Components
+
+Card components are fundamental building blocks for organizing content in detail pages and forms. They provide a consistent visual structure and encapsulate related functionality.
+
+### 1. Card Component Structure
+
+Card components follow a consistent structure using shadcn/ui components:
+
+```typescript
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface CardProps {
+  title: string;
+  data: T;
+  onUpdate?: (data: Partial<T>) => Promise<void>;
+  updating?: boolean;
+  className?: string;
+}
+
+export const ExampleCard: React.FC<CardProps> = ({
+  title,
+  data,
+  onUpdate,
+  updating = false,
+  className
+}) => {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Card content */}
+      </CardContent>
+    </Card>
+  );
+};
+```
+
+### 2. Card Component Patterns
+
+#### Information Display Cards
+Used for displaying read-only or editable information:
+
+```typescript
+// BasicInformationCard example
+export const BasicInformationCard: React.FC<BasicInformationCardProps> = ({
+  userGroup,
+  onUpdate,
+  updating = false,
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Basic Information</CardTitle>
+          {/* Edit toggle button */}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Form fields or display content */}
+      </CardContent>
+    </Card>
+  );
+};
+```
+
+#### Action Cards
+Cards that contain interactive elements and actions:
+
+```typescript
+// RoleAssignmentsCard example
+export const RoleAssignmentsCard: React.FC<RoleAssignmentsCardProps> = ({
+  roleAssignments,
+  availableModules,
+  availableRoles,
+  onAssignRoles,
+  onRemoveRoleAssignment,
+  updating,
+}) => {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Role Assignments</CardTitle>
+          <Button onClick={handleAddRole}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Role
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Role management interface */}
+      </CardContent>
+    </Card>
+  );
+};
+```
+
+### 3. Card Layout Patterns
+
+#### Two-Column Layout
+Common pattern for detail pages with main content and sidebar:
+
+```typescript
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  {/* Left Column - Main Information */}
+  <div className="lg:col-span-2 space-y-6">
+    <BasicInformationCard {...props} />
+    <RoleAssignmentsCard {...props} />
+  </div>
+  
+  {/* Right Column - Actions & Statistics */}
+  <div className="space-y-6">
+    <StatusManagementCard {...props} />
+    <StatisticsCard {...props} />
+  </div>
+</div>
+```
+
+#### Single Column Layout
+For simpler interfaces or mobile-first designs:
+
+```typescript
+<div className="space-y-6">
+  <BasicInformationCard {...props} />
+  <RoleAssignmentsCard {...props} />
+  <ActivityLogCard {...props} />
+</div>
+```
+
+### 4. Card Component Best Practices
+
+1. **Consistent Header Structure**: Always include a clear title and relevant actions
+2. **Loading States**: Show loading indicators during async operations
+3. **Error Handling**: Display error messages within the card context
+4. **Responsive Design**: Use responsive grid layouts for different screen sizes
+5. **Permission Guards**: Wrap actions with permission checks
+6. **Accessibility**: Include proper ARIA labels and keyboard navigation
+
+```typescript
+<Card>
+  <CardHeader>
+    <div className="flex items-center justify-between">
+      <CardTitle>Card Title</CardTitle>
+      <PermissionGuard permission="resource:action">
+        <Button variant="outline" size="sm">
+          Action
+        </Button>
+      </PermissionGuard>
+    </div>
+  </CardHeader>
+  <CardContent>
+    {loading ? (
+      <Skeleton className="h-20 w-full" />
+    ) : error ? (
+      <div className="text-red-500">Error: {error}</div>
+    ) : (
+      // Card content
+    )}
+  </CardContent>
+</Card>
+```
 
 ## HttpClient Architecture and Usage
 

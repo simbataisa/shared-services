@@ -7,19 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Users, Edit, Save, X } from 'lucide-react';
 import { PermissionGuard } from '@/components/PermissionGuard';
-
-interface UserGroup {
-  id: number;
-  name: string;
-  description?: string;
-  memberCount: number;
-}
-
-interface BasicInformationCardProps {
-  userGroup: UserGroup;
-  onUpdate?: (data: { name: string; description: string }) => Promise<void>;
-  updating?: boolean;
-}
+import type { UserGroup, BasicInformationCardProps } from '@/types';
 
 export const BasicInformationCard: React.FC<BasicInformationCardProps> = ({
   userGroup,

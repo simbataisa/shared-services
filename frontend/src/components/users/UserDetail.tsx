@@ -21,15 +21,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "../PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import httpClient from "@/lib/httpClient";
-import {
-  UserInfoCard,
-  UserStatusCard,
-  UserRoleGroupCard,
-  type User,
-  type UserStats,
-} from "./index";
+import { type User, type UserStats } from "@/types";
 import UserPasswordCard from "./UserPasswordCard";
-import type { PasswordChangeForm } from "./types";
+import type { PasswordChangeForm } from "@/types";
+import { UserInfoCard, UserRoleGroupCard, UserStatusCard } from "./index";
 
 const UserDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,28 +52,13 @@ const UserDetail: React.FC = () => {
 
   const fetchAvailableRolesAndGroups = async () => {
     try {
-      const [rolesResponse, groupsResponse] = await Promise.all([
-        fetch("/api/v1/roles", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }),
-        fetch("/api/v1/user-groups", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }),
+      const [rolesData, groupsData] = await Promise.all([
+        httpClient.getRoles(),
+        httpClient.getUserGroups(),
       ]);
 
-      if (rolesResponse.ok) {
-        const rolesData = await rolesResponse.json();
-        setAvailableRoles(rolesData || []);
-      }
-
-      if (groupsResponse.ok) {
-        const groupsData = await groupsResponse.json();
-        setAvailableGroups(groupsData.data?.content || []);
-      }
+      setAvailableRoles(rolesData || []);
+      setAvailableGroups(groupsData || []);
     } catch (error) {
       console.error("Error fetching available roles and groups:", error);
     }
@@ -109,9 +89,11 @@ const UserDetail: React.FC = () => {
           })) || [],
         userGroups:
           userData.userGroups?.map((group) => ({
+            id: group.id || group.userGroupId,
             userGroupId: group.userGroupId,
             name: group.name,
             description: group.description || "",
+            memberCount: group.memberCount || 0,
           })) || [],
         phoneNumber: userData.phoneNumber,
         emailVerified: userData.emailVerified,
@@ -148,7 +130,7 @@ const UserDetail: React.FC = () => {
       // API call to update user status
       await httpClient.updateUserStatus(user.id, newStatus);
 
-      setUser((prev) =>
+      setUser((prev: User | null) =>
         prev
           ? {
               ...prev,
@@ -168,7 +150,9 @@ const UserDetail: React.FC = () => {
   const handleUserInfoUpdate = async (updatedUserData: any) => {
     try {
       // Update the local user state with the new data
-      setUser((prev) => (prev ? { ...prev, ...updatedUserData } : null));
+      setUser((prev: User | null) =>
+        prev ? { ...prev, ...updatedUserData } : null
+      );
 
       // Optionally refresh the complete user data from the server
       await fetchUserData();
@@ -199,7 +183,7 @@ const UserDetail: React.FC = () => {
       }
 
       // Update user's password changed timestamp
-      setUser((prev) =>
+      setUser((prev: User | null) =>
         prev
           ? {
               ...prev,

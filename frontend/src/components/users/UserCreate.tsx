@@ -12,11 +12,12 @@ import {
 } from "@/components/ui/breadcrumb";
 import { PermissionGuard } from "../PermissionGuard";
 import { usePermissions } from "../../hooks/usePermissions";
-import httpClient, { type CreateUserRequest } from "../../lib/httpClient";
+import httpClient from "../../lib/httpClient";
+import type { CreateUserRequest, CreateUserForm } from "@/types";
 import UserInfoFormCard from "./UserInfoFormCard";
 import UserPasswordFormCard from "./UserPasswordFormCard";
+import UserRoleGroupCard from "./UserRoleGroupCard";
 import UserRoleGroupFormCard from "./UserRoleGroupFormCard";
-import type { CreateUserForm } from "./types";
 
 interface Role {
   id: number;

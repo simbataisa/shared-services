@@ -16,6 +16,7 @@ import UserList from "./pages/UserList";
 import UserDetail from "./components/users/UserDetail";
 import UserCreate from "./components/users/UserCreate";
 import RoleList from "./pages/RoleList";
+import RoleDetail from "./components/role/RoleDetail";
 import PermissionList from "./pages/PermissionList";
 import TenantList from "./pages/TenantList";
 import TenantCreate from "./components/tenant/TenantCreate";
@@ -129,7 +130,16 @@ function App() {
             path="roles"
             element={
               <ProtectedRoute permission="role:read">
-                <RoleList />
+                <RoleList roles={[]} permissions={[]} />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="roles/:id"
+            element={
+              <ProtectedRoute permission="role:read">
+                <RoleDetail />
               </ProtectedRoute>
             }
           />

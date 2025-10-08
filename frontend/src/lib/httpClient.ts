@@ -1,155 +1,30 @@
 import api from "./api";
 import type { AxiosResponse } from "axios";
-
-// Types for API responses
-export interface ApiResponse<T> {
-  data: T;
-  message: string;
-  path: string;
-  success?: boolean;
-}
-
-// User related types
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  userStatus: string;
-  createdAt: string;
-  updatedAt: string;
-  roles: Role[];
-  userGroups: UserGroup[];
-  phoneNumber?: string;
-  emailVerified?: boolean;
-  lastLogin?: string;
-  failedLoginAttempts?: number;
-  createdBy?: string;
-  updatedBy?: string;
-}
-
-export interface Role {
-  id: number;
-  name: string;
-  description?: string;
-}
-
-export interface UserGroup {
-  id: number;
-  userGroupId: number;
-  name: string;
-  description?: string;
-  memberCount: number;
-  roleAssignments?: RoleAssignment[];
-}
-
-// Role assignment interface for user groups
-export interface RoleAssignment {
-  id: number;
-  userGroupId: number;
-  userGroupName: string;
-  moduleId: number;
-  moduleName: string;
-  roleId: number;
-  roleName: string;
-  roleDescription: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
-}
-
-export interface CreateUserRequest {
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  roleIds: number[];
-  userGroupIds: number[];
-}
-
-export interface UpdateUserRequest {
-  username?: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  phoneNumber?: string;
-  roleIds?: number[];
-  userGroupIds?: number[];
-}
-
-// Tenant related types
-export interface Tenant {
-  id: number;
-  name: string;
-  description?: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateTenantRequest {
-  name: string;
-  description?: string;
-}
-
-// Module related types
-export interface Module {
-  id: number;
-  name: string;
-  description?: string;
-  isActive: boolean;
-  productId?: number;
-}
-
-export interface CreateModuleRequest {
-  name: string;
-  description?: string;
-  productId?: number;
-}
-
-// Product related types
-export interface Product {
-  id: number;
-  name: string;
-  description?: string;
-}
-
-export interface CreateProductRequest {
-  name: string;
-  description?: string;
-}
-
-// Dashboard types
-export interface DashboardStats {
-  totalUsers: number;
-  activeTenants: number;
-  totalRoles: number;
-  recentActivities: number;
-  systemHealth: string;
-  pendingApprovals: number;
-}
-
-export interface Activity {
-  id: string;
-  type: string;
-  description: string;
-  timestamp: string;
-  user: string;
-}
-
-// Auth types
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-  user: User;
-}
+import type {
+  ApiResponse,
+  User,
+  Role,
+  RoleDetails,
+  Permission,
+  UserGroup,
+  RoleAssignment,
+  Tenant,
+  Module,
+  Product,
+  DashboardStats,
+  Activity,
+  CreateUserRequest,
+  UpdateUserRequest,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+  CreateUserGroupRequest,
+  UpdateUserGroupRequest,
+  CreateTenantRequest,
+  CreateModuleRequest,
+  CreateProductRequest,
+  LoginRequest,
+  LoginResponse,
+} from "@/types";
 
 class HttpClient {
   // User API methods
@@ -241,6 +116,60 @@ class HttpClient {
   // Role API methods
   async getRoles(): Promise<Role[]> {
     const response: AxiosResponse<Role[]> = await api.get("/v1/roles");
+    return response.data;
+  }
+
+  async getRoleById(id: number): Promise<Role> {
+    const response: AxiosResponse<ApiResponse<Role>> = await api.get(
+      `/v1/roles/${id}`
+    );
+    return response.data.data;
+  }
+
+  async getRoleDetails(id: number): Promise<RoleDetails> {
+    const response: AxiosResponse<RoleDetails> = await api.get(
+      `/v1/roles/${id}`
+    );
+    return response.data;
+  }
+
+  async createRole(roleData: {
+    name: string;
+    description: string;
+    permissionIds: number[];
+  }): Promise<Role> {
+    const response: AxiosResponse<ApiResponse<Role>> = await api.post(
+      "/v1/roles",
+      roleData
+    );
+    return response.data.data;
+  }
+
+  async updateRole(
+    id: number,
+    roleData: { name?: string; description?: string; permissionIds?: number[] }
+  ): Promise<Role> {
+    const response: AxiosResponse<ApiResponse<Role>> = await api.put(
+      `/v1/roles/${id}`,
+      roleData
+    );
+    return response.data.data;
+  }
+
+  async updateRoleStatus(id: number, status: string): Promise<RoleDetails> {
+    const response: AxiosResponse<ApiResponse<RoleDetails>> = await api.put(
+      `/v1/roles/${id}`,
+      { roleStatus: status }
+    );
+    return response.data.data;
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    await api.delete(`/v1/roles/${id}`);
+  }
+
+  async getPermissions(): Promise<Permission[]> {
+    const response: AxiosResponse<Permission[]> = await api.get("/permissions");
     return response.data;
   }
 

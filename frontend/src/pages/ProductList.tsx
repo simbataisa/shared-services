@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import api from "@/lib/api";
-import type { Product, Module } from "@/store/auth";
+import type { Product, Module, ProductWithModules } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +21,6 @@ import { Plus, Edit, Trash2, Package, AlertCircle, Eye } from "lucide-react";
 import SearchAndFilter from "../components/SearchAndFilter";
 import { StatusBadge } from "@/components/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
-
-interface ProductWithModules extends Product {
-  modules: Module[];
-}
 
 export default function ProductList() {
   const { canViewProducts } = usePermissions();

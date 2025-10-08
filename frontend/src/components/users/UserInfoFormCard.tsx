@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { User as UserIcon } from "lucide-react";
-import type { CreateUserForm } from "./types";
+import type { CreateUserForm } from "@/types";
 
 interface UserInfoFormCardProps {
   formData: CreateUserForm;

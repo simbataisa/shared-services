@@ -22,27 +22,7 @@ import {
   Bell,
 } from "lucide-react";
 import api from "../lib/api";
-
-interface DashboardStats {
-  totalUsers: number;
-  activeTenants: number;
-  totalRoles: number;
-  recentActivities: number;
-  systemHealth: "healthy" | "warning" | "critical";
-  pendingApprovals: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type:
-    | "user_login"
-    | "role_assigned"
-    | "tenant_created"
-    | "permission_granted";
-  description: string;
-  timestamp: string;
-  user: string;
-}
+import type { DashboardStats, RecentActivity } from "@/types";
 
 export default function Dashboard() {
   const { user, tenant } = useAuth();

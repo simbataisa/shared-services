@@ -38,18 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-
-interface Module {
-  id: number;
-  name: string;
-  description: string;
-  code?: string;
-  isActive: boolean;
-  productId: number;
-  productName: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Module } from "@/types";
 
 const ModuleList: React.FC = () => {
   const [modules, setModules] = useState<Module[]>([]);
@@ -129,7 +118,8 @@ const ModuleList: React.FC = () => {
   const filteredModules = modules.filter((module) => {
     const matchesSearch =
       module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      module.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (module.description &&
+        module.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (module.code &&
         module.code.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -139,7 +129,7 @@ const ModuleList: React.FC = () => {
       (statusFilter === "inactive" && !module.isActive);
 
     const matchesProduct =
-      productFilter === "all" || module.productId.toString() === productFilter;
+      productFilter === "all" || module.productId?.toString() === productFilter;
 
     return matchesSearch && matchesStatus && matchesProduct;
   });
@@ -262,7 +252,10 @@ const ModuleList: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {new Date(module.updatedAt).toLocaleDateString()}
+                        {module.updatedAt 
+                          ? new Date(module.updatedAt).toLocaleDateString()
+                          : "N/A"
+                        }
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">

@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,37 +15,12 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/StatusBadge";
 import SearchAndFilter from "@/components/SearchAndFilter";
-
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
-import { Edit, Trash2, Shield, Eye } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Shield, Eye } from "lucide-react";
 import { PermissionGuard } from "@/components/PermissionGuard";
-
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  userStatus: "ACTIVE" | "INACTIVE";
-  createdAt: string;
-  updatedAt: string;
-  roles: Role[];
-  userGroups: UserGroup[];
-}
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-}
-
-interface UserGroup {
-  userGroupId: number;
-  name: string;
-  description: string;
-}
+import type { User, Role, UserGroup } from "@/types";
+import httpClient from "@/lib/httpClient";
 
 const UserList: React.FC = () => {
   const navigate = useNavigate();
@@ -97,16 +66,8 @@ const UserList: React.FC = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch("/api/v1/roles", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setRoles(data || []);
-      }
+      const roles = await httpClient.getRoles();
+      setRoles(roles || []);
     } catch (err) {
       console.error("Failed to fetch roles:", err);
     }
@@ -266,7 +227,9 @@ const UserList: React.FC = () => {
                           <Badge
                             key={role.id}
                             variant="outline"
-                            className="text-xs"
+                            className="text-xs cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                            onClick={() => navigate(`/roles/${role.id}`)}
+                            title={`View ${role.name} role details`}
                           >
                             {role.name}
                           </Badge>
