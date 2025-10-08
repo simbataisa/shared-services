@@ -20,7 +20,6 @@ import RoleDetail from "./components/role/RoleDetail";
 import PermissionList from "./pages/PermissionList";
 import TenantList from "./pages/TenantList";
 import TenantCreate from "./components/tenant/TenantCreate";
-import TenantEdit from "./components/tenant/TenantEdit";
 import TenantDetail from "./components/tenant/TenantDetail";
 import ProductList from "./pages/ProductList";
 import ProductCreate from "./components/product/ProductCreate";
@@ -176,7 +175,7 @@ function App() {
             path="tenants/:id/edit"
             element={
               <ProtectedRoute permission="tenants:update">
-                <TenantEdit />
+                <TenantDetail />
               </ProtectedRoute>
             }
           />
@@ -262,10 +261,7 @@ function App() {
             }
           />
 
-          <Route
-            path="error-demo"
-            element={<ErrorDemoPage />}
-          />
+          <Route path="error-demo" element={<ErrorDemoPage />} />
         </Route>
 
         <Route
