@@ -6,3 +6,6 @@ export { SearchAndFilter, default as SearchAndFilterDefault } from './SearchAndF
 export { StatusBadge, StatusBadgeWithIcon, default as StatusBadgeDefault } from './StatusBadge';
 export { PermissionsCard } from './PermissionsCard';
 export type { PermissionsCardProps } from './PermissionsCard';
+export { default as ErrorCard } from './ErrorCard';
+export { default as ErrorDialog } from './ErrorDialog';
+export { default as ErrorBoundary, withErrorBoundary } from './ErrorBoundary';

@@ -31,6 +31,7 @@ import ModuleCreate from "./components/module/ModuleCreate";
 import ModuleDetail from "./components/module/ModuleDetail";
 import ModuleEdit from "./components/module/ModuleEdit";
 import Unauthorized from "./pages/Unauthorized";
+import ErrorDemoPage from "./pages/ErrorDemoPage";
 import { useAuth } from "./store/auth";
 
 function App() {
@@ -259,6 +260,11 @@ function App() {
                 <ModuleEdit />
               </ProtectedRoute>
             }
+          />
+
+          <Route
+            path="error-demo"
+            element={<ErrorDemoPage />}
           />
         </Route>
 

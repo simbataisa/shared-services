@@ -130,7 +130,13 @@ export interface RoleDetails {
 }
 
 export interface TenantDetails extends Tenant {
-  // Additional fields for detailed tenant view
+  userCount?: number;
+  roleCount?: number;
+  lastActivity?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  code?: string;
+  type?: "enterprise" | "standard" | "basic";
 }
 
 // Statistics interfaces

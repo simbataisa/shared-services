@@ -37,15 +37,8 @@ import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus, getStatusVariant } from "@/lib/status-colors";
 import api from "@/lib/api";
-import { type Tenant } from "@/store/auth";
-
-interface TenantDetails extends Tenant {
-  userCount?: number;
-  roleCount?: number;
-  lastActivity?: string;
-  createdBy?: string;
-  updatedBy?: string;
-}
+import httpClient from "@/lib/httpClient";
+import { type Tenant, type TenantDetails } from "@/types/entities";
 
 export default function TenantDetail() {
   const { id } = useParams<{ id: string }>();
@@ -67,17 +60,26 @@ export default function TenantDetail() {
   }, [canViewTenants, navigate]);
 
   useEffect(() => {
-    if (id && canViewTenants) {
-      fetchTenantDetails();
+    if (!canViewTenants) {
+      return;
     }
+
+    // Validate tenant ID
+    if (!id || id === 'undefined' || id === 'null' || isNaN(Number(id))) {
+      setError("Invalid tenant ID");
+      setLoading(false);
+      return;
+    }
+
+    fetchTenantDetails();
   }, [id, canViewTenants]);
 
   const fetchTenantDetails = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/v1/tenants/${id}`);
-      setTenant(response.data);
+      const tenant = await httpClient.getTenantById(Number(id));
+      setTenant(tenant);
     } catch (error) {
       console.error("Failed to fetch tenant details:", error);
       setError("Failed to load tenant details");
@@ -290,7 +292,7 @@ export default function TenantDetail() {
 
                 <div className="space-y-2">
                   <Label>Type</Label>
-                  <div className="text-sm">{getTypeLabel(tenant.type)}</div>
+                  <div className="text-sm">{getTypeLabel(tenant.type || "")}</div>
                 </div>
 
                 <div className="space-y-2">

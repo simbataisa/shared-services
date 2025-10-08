@@ -15,6 +15,9 @@ export * from './components';
 // Store types
 export * from './store';
 
+// Error types
+export * from './errors';
+
 // Re-export commonly used types for convenience
 export type {
   User,

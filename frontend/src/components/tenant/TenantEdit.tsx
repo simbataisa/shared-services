@@ -64,8 +64,15 @@ export default function TenantEdit() {
 
   useEffect(() => {
     const fetchTenant = async () => {
-      if (!id || !canUpdateTenants) {
+      if (!canUpdateTenants) {
         navigate("/tenants");
+        return;
+      }
+
+      // Validate tenant ID
+      if (!id || id === 'undefined' || id === 'null' || isNaN(Number(id))) {
+        setError("Invalid tenant ID");
+        setInitialLoading(false);
         return;
       }
 
