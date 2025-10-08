@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../lib/api";
-import { useAuth } from "../store/auth";
+import api from "@/lib/api";
+import { useAuth } from "@/store/auth";
 import {
   Card,
   CardContent,

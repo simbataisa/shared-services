@@ -13,12 +13,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { StatusBadge } from "@/components/StatusBadge";
-import SearchAndFilter from "@/components/SearchAndFilter";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import SearchAndFilter from "@/components/common/SearchAndFilter";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { Shield, Eye } from "lucide-react";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import type { User, Role, UserGroup } from "@/types";
 import httpClient from "@/lib/httpClient";
 

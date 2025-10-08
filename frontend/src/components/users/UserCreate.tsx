@@ -10,13 +10,12 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { PermissionGuard } from "../PermissionGuard";
-import { usePermissions } from "../../hooks/usePermissions";
-import httpClient from "../../lib/httpClient";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { usePermissions } from "@/hooks/usePermissions";
+import httpClient from "@/lib/httpClient";
 import type { CreateUserRequest, CreateUserForm } from "@/types";
 import UserInfoFormCard from "./UserInfoFormCard";
 import UserPasswordFormCard from "./UserPasswordFormCard";
-import UserRoleGroupCard from "./UserRoleGroupCard";
 import UserRoleGroupFormCard from "./UserRoleGroupFormCard";
 
 interface Role {

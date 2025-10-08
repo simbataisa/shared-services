@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/StatusBadge";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { Edit, Trash2, Users, Eye } from "lucide-react";
 import type { RoleAssignment } from "@/types";

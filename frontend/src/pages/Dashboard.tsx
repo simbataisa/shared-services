@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../store/auth";
-import { usePermissions } from "../hooks/usePermissions";
-import { PermissionGuard } from "../components/PermissionGuard";
+import { useAuth } from "@/store/auth";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +15,10 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
-  Clock,
   BarChart3,
   PieChart,
-  Calendar,
-  Bell,
 } from "lucide-react";
-import api from "../lib/api";
+import api from "@/lib/api";
 import type { DashboardStats, RecentActivity } from "@/types";
 
 export default function Dashboard() {

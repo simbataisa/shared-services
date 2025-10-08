@@ -28,9 +28,9 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionGuard } from "../PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
-import api from "../../lib/api";
+import api from "@/lib/api";
 
 interface TenantFormData {
   tenantCode: string;
@@ -217,7 +217,9 @@ export default function TenantEdit() {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to={`/tenants/${id}`}>{formData.name || "Tenant"}</Link>
+                    <Link to={`/tenants/${id}`}>
+                      {formData.name || "Tenant"}
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -273,8 +275,8 @@ export default function TenantEdit() {
                       </Alert>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      Unique identifier for the tenant (uppercase letters, numbers,
-                      and underscores only)
+                      Unique identifier for the tenant (uppercase letters,
+                      numbers, and underscores only)
                     </p>
                   </div>
 
@@ -284,7 +286,9 @@ export default function TenantEdit() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       placeholder="e.g., Acme Corporation"
                       maxLength={100}
                       className={errors.name ? "border-destructive" : ""}
@@ -302,7 +306,10 @@ export default function TenantEdit() {
                     <Select
                       value={formData.type}
                       onValueChange={(value) =>
-                        handleInputChange("type", value as TenantFormData["type"])
+                        handleInputChange(
+                          "type",
+                          value as TenantFormData["type"]
+                        )
                       }
                     >
                       <SelectTrigger>
@@ -390,8 +397,8 @@ export default function TenantEdit() {
                     <div>
                       <h4 className="text-sm font-medium">Impact of Changes</h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Changes to tenant information will affect all users and data
-                        associated with this tenant.
+                        Changes to tenant information will affect all users and
+                        data associated with this tenant.
                       </p>
                     </div>
                   </div>
@@ -399,18 +406,34 @@ export default function TenantEdit() {
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium">Tenant Types</h4>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p><strong>Enterprise:</strong> Full-featured tenant with advanced capabilities</p>
-                      <p><strong>Standard:</strong> Standard tenant with core features</p>
-                      <p><strong>Basic:</strong> Basic tenant with limited features</p>
+                      <p>
+                        <strong>Enterprise:</strong> Full-featured tenant with
+                        advanced capabilities
+                      </p>
+                      <p>
+                        <strong>Standard:</strong> Standard tenant with core
+                        features
+                      </p>
+                      <p>
+                        <strong>Basic:</strong> Basic tenant with limited
+                        features
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium">Status Options</h4>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p><strong>Active:</strong> Tenant is fully operational</p>
-                      <p><strong>Inactive:</strong> Tenant is disabled</p>
-                      <p><strong>Suspended:</strong> Tenant is temporarily suspended</p>
+                      <p>
+                        <strong>Active:</strong> Tenant is fully operational
+                      </p>
+                      <p>
+                        <strong>Inactive:</strong> Tenant is disabled
+                      </p>
+                      <p>
+                        <strong>Suspended:</strong> Tenant is temporarily
+                        suspended
+                      </p>
                     </div>
                   </div>
                 </div>

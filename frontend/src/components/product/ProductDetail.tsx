@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionGuard } from "../PermissionGuard";
-import { StatusBadge } from "../StatusBadge";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import type { Product, Module } from "@/store/auth";

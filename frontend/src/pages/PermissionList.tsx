@@ -1,209 +1,253 @@
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { usePermissions } from '@/hooks/usePermissions'
-import { Search, Plus, Edit, Trash2, Shield, Key } from 'lucide-react'
-import { SearchAndFilter } from '@/components/SearchAndFilter'
+import React, { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { usePermissions } from "@/hooks/usePermissions";
+import { Plus, Edit, Trash2, Shield } from "lucide-react";
+import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import type { Permission, CreatePermissionForm } from "@/types";
 
 const PermissionList: React.FC = () => {
-  const [permissions, setPermissions] = useState<Permission[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [resourceFilter, setResourceFilter] = useState<string>('all')
-  const [actionFilter, setActionFilter] = useState<string>('all')
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null)
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [resourceFilter, setResourceFilter] = useState<string>("all");
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedPermission, setSelectedPermission] =
+    useState<Permission | null>(null);
   const [createForm, setCreateForm] = useState<CreatePermissionForm>({
-    name: '',
-    description: '',
-    resource: '',
-    action: ''
-  })
+    name: "",
+    description: "",
+    resource: "",
+    action: "",
+  });
 
-  const { canViewPermissions, canAssignPermissions } = usePermissions()
+  const { canViewPermissions, canAssignPermissions } = usePermissions();
 
   useEffect(() => {
     if (canViewPermissions) {
-      fetchPermissions()
+      fetchPermissions();
     }
-  }, [canViewPermissions])
+  }, [canViewPermissions]);
 
   const fetchPermissions = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/permissions', {
+      setLoading(true);
+      const response = await fetch("/api/permissions", {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
-      
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to fetch permissions')
+        throw new Error("Failed to fetch permissions");
       }
-      
-      const data = await response.json()
-      setPermissions(data || [])
+
+      const data = await response.json();
+      setPermissions(data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch permissions')
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch permissions"
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleCreatePermission = async () => {
     try {
-      const response = await fetch('/api/permissions', {
-        method: 'POST',
+      const response = await fetch("/api/permissions", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(createForm)
-      })
+        body: JSON.stringify(createForm),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to create permission')
+        throw new Error("Failed to create permission");
       }
 
-      setIsCreateDialogOpen(false)
+      setIsCreateDialogOpen(false);
       setCreateForm({
-        name: '',
-        description: '',
-        resource: '',
-        action: ''
-      })
-      fetchPermissions()
+        name: "",
+        description: "",
+        resource: "",
+        action: "",
+      });
+      fetchPermissions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create permission')
+      setError(
+        err instanceof Error ? err.message : "Failed to create permission"
+      );
     }
-  }
+  };
 
   const handleEditPermission = (permission: Permission) => {
-    const { resource, action } = parsePermissionName(permission.name)
-    setSelectedPermission(permission)
+    const { resource, action } = parsePermissionName(permission.name);
+    setSelectedPermission(permission);
     setCreateForm({
       name: permission.name,
       description: permission.description,
       resource: resource,
-      action: action
-    })
-    setIsEditDialogOpen(true)
-  }
+      action: action,
+    });
+    setIsEditDialogOpen(true);
+  };
 
   const handleUpdatePermission = async () => {
-    if (!selectedPermission) return
+    if (!selectedPermission) return;
 
     try {
-      const response = await fetch(`/api/permissions/${selectedPermission.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(createForm)
-      })
+      const response = await fetch(
+        `/api/permissions/${selectedPermission.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(createForm),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to update permission')
+        throw new Error("Failed to update permission");
       }
 
-      setIsEditDialogOpen(false)
-      setSelectedPermission(null)
+      setIsEditDialogOpen(false);
+      setSelectedPermission(null);
       setCreateForm({
-        name: '',
-        description: '',
-        resource: '',
-        action: ''
-      })
-      fetchPermissions()
+        name: "",
+        description: "",
+        resource: "",
+        action: "",
+      });
+      fetchPermissions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update permission')
+      setError(
+        err instanceof Error ? err.message : "Failed to update permission"
+      );
     }
-  }
+  };
 
   const handleDeletePermission = async (permissionId: number) => {
-    if (!confirm('Are you sure you want to delete this permission?')) {
-      return
+    if (!confirm("Are you sure you want to delete this permission?")) {
+      return;
     }
 
     try {
       const response = await fetch(`/api/permissions/${permissionId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      })
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to delete permission')
+        throw new Error("Failed to delete permission");
       }
 
-      fetchPermissions()
+      fetchPermissions();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete permission')
+      setError(
+        err instanceof Error ? err.message : "Failed to delete permission"
+      );
     }
-  }
+  };
 
   // Helper function to parse resource and action from permission name
   const parsePermissionName = (name: string) => {
-    if (!name || typeof name !== 'string') {
-      return { resource: 'unknown', action: 'unknown' }
+    if (!name || typeof name !== "string") {
+      return { resource: "unknown", action: "unknown" };
     }
-    
-    const parts = name.split(':')
+
+    const parts = name.split(":");
     if (parts.length >= 2) {
       return {
         resource: parts[0],
-        action: parts[1]
-      }
+        action: parts[1],
+      };
     }
-    
-    return { resource: name, action: 'unknown' }
-  }
 
-  const filteredPermissions = permissions.filter(permission => {
-    const { resource, action } = parsePermissionName(permission.name)
-    
-    const matchesSearch = permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         permission.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         action.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesResource = resourceFilter === 'all' || resource === resourceFilter
-    const matchesAction = actionFilter === 'all' || action === actionFilter
-    
-    return matchesSearch && matchesResource && matchesAction
-  })
+    return { resource: name, action: "unknown" };
+  };
 
-  const uniqueResources = Array.from(new Set(permissions.map(p => parsePermissionName(p.name).resource))).sort()
-  const uniqueActions = Array.from(new Set(permissions.map(p => parsePermissionName(p.name).action))).sort()
+  const filteredPermissions = permissions.filter((permission) => {
+    const { resource, action } = parsePermissionName(permission.name);
+
+    const matchesSearch =
+      permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      permission.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      action.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesResource =
+      resourceFilter === "all" || resource === resourceFilter;
+    const matchesAction = actionFilter === "all" || action === actionFilter;
+
+    return matchesSearch && matchesResource && matchesAction;
+  });
+
+  const uniqueResources = Array.from(
+    new Set(permissions.map((p) => parsePermissionName(p.name).resource))
+  ).sort();
+  const uniqueActions = Array.from(
+    new Set(permissions.map((p) => parsePermissionName(p.name).action))
+  ).sort();
 
   const getActionBadgeVariant = (action: string) => {
-    if (!action || typeof action !== 'string') {
-      return 'outline'
+    if (!action || typeof action !== "string") {
+      return "outline";
     }
-    
+
     switch (action.toLowerCase()) {
-      case 'create': return 'default'
-      case 'read': return 'secondary'
-      case 'update': return 'outline'
-      case 'delete': return 'destructive'
-      case 'admin': return 'default'
-      default: return 'outline'
+      case "create":
+        return "default";
+      case "read":
+        return "secondary";
+      case "update":
+        return "outline";
+      case "delete":
+        return "destructive";
+      case "admin":
+        return "default";
+      default:
+        return "outline";
     }
-  }
+  };
 
   if (!canViewPermissions) {
     return (
@@ -215,14 +259,16 @@ const PermissionList: React.FC = () => {
           </AlertDescription>
         </Alert>
       </div>
-    )
+    );
   }
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Permission Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Permission Management
+          </h1>
           <p className="text-muted-foreground">
             Manage system permissions and access controls
           </p>
@@ -247,7 +293,9 @@ const PermissionList: React.FC = () => {
                 <Input
                   id="edit-name"
                   value={createForm.name}
-                  onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, name: e.target.value })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -258,7 +306,12 @@ const PermissionList: React.FC = () => {
                 <Textarea
                   id="edit-description"
                   value={createForm.description}
-                  onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
+                  onChange={(e) =>
+                    setCreateForm({
+                      ...createForm,
+                      description: e.target.value,
+                    })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -269,7 +322,9 @@ const PermissionList: React.FC = () => {
                 <Input
                   id="edit-resource"
                   value={createForm.resource}
-                  onChange={(e) => setCreateForm({...createForm, resource: e.target.value})}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, resource: e.target.value })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -280,7 +335,9 @@ const PermissionList: React.FC = () => {
                 <Input
                   id="edit-action"
                   value={createForm.action}
-                  onChange={(e) => setCreateForm({...createForm, action: e.target.value})}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, action: e.target.value })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -312,10 +369,13 @@ const PermissionList: React.FC = () => {
             onChange: setResourceFilter,
             options: [
               { value: "all", label: "All Resources" },
-              ...uniqueResources.map(resource => ({ value: resource, label: resource }))
+              ...uniqueResources.map((resource) => ({
+                value: resource,
+                label: resource,
+              })),
             ],
             placeholder: "Filter by resource",
-            width: "w-[180px]"
+            width: "w-[180px]",
           },
           {
             label: "Action",
@@ -323,15 +383,21 @@ const PermissionList: React.FC = () => {
             onChange: setActionFilter,
             options: [
               { value: "all", label: "All Actions" },
-              ...uniqueActions.map(action => ({ value: action, label: action }))
+              ...uniqueActions.map((action) => ({
+                value: action,
+                label: action,
+              })),
             ],
             placeholder: "Filter by action",
-            width: "w-[180px]"
-          }
+            width: "w-[180px]",
+          },
         ]}
         actions={
           canAssignPermissions && (
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Dialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
@@ -353,7 +419,9 @@ const PermissionList: React.FC = () => {
                     <Input
                       id="name"
                       value={createForm.name}
-                      onChange={(e) => setCreateForm({...createForm, name: e.target.value})}
+                      onChange={(e) =>
+                        setCreateForm({ ...createForm, name: e.target.value })
+                      }
                       className="col-span-3"
                       placeholder="e.g., user:read"
                     />
@@ -365,7 +433,12 @@ const PermissionList: React.FC = () => {
                     <Textarea
                       id="description"
                       value={createForm.description}
-                      onChange={(e) => setCreateForm({...createForm, description: e.target.value})}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          description: e.target.value,
+                        })
+                      }
                       className="col-span-3"
                       placeholder="Describe what this permission allows"
                     />
@@ -377,7 +450,12 @@ const PermissionList: React.FC = () => {
                     <Input
                       id="resource"
                       value={createForm.resource}
-                      onChange={(e) => setCreateForm({...createForm, resource: e.target.value})}
+                      onChange={(e) =>
+                        setCreateForm({
+                          ...createForm,
+                          resource: e.target.value,
+                        })
+                      }
                       className="col-span-3"
                       placeholder="e.g., user, role, permission"
                     />
@@ -389,7 +467,9 @@ const PermissionList: React.FC = () => {
                     <Input
                       id="action"
                       value={createForm.action}
-                      onChange={(e) => setCreateForm({...createForm, action: e.target.value})}
+                      onChange={(e) =>
+                        setCreateForm({ ...createForm, action: e.target.value })
+                      }
                       className="col-span-3"
                       placeholder="e.g., create, read, update, delete"
                     />
@@ -434,10 +514,14 @@ const PermissionList: React.FC = () => {
               </TableHeader>
               <TableBody>
                 {filteredPermissions.map((permission) => {
-                  const { resource, action } = parsePermissionName(permission.name)
+                  const { resource, action } = parsePermissionName(
+                    permission.name
+                  );
                   return (
                     <TableRow key={permission.id}>
-                      <TableCell className="font-medium">{permission.name}</TableCell>
+                      <TableCell className="font-medium">
+                        {permission.name}
+                      </TableCell>
                       <TableCell>{permission.description}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{resource}</Badge>
@@ -463,7 +547,9 @@ const PermissionList: React.FC = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDeletePermission(permission.id)}
+                              onClick={() =>
+                                handleDeletePermission(permission.id)
+                              }
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -472,7 +558,7 @@ const PermissionList: React.FC = () => {
                         )}
                       </TableCell>
                     </TableRow>
-                  )
+                  );
                 })}
               </TableBody>
             </Table>
@@ -480,7 +566,7 @@ const PermissionList: React.FC = () => {
         </CardContent>
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default PermissionList
+export default PermissionList;

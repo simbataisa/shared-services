@@ -18,9 +18,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
-import { StatusBadge } from "@/components/StatusBadge";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { PermissionsCard } from "@/components/common";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import httpClient from "@/lib/httpClient";
@@ -235,33 +235,11 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
             </Card>
 
             {/* Permissions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Activity className="mr-2 h-5 w-5" />
-                  Permissions ({role.permissions?.length || 0})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {role.permissions && role.permissions.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                    {role.permissions.map((permission) => (
-                      <Badge
-                        key={permission.id}
-                        variant="outline"
-                        className="justify-start"
-                      >
-                        {permission.name}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">
-                    No permissions assigned to this role.
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <PermissionsCard
+              permissions={role.permissions}
+              title="Permissions"
+              emptyMessage="No permissions assigned to this role."
+            />
           </div>
 
           {/* Sidebar */}
@@ -346,8 +324,8 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
 
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Status</span>
-                    <StatusBadge 
-                      status={normalizeEntityStatus("role", stats.status)} 
+                    <StatusBadge
+                      status={normalizeEntityStatus("role", stats.status)}
                     />
                   </div>
 

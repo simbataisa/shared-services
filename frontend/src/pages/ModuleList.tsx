@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { PermissionGuard } from "../components/PermissionGuard";
-import { StatusBadge } from "../components/StatusBadge";
-import { usePermissions } from "../hooks/usePermissions";
-import { normalizeEntityStatus } from "../lib/status-colors";
-import { SearchAndFilter } from "../components/SearchAndFilter";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { usePermissions } from "@/hooks/usePermissions";
+import { normalizeEntityStatus } from "@/lib/status-colors";
+import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import {
   Card,
   CardContent,
@@ -23,21 +23,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  MoreHorizontal,
-  CheckCircle,
-} from "lucide-react";
-import api from "../lib/api";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
+import { Plus, Edit, Trash2, Eye } from "lucide-react";
+import api from "@/lib/api";
 import type { Module } from "@/types";
 
 const ModuleList: React.FC = () => {
@@ -252,10 +239,9 @@ const ModuleList: React.FC = () => {
                         />
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {module.updatedAt 
+                        {module.updatedAt
                           ? new Date(module.updatedAt).toLocaleDateString()
-                          : "N/A"
-                        }
+                          : "N/A"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-2">

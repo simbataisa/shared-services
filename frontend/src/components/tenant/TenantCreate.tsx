@@ -27,9 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PermissionGuard } from "../PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
-import api from "../../lib/api";
+import api from "@/lib/api";
 
 interface TenantFormData {
   tenantCode: string;
@@ -175,8 +175,8 @@ export default function TenantCreate() {
                       </Alert>
                     )}
                     <p className="text-sm text-muted-foreground">
-                      Unique identifier for the tenant (uppercase letters, numbers,
-                      and underscores only)
+                      Unique identifier for the tenant (uppercase letters,
+                      numbers, and underscores only)
                     </p>
                   </div>
 
@@ -186,7 +186,9 @@ export default function TenantCreate() {
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("name", e.target.value)
+                      }
                       placeholder="e.g., Acme Corporation"
                       maxLength={100}
                       className={errors.name ? "border-destructive" : ""}
@@ -204,7 +206,10 @@ export default function TenantCreate() {
                     <Select
                       value={formData.type}
                       onValueChange={(value) =>
-                        handleInputChange("type", value as TenantFormData["type"])
+                        handleInputChange(
+                          "type",
+                          value as TenantFormData["type"]
+                        )
                       }
                     >
                       <SelectTrigger>
@@ -291,7 +296,8 @@ export default function TenantCreate() {
                     <div>
                       <h4 className="text-sm font-medium">Tenant Isolation</h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Each tenant has its own isolated data and user access controls.
+                        Each tenant has its own isolated data and user access
+                        controls.
                       </p>
                     </div>
                   </div>
@@ -299,9 +305,18 @@ export default function TenantCreate() {
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium">Tenant Types</h4>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p><strong>Enterprise:</strong> Full-featured tenant with advanced capabilities</p>
-                      <p><strong>Standard:</strong> Standard tenant with core features</p>
-                      <p><strong>Basic:</strong> Basic tenant with limited features</p>
+                      <p>
+                        <strong>Enterprise:</strong> Full-featured tenant with
+                        advanced capabilities
+                      </p>
+                      <p>
+                        <strong>Standard:</strong> Standard tenant with core
+                        features
+                      </p>
+                      <p>
+                        <strong>Basic:</strong> Basic tenant with limited
+                        features
+                      </p>
                     </div>
                   </div>
 

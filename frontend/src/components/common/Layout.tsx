@@ -1,11 +1,21 @@
-import { type ReactNode } from 'react'
-import { NavLink, useNavigate, Link } from 'react-router-dom'
-import { LogOut, User, Settings, Shield, Users, Package, Layers, Key, Building, BarChart3 } from 'lucide-react'
-import { useAuth } from '../store/auth'
-import { useNavigationPermissions } from '../hooks/usePermissions'
-import { PermissionGuard } from './PermissionGuard'
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
+import { type ReactNode } from "react";
+import { NavLink, useNavigate, Link } from "react-router-dom";
+import {
+  LogOut,
+  User,
+  Shield,
+  Users,
+  Package,
+  Layers,
+  Key,
+  Building,
+  BarChart3,
+} from "lucide-react";
+import { useAuth } from "@/store/auth";
+import { useNavigationPermissions } from "@/hooks/usePermissions";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
   SidebarContent,
@@ -19,79 +29,79 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "./ui/sidebar"
+} from "@/components/ui/sidebar";
 
 interface LayoutProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 interface NavigationItem {
-  to: string
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  canAccess: boolean
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  canAccess: boolean;
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { user, tenant, logout } = useAuth()
-  const navigate = useNavigate()
-  const navPermissions = useNavigationPermissions()
+  const { user, tenant, logout } = useAuth();
+  const navigate = useNavigate();
+  const navPermissions = useNavigationPermissions();
 
   const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+    logout();
+    navigate("/login");
+  };
 
   const navigationItems: NavigationItem[] = [
     {
-      to: '/dashboard',
-      label: 'Dashboard',
+      to: "/dashboard",
+      label: "Dashboard",
       icon: BarChart3,
-      canAccess: navPermissions.canAccessDashboard
+      canAccess: navPermissions.canAccessDashboard,
     },
     {
-      to: '/user-groups',
-      label: 'User Groups',
+      to: "/user-groups",
+      label: "User Groups",
       icon: Users,
-      canAccess: navPermissions.canAccessUsers
+      canAccess: navPermissions.canAccessUsers,
     },
     {
-      to: '/users',
-      label: 'Users',
+      to: "/users",
+      label: "Users",
       icon: User,
-      canAccess: navPermissions.canAccessUsers
+      canAccess: navPermissions.canAccessUsers,
     },
     {
-      to: '/roles',
-      label: 'Roles',
+      to: "/roles",
+      label: "Roles",
       icon: Shield,
-      canAccess: navPermissions.canAccessRoles
+      canAccess: navPermissions.canAccessRoles,
     },
     {
-      to: '/permissions',
-      label: 'Permissions',
+      to: "/permissions",
+      label: "Permissions",
       icon: Key,
-      canAccess: navPermissions.canAccessRoles
+      canAccess: navPermissions.canAccessRoles,
     },
     {
-      to: '/products',
-      label: 'Products',
+      to: "/products",
+      label: "Products",
       icon: Package,
-      canAccess: navPermissions.canAccessProducts
+      canAccess: navPermissions.canAccessProducts,
     },
     {
-      to: '/modules',
-      label: 'Modules',
+      to: "/modules",
+      label: "Modules",
       icon: Layers,
-      canAccess: navPermissions.canAccessModules
+      canAccess: navPermissions.canAccessModules,
     },
     {
-      to: '/tenants',
-      label: 'Tenants',
+      to: "/tenants",
+      label: "Tenants",
       icon: Building,
-      canAccess: navPermissions.canAccessTenants
-    }
-  ]
+      canAccess: navPermissions.canAccessTenants,
+    },
+  ];
 
   return (
     <SidebarProvider>
@@ -104,11 +114,13 @@ export default function Layout({ children }: LayoutProps) {
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">Shared Services</span>
-                <span className="truncate text-xs">{tenant?.name || 'Platform'}</span>
+                <span className="truncate text-xs">
+                  {tenant?.name || "Platform"}
+                </span>
               </div>
             </div>
           </SidebarHeader>
-          
+
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
@@ -123,7 +135,9 @@ export default function Layout({ children }: LayoutProps) {
                               to={item.to}
                               className={({ isActive }) =>
                                 `flex items-center gap-2 ${
-                                  isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground' : ''
+                                  isActive
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                    : ""
                                 }`
                               }
                             >
@@ -139,7 +153,7 @@ export default function Layout({ children }: LayoutProps) {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          
+
           <SidebarFooter>
             {user && (
               <div className="p-4">
@@ -149,18 +163,24 @@ export default function Layout({ children }: LayoutProps) {
                     <span className="text-sm font-medium">{user.username}</span>
                   </div>
                   <div className="mb-3">
-                    <p className="text-xs text-muted-foreground mb-1">Your Roles:</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Your Roles:
+                    </p>
                     <div className="flex flex-wrap gap-1">
                       {user.roles.map((role) => (
-                        <Badge key={role.id} variant="secondary" className="text-xs">
+                        <Badge
+                          key={role.id}
+                          variant="secondary"
+                          className="text-xs"
+                        >
                           {role.name}
                         </Badge>
                       ))}
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleLogout}
                     className="w-full"
                   >
@@ -172,7 +192,7 @@ export default function Layout({ children }: LayoutProps) {
             )}
           </SidebarFooter>
         </Sidebar>
-        
+
         <main className="flex-1 flex flex-col">
           {/* Header with sidebar trigger */}
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -188,13 +208,11 @@ export default function Layout({ children }: LayoutProps) {
               </Button>
             )}
           </header>
-          
+
           {/* Main content area */}
-          <div className="flex-1 p-6">
-            {children}
-          </div>
+          <div className="flex-1 p-6">{children}</div>
         </main>
       </div>
     </SidebarProvider>
-  )
+  );
 }

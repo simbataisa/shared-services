@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -28,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PermissionGuard } from "../PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import api from "@/lib/api";
 
 interface ProductFormData {
@@ -212,10 +211,14 @@ const ProductCreate: React.FC = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Enter product name"
-                    className={`mt-1 ${errors.name ? "border-destructive" : ""}`}
+                    className={`mt-1 ${
+                      errors.name ? "border-destructive" : ""
+                    }`}
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-destructive">{errors.name}</p>
+                    <p className="mt-1 text-sm text-destructive">
+                      {errors.name}
+                    </p>
                   )}
                 </div>
 
@@ -228,10 +231,14 @@ const ProductCreate: React.FC = () => {
                     value={formData.code}
                     onChange={handleInputChange}
                     placeholder="Enter product code (e.g., PROD_001)"
-                    className={`mt-1 font-mono bg-gray-50 ${errors.code ? "border-destructive" : ""}`}
+                    className={`mt-1 font-mono bg-gray-50 ${
+                      errors.code ? "border-destructive" : ""
+                    }`}
                   />
                   {errors.code && (
-                    <p className="mt-1 text-sm text-destructive">{errors.code}</p>
+                    <p className="mt-1 text-sm text-destructive">
+                      {errors.code}
+                    </p>
                   )}
                 </div>
 
@@ -244,7 +251,9 @@ const ProductCreate: React.FC = () => {
                     value={formData.category}
                     onChange={handleInputChange}
                     placeholder="Enter category"
-                    className={`mt-1 ${errors.category ? "border-destructive" : ""}`}
+                    className={`mt-1 ${
+                      errors.category ? "border-destructive" : ""
+                    }`}
                   />
                   {errors.category && (
                     <p className="mt-1 text-sm text-destructive">
@@ -262,7 +271,9 @@ const ProductCreate: React.FC = () => {
                     value={formData.version}
                     onChange={handleInputChange}
                     placeholder="Enter version (e.g., 1.0.0)"
-                    className={`mt-1 font-mono ${errors.version ? "border-destructive" : ""}`}
+                    className={`mt-1 font-mono ${
+                      errors.version ? "border-destructive" : ""
+                    }`}
                   />
                   {errors.version && (
                     <p className="mt-1 text-sm text-destructive">

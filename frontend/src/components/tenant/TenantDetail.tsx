@@ -32,8 +32,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
-import { StatusBadge } from "@/components/StatusBadge";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus, getStatusVariant } from "@/lib/status-colors";
 import api from "@/lib/api";

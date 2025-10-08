@@ -1,29 +1,34 @@
-import React from 'react'
-import { Search, Filter } from 'lucide-react'
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
+import React from "react";
+import { Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FilterOption {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 interface SearchAndFilterProps {
-  searchTerm: string
-  onSearchChange: (value: string) => void
-  searchPlaceholder?: string
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  searchPlaceholder?: string;
   filters?: {
-    label: string
-    value: string
-    onChange: (value: string) => void
-    options: FilterOption[]
-    placeholder?: string
-    width?: string
-  }[]
-  actions?: React.ReactNode
-  className?: string
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: FilterOption[];
+    placeholder?: string;
+    width?: string;
+  }[];
+  actions?: React.ReactNode;
+  className?: string;
 }
 
 export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
@@ -32,7 +37,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   searchPlaceholder = "Search...",
   filters = [],
   actions,
-  className = ""
+  className = "",
 }) => {
   return (
     <Card className={className}>
@@ -48,18 +53,22 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               className="pl-10"
             />
           </div>
-          
+
           {/* Filters */}
           {filters.length > 0 && (
             <div className="flex gap-2 flex-wrap">
               {filters.map((filter, index) => (
-                <Select 
-                  key={index} 
-                  value={filter.value} 
+                <Select
+                  key={index}
+                  value={filter.value}
                   onValueChange={filter.onChange}
                 >
                   <SelectTrigger className={filter.width || "w-40"}>
-                    <SelectValue placeholder={filter.placeholder || `Filter by ${filter.label}`} />
+                    <SelectValue
+                      placeholder={
+                        filter.placeholder || `Filter by ${filter.label}`
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {filter.options.map((option) => (
@@ -72,17 +81,13 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               ))}
             </div>
           )}
-          
+
           {/* Additional Actions */}
-          {actions && (
-            <div className="flex gap-2">
-              {actions}
-            </div>
-          )}
+          {actions && <div className="flex gap-2">{actions}</div>}
         </div>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default SearchAndFilter
+export default SearchAndFilter;

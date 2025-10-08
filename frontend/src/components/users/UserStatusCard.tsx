@@ -1,6 +1,5 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -8,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { StatusBadge } from "../StatusBadge";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import type { User } from "@/types";
@@ -45,7 +44,7 @@ const UserStatusCard: React.FC<UserStatusCardProps> = ({
             <div>
               <h4 className="font-medium text-gray-900">Current Status</h4>
               <p className="text-sm text-gray-600">
-                User is currently {user.userStatus?.toLowerCase() || 'unknown'}
+                User is currently {user.userStatus?.toLowerCase() || "unknown"}
               </p>
             </div>
             <StatusBadge

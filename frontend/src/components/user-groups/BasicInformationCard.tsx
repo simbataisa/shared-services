@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Users, Edit, Save, X } from 'lucide-react';
-import { PermissionGuard } from '@/components/PermissionGuard';
+import { PermissionGuard } from '@/components/common/PermissionGuard';
 import type { UserGroup, BasicInformationCardProps } from '@/types';
 
 export const BasicInformationCard: React.FC<BasicInformationCardProps> = ({

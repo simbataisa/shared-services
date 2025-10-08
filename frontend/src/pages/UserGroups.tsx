@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import httpClient from "@/lib/httpClient";
 import type { UserGroup, Role, Module, CreateGroupForm } from "@/types";
-import SearchAndFilter from "@/components/SearchAndFilter";
+import SearchAndFilter from "@/components/common/SearchAndFilter";
 import UserGroupsTable from "@/components/user-groups/UserGroupsTable";
 import { Button } from "@/components/ui/button";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 
 const UserGroups: React.FC = () => {
   const [groups, setGroups] = useState<UserGroup[]>([]);

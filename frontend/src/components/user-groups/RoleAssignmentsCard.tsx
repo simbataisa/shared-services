@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import type { RoleAssignment, Module, Role } from "@/types";
 
 interface RoleAssignmentsCardProps {

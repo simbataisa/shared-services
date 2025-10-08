@@ -10,9 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { StatusBadge } from "../StatusBadge";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
-import { User as UserIcon, Mail, Calendar, Edit, Save, X } from "lucide-react";
+import { User as UserIcon, Edit, Save, X } from "lucide-react";
 import type { User as UserType } from "@/types";
 import httpClient from "@/lib/httpClient";
 
@@ -53,7 +53,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
   };
 
@@ -71,15 +71,17 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
       };
 
       const updatedUser = await httpClient.updateUser(user.id, updateData);
-      
+
       if (onUserUpdated) {
         onUserUpdated(updatedUser);
       }
-      
+
       setIsEditing(false);
     } catch (error: any) {
       console.error("Error updating user:", error);
-      setError(error.response?.data?.message || "Failed to update user information");
+      setError(
+        error.response?.data?.message || "Failed to update user information"
+      );
     } finally {
       setLoading(false);
     }
@@ -207,9 +209,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
                 className="mt-1 text-sm"
               />
             ) : (
-              <p className="mt-1 text-sm text-gray-900">
-                {user.firstName}
-              </p>
+              <p className="mt-1 text-sm text-gray-900">{user.firstName}</p>
             )}
           </div>
 
@@ -225,9 +225,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
                 className="mt-1 text-sm"
               />
             ) : (
-              <p className="mt-1 text-sm text-gray-900">
-                {user.lastName}
-              </p>
+              <p className="mt-1 text-sm text-gray-900">{user.lastName}</p>
             )}
           </div>
 
@@ -238,7 +236,9 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
             {isEditing ? (
               <Input
                 value={formData.phoneNumber}
-                onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("phoneNumber", e.target.value)
+                }
                 disabled={loading}
                 placeholder="Enter phone number"
                 className="mt-1 text-sm"
@@ -271,9 +271,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
                   {formatDate(user.createdAt)}
                 </p>
                 {user.createdBy && (
-                  <p className="text-xs text-gray-500">
-                    by {user.createdBy}
-                  </p>
+                  <p className="text-xs text-gray-500">by {user.createdBy}</p>
                 )}
               </div>
 
@@ -285,9 +283,7 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
                   {formatDate(user.updatedAt)}
                 </p>
                 {user.updatedBy && (
-                  <p className="text-xs text-gray-500">
-                    by {user.updatedBy}
-                  </p>
+                  <p className="text-xs text-gray-500">by {user.updatedBy}</p>
                 )}
               </div>
 

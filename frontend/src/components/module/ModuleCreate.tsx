@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PermissionGuard } from "../PermissionGuard";
-import api from "../../lib/api";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import api from "@/lib/api";
 import {
   Card,
   CardContent,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { usePermissions } from "@/hooks/usePermissions";
-import { PermissionGuard } from "@/components/PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import api from "@/lib/api";
 import type { Product, Module, ProductWithModules } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,10 +16,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
+} from "@/components/ui/table";
 import { Plus, Edit, Trash2, Package, AlertCircle, Eye } from "lucide-react";
-import SearchAndFilter from "../components/SearchAndFilter";
-import { StatusBadge } from "@/components/StatusBadge";
+import SearchAndFilter from "@/components/common/SearchAndFilter";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 
 export default function ProductList() {

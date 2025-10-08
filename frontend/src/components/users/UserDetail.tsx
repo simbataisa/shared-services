@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionGuard } from "../PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import httpClient from "@/lib/httpClient";
 import { type User, type UserStats } from "@/types";

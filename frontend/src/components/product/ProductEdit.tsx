@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Save, Package, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -29,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionGuard } from "../PermissionGuard";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
 import type { Product } from "@/store/auth";
 import api from "@/lib/api";
 
@@ -258,7 +257,9 @@ const ProductEdit: React.FC = () => {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to={`/products/${id}`}>{product?.name || "Product"}</Link>
+                    <Link to={`/products/${id}`}>
+                      {product?.name || "Product"}
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -270,7 +271,9 @@ const ProductEdit: React.FC = () => {
 
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Edit Product</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Edit Product
+                </h1>
                 <p className="mt-2 text-gray-600">
                   Update product information and settings
                 </p>
@@ -306,7 +309,9 @@ const ProductEdit: React.FC = () => {
                         onChange={handleInputChange}
                         placeholder="Enter product name"
                         required
-                        className={`mt-1 ${fieldErrors.name ? "border-red-500" : ""}`}
+                        className={`mt-1 ${
+                          fieldErrors.name ? "border-red-500" : ""
+                        }`}
                       />
                       {fieldErrors.name && (
                         <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
@@ -326,7 +331,9 @@ const ProductEdit: React.FC = () => {
                         onChange={handleInputChange}
                         placeholder="Enter product code"
                         required
-                        className={`mt-1 font-mono bg-gray-50 ${fieldErrors.code ? "border-red-500" : ""}`}
+                        className={`mt-1 font-mono bg-gray-50 ${
+                          fieldErrors.code ? "border-red-500" : ""
+                        }`}
                       />
                       {fieldErrors.code && (
                         <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
@@ -359,7 +366,9 @@ const ProductEdit: React.FC = () => {
                         value={formData.version}
                         onChange={handleInputChange}
                         placeholder="Enter version (e.g., 1.0.0)"
-                        className={`mt-1 font-mono ${fieldErrors.version ? "border-red-500" : ""}`}
+                        className={`mt-1 font-mono ${
+                          fieldErrors.version ? "border-red-500" : ""
+                        }`}
                       />
                       {fieldErrors.version && (
                         <p className="mt-1 text-sm text-red-500 flex items-center gap-1">
@@ -440,13 +449,16 @@ const ProductEdit: React.FC = () => {
                         Created At
                       </label>
                       <p className="mt-1 text-sm text-gray-900">
-                        {new Date(product.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {new Date(product.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
                       </p>
                       <p className="text-xs text-gray-500">
                         by {product.createdBy || "N/A"}
@@ -458,13 +470,16 @@ const ProductEdit: React.FC = () => {
                         Last Updated
                       </label>
                       <p className="mt-1 text-sm text-gray-900">
-                        {new Date(product.updatedAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {new Date(product.updatedAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )}
                       </p>
                       <p className="text-xs text-gray-500">
                         by {product.updatedBy || "N/A"}

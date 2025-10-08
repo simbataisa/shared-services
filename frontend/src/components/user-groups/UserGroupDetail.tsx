@@ -40,8 +40,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { PermissionGuard } from "@/components/PermissionGuard";
-import { StatusBadge } from "@/components/StatusBadge";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
 import { BasicInformationCard } from "./BasicInformationCard";
 import { RoleAssignmentsCard } from "./RoleAssignmentsCard";

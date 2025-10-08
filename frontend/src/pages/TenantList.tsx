@@ -25,13 +25,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "../components/StatusBadge";
-import { PermissionGuard } from "../components/PermissionGuard";
-import { getStatusIcon } from "../lib/status-icons";
-import { normalizeEntityStatus, getStatusVariant } from "../lib/status-colors";
-import api from "../lib/api";
-import { type Tenant } from "../store/auth";
-import SearchAndFilter from "../components/SearchAndFilter";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { getStatusIcon } from "@/lib/status-icons";
+import { normalizeEntityStatus } from "@/lib/status-colors";
+import api from "@/lib/api";
+import { type Tenant } from "@/store/auth";
+import SearchAndFilter from "@/components/common/SearchAndFilter";
 
 export default function TenantList() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
