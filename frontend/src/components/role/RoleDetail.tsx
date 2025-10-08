@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Shield, Activity } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,7 +24,13 @@ import { RoleInfoCard } from "./RoleInfoCard";
 import { RoleStatsCard } from "./RoleStatsCard";
 import { usePermissions } from "@/hooks/usePermissions";
 import httpClient from "@/lib/httpClient";
-import type { RoleDetails, RoleStats, RoleDetailProps } from "@/types";
+import {
+  type RoleDetails,
+  type RoleStats,
+  type RoleDetailProps,
+  type RoleStatus,
+  ENTITY_STATUS_MAPPINGS,
+} from "@/types";
 
 const RoleDetail: React.FC<RoleDetailProps> = () => {
   const { id } = useParams<{ id: string }>();
@@ -65,7 +71,7 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
         totalPermissions: roleData.permissions?.length || 0,
         totalUsers: roleData.userCount || 0,
         totalUserGroups: roleData.userGroupCount || 0,
-        status: roleData.roleStatus || "ACTIVE",
+        roleStatus: roleData.roleStatus || ENTITY_STATUS_MAPPINGS.role.ACTIVE,
         lastModified: roleData.updatedAt || roleData.createdAt,
       };
 
@@ -78,16 +84,16 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
     }
   };
 
-  const handleStatusUpdate = async (newStatus: "ACTIVE" | "INACTIVE") => {
+  const handleStatusUpdate = async (roleId: number, newStatus: RoleStatus) => {
     if (!role) return;
 
     try {
       setUpdating(true);
-      const updatedRole = await httpClient.updateRoleStatus(role.id, newStatus);
+      const updatedRole = await httpClient.updateRoleStatus(roleId, newStatus);
 
       setRole(updatedRole);
       if (stats) {
-        setStats({ ...stats, status: newStatus });
+        setStats({ ...stats, roleStatus: newStatus });
       }
     } catch (err: any) {
       console.error("Error updating role status:", err);

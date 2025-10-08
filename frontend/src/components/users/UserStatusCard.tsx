@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-colors";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import type { User } from "@/types";
+import { StatusDisplayCard } from "../common";
 
 interface UserStatusCardProps {
   user: User;
@@ -39,19 +40,13 @@ const UserStatusCard: React.FC<UserStatusCardProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="border border-gray-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium text-gray-900">Current Status</h4>
-              <p className="text-sm text-gray-600">
-                User is currently {user.userStatus?.toLowerCase() || "unknown"}
-              </p>
-            </div>
-            <StatusBadge
-              status={normalizeEntityStatus("user", user.userStatus)}
-            />
-          </div>
-        </div>
+        <StatusDisplayCard
+          title="User Status"
+          description={`User is currently ${
+            user.userStatus?.toLowerCase() || "unknown"
+          }`}
+          status={user.userStatus}
+        />
 
         {canUpdate && onStatusChange && (
           <div className="space-y-2">

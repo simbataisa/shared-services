@@ -15,6 +15,7 @@ import { normalizeEntityStatus } from "@/lib/status-colors";
 import { User as UserIcon, Edit, Save, X } from "lucide-react";
 import type { User as UserType } from "@/types";
 import httpClient from "@/lib/httpClient";
+import { getStatusColor, getStatusIcon } from "@/lib/status-icons";
 
 interface UserInfoCardProps {
   user: UserType;
@@ -254,10 +255,13 @@ const UserInfoCard: React.FC<UserInfoCardProps> = ({
             <Label className="block text-sm font-medium text-gray-700">
               Status
             </Label>
-            <div className="mt-1">
-              <StatusBadge
-                status={normalizeEntityStatus("user", user.userStatus)}
-              />
+            <div
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(
+                user.userStatus
+              )}`}
+            >
+              {getStatusIcon(user.userStatus)}
+              {user.userStatus}
             </div>
           </div>
 

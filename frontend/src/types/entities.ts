@@ -27,7 +27,7 @@ export interface Role {
   createdAt?: string;
   updatedAt?: string;
   permissions?: Permission[];
-  status?: 'active' | 'inactive' | 'draft' | 'deprecated';
+  status?: "active" | "inactive" | "draft" | "deprecated";
   moduleId?: number;
   moduleName?: string;
   isActive?: boolean;
@@ -112,12 +112,70 @@ export interface Product {
   version: string;
 }
 
+export const ENTITY_STATUS_MAPPINGS = {
+  role: {
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
+  },
+  user: {
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
+  },
+  tenant: {
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
+  },
+  module: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
+  product: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
+};
+
+export const ENTITY_STATUS_MAPPINGS_1 = {
+  role: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
+  user: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
+  tenant: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
+  module: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
+  product: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
+};
+
+export type EntityStatus =
+  (typeof ENTITY_STATUS_MAPPINGS)[keyof typeof ENTITY_STATUS_MAPPINGS][keyof (typeof ENTITY_STATUS_MAPPINGS)[keyof typeof ENTITY_STATUS_MAPPINGS]];
+
+export type RoleStatus =
+  (typeof ENTITY_STATUS_MAPPINGS.role)[keyof typeof ENTITY_STATUS_MAPPINGS.role];
+
+export type EntityStatus1 =
+  (typeof ENTITY_STATUS_MAPPINGS_1)[keyof typeof ENTITY_STATUS_MAPPINGS_1][keyof (typeof ENTITY_STATUS_MAPPINGS_1)[keyof typeof ENTITY_STATUS_MAPPINGS_1]];
+
+export type RoleStatus1 =
+  (typeof ENTITY_STATUS_MAPPINGS_1.role)[keyof typeof ENTITY_STATUS_MAPPINGS_1.role];
+
 // Extended entity types for detailed views
 export interface RoleDetails {
   id: number;
   name: string;
   description: string;
-  roleStatus: "ACTIVE" | "INACTIVE";
+  roleStatus: RoleStatus;
   permissions?: Permission[];
   userCount?: number;
   userGroupCount?: number;
@@ -151,7 +209,7 @@ export interface RoleStats {
   totalPermissions: number;
   totalUsers: number;
   totalUserGroups: number;
-  status: "ACTIVE" | "INACTIVE";
+  roleStatus: RoleStatus;
   lastModified: string;
 }
 

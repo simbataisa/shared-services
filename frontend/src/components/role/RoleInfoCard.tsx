@@ -1,14 +1,9 @@
 import React from "react";
 import { Shield } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getStatusColor, getStatusIcon } from "@/lib/status-icons";
 import type { RoleDetails } from "@/types";
+import { Label } from "../ui/label";
 
 interface RoleInfoCardProps {
   role: RoleDetails;
@@ -32,13 +27,16 @@ export const RoleInfoCard: React.FC<RoleInfoCardProps> = ({ role }) => {
             <p className="mt-1 text-sm text-gray-900">{role.name}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-500">
+            <Label className="block text-sm font-medium text-gray-700">
               Status
-            </label>
-            <div className="mt-1">
-              <StatusBadge
-                status={normalizeEntityStatus("role", role.roleStatus)}
-              />
+            </Label>
+            <div
+              className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(
+                role.roleStatus
+              )}`}
+            >
+              {getStatusIcon(role.roleStatus)}
+              {role.roleStatus}
             </div>
           </div>
           <div className="md:col-span-2">

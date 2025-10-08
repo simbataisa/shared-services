@@ -45,6 +45,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
 import { BasicInformationCard } from "./BasicInformationCard";
 import { RoleAssignmentsCard } from "./RoleAssignmentsCard";
+import UserGroupStatusCard from "./UserGroupStatusCard";
 import type {
   RoleAssignment,
   UserGroupDetails,
@@ -207,6 +208,25 @@ export default function UserGroupDetail() {
     } catch (error) {
       console.error("Failed to delete user group:", error);
       setError("Failed to delete user group");
+      setUpdating(false);
+    }
+  };
+
+  const handleStatusUpdate = async (action: "activate" | "deactivate") => {
+    if (!userGroup) return;
+
+    try {
+      setUpdating(true);
+      // For now, this is a placeholder - the actual API endpoint would depend on your backend
+      // You might need to implement specific endpoints for activating/deactivating user groups
+      console.log(`${action} user group:`, userGroup.userGroupId);
+      
+      // Refresh the user group details after status update
+      await fetchUserGroupDetails();
+    } catch (error) {
+      console.error(`Failed to ${action} user group:`, error);
+      setError(`Failed to ${action} user group`);
+    } finally {
       setUpdating(false);
     }
   };
@@ -378,47 +398,11 @@ export default function UserGroupDetail() {
         {/* Right Column - Actions & Statistics */}
         <div className="space-y-6">
           {/* Status Management */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Status Management</CardTitle>
-              <CardDescription>
-                Manage the user group's operational status
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center gap-2">
-                {getStatusIcon(userGroup.memberCount)}
-                <StatusBadge
-                  status={userGroup.memberCount > 0 ? "active" : "inactive"}
-                />
-                <span className="text-sm text-gray-600">
-                  ({userGroup.memberCount} members)
-                </span>
-              </div>
-
-              <PermissionGuard permission="user-groups:update">
-                {userGroup.memberCount > 0 ? (
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    disabled={updating}
-                  >
-                    <XCircle className="h-4 w-4 mr-2" />
-                    Deactivate Group
-                  </Button>
-                ) : (
-                  <Button
-                    variant={userGroup.memberCount > 0 ? "default" : "outline"}
-                    className="w-full"
-                    disabled={updating}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Activate Group
-                  </Button>
-                )}
-              </PermissionGuard>
-            </CardContent>
-          </Card>
+          <UserGroupStatusCard
+            memberCount={userGroup.memberCount}
+            onStatusUpdate={handleStatusUpdate}
+            updating={updating}
+          />
 
           {/* Statistics */}
           {stats && (
