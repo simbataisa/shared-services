@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { PermissionsCard } from "@/components/common";
+import { RoleStatusCard } from "./RoleStatusCard";
+import { RoleInfoCard } from "./RoleInfoCard";
+import { RoleStatsCard } from "./RoleStatsCard";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-colors";
 import httpClient from "@/lib/httpClient";
 import type { RoleDetails, RoleStats, RoleDetailProps } from "@/types";
 
@@ -173,184 +173,27 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Role Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Shield className="mr-2 h-5 w-5" />
-                  Role Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Role Name
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">{role.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Status
-                    </label>
-                    <div className="mt-1">
-                      <StatusBadge
-                        status={normalizeEntityStatus("role", role.roleStatus)}
-                      />
-                    </div>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium text-gray-500">
-                      Description
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {role.description || "No description provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Created At
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {new Date(role.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Last Updated
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
-                      {new Date(role.updatedAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <RoleInfoCard role={role} />
 
             {/* Permissions */}
             <PermissionsCard
               permissions={role.permissions}
               title="Permissions"
+              defaultExpanded={false}
               emptyMessage="No permissions assigned to this role."
             />
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
             {/* Role Status Management */}
-            <PermissionGuard permission="role:update">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
-                    Status Management
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">
-                      Current Status
-                    </span>
-                    <StatusBadge
-                      status={normalizeEntityStatus("role", role.roleStatus)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    {role.roleStatus === "ACTIVE" ? (
-                      <Button
-                        onClick={() => handleStatusUpdate("INACTIVE")}
-                        disabled={updating}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        Deactivate Role
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => handleStatusUpdate("ACTIVE")}
-                        disabled={updating}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        Activate Role
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </PermissionGuard>
+            <RoleStatusCard
+              role={role}
+              onStatusUpdate={handleStatusUpdate}
+              updating={updating}
+            />
 
             {/* Statistics */}
-            {stats && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
-                    Statistics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">
-                      Total Permissions
-                    </span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {stats.totalPermissions}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">
-                      Users with Role
-                    </span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {stats.totalUsers}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">User Groups</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {stats.totalUserGroups}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Status</span>
-                    <StatusBadge
-                      status={normalizeEntityStatus("role", stats.status)}
-                    />
-                  </div>
-
-                  {stats.lastModified && (
-                    <div className="pt-4 border-t border-gray-200">
-                      <span className="text-sm text-gray-600">
-                        Last Modified
-                      </span>
-                      <p className="text-sm font-medium text-gray-900">
-                        {new Date(stats.lastModified).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            <RoleStatsCard stats={stats} />
           </div>
         </div>
       </div>

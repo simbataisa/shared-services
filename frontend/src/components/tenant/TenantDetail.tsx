@@ -281,17 +281,17 @@ const TenantDetailComponent: React.FC = () => {
             onUpdate={handleTenantUpdate}
             updating={updating}
           />
+          <TenantAuditInfoCard tenant={tenant} />
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
           <TenantStatusCard
             tenant={tenant}
             onStatusUpdate={handleStatusChange}
             onDelete={handleDeleteTenant}
             updating={updating}
           />
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          <TenantAuditInfoCard tenant={tenant} />
           <StatisticsCard tenant={tenant} />
         </div>
       </div>
