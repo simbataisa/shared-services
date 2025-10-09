@@ -27,6 +27,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
@@ -106,31 +107,37 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
-        <Sidebar variant="inset">
+        <Sidebar variant="inset" collapsible="icon">
           <SidebarHeader>
-            <div className="flex items-center gap-2 px-4 py-2">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Building className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="flex items-center gap-2 px-4 py-2 group-data-[collapsible=icon]:justify-left group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:gap-0">
+              <Building className="size-4 shrink-0 text-sidebar-foreground" />
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-semibold">Shared Services</span>
-                <span className="truncate text-xs">
+                {/* <span className="truncate text-xs">
                   {tenant?.name || "Platform"}
-                </span>
+                </span> */}
               </div>
             </div>
           </SidebarHeader>
 
+          <SidebarRail />
+
           <SidebarContent>
             <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+                Navigation
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {navigationItems.map((item) => (
                     <PermissionGuard key={item.to} fallback={null}>
                       {item.canAccess && (
                         <SidebarMenuItem>
-                          <SidebarMenuButton asChild>
+                          <SidebarMenuButton
+                            asChild
+                            tooltip={item.label}
+                            size="lg"
+                          >
                             <NavLink
                               to={item.to}
                               className={({ isActive }) =>
@@ -142,7 +149,9 @@ export default function Layout({ children }: LayoutProps) {
                               }
                             >
                               <item.icon className="size-4" />
-                              <span>{item.label}</span>
+                              <span className="group-data-[collapsible=icon]:hidden">
+                                {item.label}
+                              </span>
                             </NavLink>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
@@ -156,7 +165,7 @@ export default function Layout({ children }: LayoutProps) {
 
           <SidebarFooter>
             {user && (
-              <div className="p-4">
+              <div className="p-4 group-data-[collapsible=icon]:hidden">
                 <div className="rounded-lg border bg-sidebar-accent/50 p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <User className="size-4" />
