@@ -41,18 +41,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { StatusBadge } from "@/components/common/StatusBadge";
+import { StatisticsCard } from "@/components/common";
 import { usePermissions } from "@/hooks/usePermissions";
 import { BasicInformationCard } from "./BasicInformationCard";
 import { RoleAssignmentsCard } from "./RoleAssignmentsCard";
 import UserGroupStatusCard from "./UserGroupStatusCard";
-import type {
-  RoleAssignment,
-  UserGroupDetails,
-  UserGroupStats,
-  Module,
-  Role,
-} from "@/types";
+import type { UserGroupDetails, UserGroupStats, Module, Role } from "@/types";
 import api from "@/lib/api";
 
 export default function UserGroupDetail() {
@@ -220,7 +214,7 @@ export default function UserGroupDetail() {
       // For now, this is a placeholder - the actual API endpoint would depend on your backend
       // You might need to implement specific endpoints for activating/deactivating user groups
       console.log(`${action} user group:`, userGroup.userGroupId);
-      
+
       // Refresh the user group details after status update
       await fetchUserGroupDetails();
     } catch (error) {
@@ -406,40 +400,30 @@ export default function UserGroupDetail() {
 
           {/* Statistics */}
           {stats && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Statistics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div className="bg-blue-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                      <Users className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <p className="text-2xl font-bold">{stats.totalMembers}</p>
-                    <p className="text-sm text-muted-foreground">Members</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="bg-purple-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                      <Shield className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <p className="text-2xl font-bold">{stats.totalRoles}</p>
-                    <p className="text-sm text-muted-foreground">Roles</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="bg-green-100 p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                      <Activity className="h-6 w-6 text-green-600" />
-                    </div>
-                    <p className="text-2xl font-bold">
-                      {stats.totalMembers > 0 ? "Active" : "Empty"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <StatisticsCard
+              title="Statistics"
+              layout="grid"
+              statistics={[
+                {
+                  label: "Members",
+                  value: stats.totalMembers,
+                  icon: <Users className="h-6 w-6 text-blue-600" />,
+                  className: "bg-blue-100",
+                },
+                {
+                  label: "Roles",
+                  value: stats.totalRoles,
+                  icon: <Shield className="h-6 w-6 text-purple-600" />,
+                  className: "bg-purple-100",
+                },
+                {
+                  label: "Status",
+                  value: stats.totalMembers > 0 ? "Active" : "Empty",
+                  icon: <Activity className="h-6 w-6 text-green-600" />,
+                  className: "bg-green-100",
+                },
+              ]}
+            />
           )}
 
           {/* Audit Information */}

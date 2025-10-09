@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { StatisticsCard } from "@/components/common";
 import { usePermissions } from "@/hooks/usePermissions";
 import httpClient from "@/lib/httpClient";
 import { type User, type UserStats } from "@/types";
@@ -493,58 +494,37 @@ const UserDetail: React.FC = () => {
 
             {/* Statistics */}
             {stats && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-gray-900">
-                    Statistics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">Total Roles</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {stats.totalRoles}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">User Groups</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      {stats.totalUserGroups}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-600">
-                      Account Status
-                    </span>
-                    <span
-                      className={`text-sm font-medium ${
-                        stats.accountStatus === "ACTIVE"
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {stats.accountStatus}
-                    </span>
-                  </div>
-
-                  {stats.lastLogin && (
-                    <div className="pt-4 border-t border-gray-200">
-                      <span className="text-sm text-gray-600">Last Login</span>
-                      <p className="text-sm font-medium text-gray-900">
-                        {new Date(stats.lastLogin).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <StatisticsCard
+                statistics={[
+                  {
+                    label: "Total Roles",
+                    value: stats.totalRoles,
+                  },
+                  {
+                    label: "User Groups",
+                    value: stats.totalUserGroups,
+                  },
+                  {
+                    label: "Account Status",
+                    value: stats.accountStatus,
+                    className: stats.accountStatus === "ACTIVE" ? "text-green-600" : "text-red-600",
+                  },
+                  ...(stats.lastLogin
+                    ? [
+                        {
+                          label: "Last Login",
+                          value: new Date(stats.lastLogin).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
             )}
           </div>
         </div>

@@ -1,23 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -26,20 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-  ArrowLeft,
-  Building2,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Edit,
-  Save,
-  Trash2,
-  User,
-  X,
-  XCircle,
-  AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import type {
   TenantType,
   TenantStatus,
@@ -47,59 +17,10 @@ import type {
   TenantDetail as TenantDetailType,
 } from "@/types/tenant";
 import { httpClient } from "@/lib/httpClient";
-import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { usePermissions } from "@/hooks/usePermissions";
+import { StatisticsCard } from "@/components/common";
 import TenantStatusCard from "./TenantStatusCard";
 import TenantBasicInfoCard from "./TenantBasicInfoCard";
 import TenantAuditInfoCard from "./TenantAuditInfoCard";
-
-interface StatisticsCardProps {
-  tenant: TenantDetailType;
-}
-
-const StatisticsCard: React.FC<StatisticsCardProps> = ({ tenant }) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Statistics</CardTitle>
-        <CardDescription>
-          Key metrics and information about this tenant
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
-              {tenant.organizationId || "N/A"}
-            </div>
-            <div className="text-xs text-muted-foreground">Organization ID</div>
-          </div>
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
-              {tenant.status === "ACTIVE" ? "✓" : "✗"}
-            </div>
-            <div className="text-xs text-muted-foreground">Active Status</div>
-          </div>
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
-              {new Date(tenant.createdAt).getFullYear()}
-            </div>
-            <div className="text-xs text-muted-foreground">Created Year</div>
-          </div>
-          <div className="text-center p-4 bg-muted/50 rounded-lg">
-            <div className="text-2xl font-bold text-primary">
-              {Math.floor(
-                (Date.now() - new Date(tenant.createdAt).getTime()) /
-                  (1000 * 60 * 60 * 24)
-              )}
-            </div>
-            <div className="text-xs text-muted-foreground">Days Active</div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 const TenantDetailComponent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -292,7 +213,32 @@ const TenantDetailComponent: React.FC = () => {
             onDelete={handleDeleteTenant}
             updating={updating}
           />
-          <StatisticsCard tenant={tenant} />
+          <StatisticsCard
+            title="Statistics"
+            description="Key metrics and information about this tenant"
+            layout="grid"
+            statistics={[
+              {
+                label: "Organization ID",
+                value: tenant.organizationId || "N/A",
+              },
+              {
+                label: "Active Status",
+                value: tenant.status === "ACTIVE" ? "✓" : "✗",
+              },
+              {
+                label: "Created Year",
+                value: new Date(tenant.createdAt).getFullYear(),
+              },
+              {
+                label: "Days Active",
+                value: Math.floor(
+                  (Date.now() - new Date(tenant.createdAt).getTime()) /
+                    (1000 * 60 * 60 * 24)
+                ),
+              },
+            ]}
+          />
         </div>
       </div>
     </div>
