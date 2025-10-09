@@ -59,6 +59,18 @@ spring:
     driver-class-name: org.postgresql.Driver
     username: postgres
     password: postgres
+    hikari:
+      # Connection pool settings to prevent thread starvation
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      # Performance optimizations
+      auto-commit: false
+      connection-test-query: SELECT 1
+      validation-timeout: 5000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -426,7 +438,19 @@ public class ApiResponse<T> {
 
 ### Recent Fixes and Updates
 
-#### Permission System Alignment (Latest)
+#### HikariCP Connection Pool Optimization (Latest)
+- **Issue**: HikariCP thread starvation warning: "Thread starvation or clock leap detected (housekeeper delta=15m39s452ms)"
+- **Root Cause**: Default HikariCP configuration was insufficient for the application's database connection needs, leading to connection pool exhaustion
+- **Solution**: 
+  - Added comprehensive HikariCP configuration in `application.yml`
+  - Set `maximum-pool-size: 20` (increased from default 10)
+  - Configured `minimum-idle: 5` for maintaining idle connections
+  - Added connection timeouts and lifecycle management settings
+  - Enabled leak detection with 60-second threshold
+  - Optimized performance with `auto-commit: false` and connection validation
+- **Impact**: Eliminated thread starvation warnings and improved database connection management performance
+
+#### Permission System Alignment
 - **Issue**: Frontend permission checks were failing due to mismatch between singular (`tenant:read`) and plural (`tenants:read`) permission names
 - **Root Cause**: JWT tokens contained plural permissions (`tenants:*`) while frontend code expected singular (`tenant:*`)
 - **Solution**: 
