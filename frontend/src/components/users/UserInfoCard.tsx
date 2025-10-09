@@ -11,11 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 import { User as UserIcon, Edit, Save, X } from "lucide-react";
 import type { User as UserType } from "@/types";
 import httpClient from "@/lib/httpClient";
-import { getStatusColor, getStatusIcon } from "@/lib/status-icons";
+import { getStatusColor, getStatusIcon } from "@/lib/status-utils";
 
 interface UserInfoCardProps {
   user: UserType;

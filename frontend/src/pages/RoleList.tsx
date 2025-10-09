@@ -24,7 +24,7 @@ import { Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
 import RoleDialog from "@/components/role/RoleDialog";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 import httpClient from "@/lib/httpClient";
 import type {
   Role,

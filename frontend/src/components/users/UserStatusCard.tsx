@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import type { User } from "@/types";
 import { StatusDisplayCard } from "../common";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { getStatusConfig, type StatusType } from "@/lib/status-colors";
+import { getStatusConfig, type StatusType } from "@/lib/status-utils";
 import { cn } from "@/lib/utils";
 
 interface StatusBadgeProps {

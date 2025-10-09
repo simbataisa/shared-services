@@ -1,5 +1,5 @@
 import React from "react";
-import { getStatusIcon, getStatusColor } from "@/lib/status-icons";
+import { getStatusIcon, getStatusColor } from "@/lib/status-utils";
 import type { RoleStatus } from "@/types";
 
 interface StatusDisplayCardProps {

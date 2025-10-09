@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -31,11 +32,13 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Plus, Edit, Trash2, Shield } from "lucide-react";
+import { Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
 import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import type { Permission, CreatePermissionForm } from "@/types";
+import httpClient from "@/lib/httpClient";
 
 const PermissionList: React.FC = () => {
+  const navigate = useNavigate();
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +56,7 @@ const PermissionList: React.FC = () => {
     action: "",
   });
 
-  const { canViewPermissions, canAssignPermissions } = usePermissions();
+  const { canViewPermissions, canManagePermissions } = usePermissions();
 
   useEffect(() => {
     if (canViewPermissions) {
@@ -64,18 +67,8 @@ const PermissionList: React.FC = () => {
   const fetchPermissions = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/permissions", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch permissions");
-      }
-
-      const data = await response.json();
-      setPermissions(data || []);
+      const response = await httpClient.getPermissions();
+      setPermissions(response || []);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch permissions"
@@ -87,7 +80,7 @@ const PermissionList: React.FC = () => {
 
   const handleCreatePermission = async () => {
     try {
-      const response = await fetch("/api/permissions", {
+      const response = await fetch("/permissions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -115,33 +108,18 @@ const PermissionList: React.FC = () => {
     }
   };
 
-  const handleEditPermission = (permission: Permission) => {
-    const { resource, action } = parsePermissionName(permission.name);
-    setSelectedPermission(permission);
-    setCreateForm({
-      name: permission.name,
-      description: permission.description,
-      resource: resource,
-      action: action,
-    });
-    setIsEditDialogOpen(true);
-  };
-
   const handleUpdatePermission = async () => {
     if (!selectedPermission) return;
 
     try {
-      const response = await fetch(
-        `/api/permissions/${selectedPermission.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify(createForm),
-        }
-      );
+      const response = await fetch(`/v1/permissions/${selectedPermission.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(createForm),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update permission");
@@ -169,7 +147,7 @@ const PermissionList: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/permissions/${permissionId}`, {
+      const response = await fetch(`/v1/permissions/${permissionId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -186,6 +164,10 @@ const PermissionList: React.FC = () => {
         err instanceof Error ? err.message : "Failed to delete permission"
       );
     }
+  };
+
+  const handleViewPermission = (permission: Permission) => {
+    navigate(`/permissions/${permission.id}`);
   };
 
   // Helper function to parse resource and action from permission name
@@ -276,7 +258,7 @@ const PermissionList: React.FC = () => {
       </div>
 
       {/* Edit Dialog */}
-      {canAssignPermissions && (
+      {canManagePermissions && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -393,7 +375,7 @@ const PermissionList: React.FC = () => {
           },
         ]}
         actions={
-          canAssignPermissions && (
+          canManagePermissions && (
             <Dialog
               open={isCreateDialogOpen}
               onOpenChange={setIsCreateDialogOpen}
@@ -535,24 +517,15 @@ const PermissionList: React.FC = () => {
                         {new Date(permission.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        {canAssignPermissions && (
+                        {canViewPermissions && (
                           <div className="flex items-center space-x-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleEditPermission(permission)}
+                              onClick={() => handleViewPermission(permission)}
+                              className="text-blue-600 hover:text-blue-700"
                             >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleDeletePermission(permission.id)
-                              }
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
+                              <Eye className="h-4 w-4" />
                             </Button>
                           </div>
                         )}

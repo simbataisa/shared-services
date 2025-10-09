@@ -27,8 +27,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { getStatusIcon } from "@/lib/status-icons";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { getStatusIcon } from "@/lib/status-utils";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 import api from "@/lib/api";
 import { type Tenant } from "@/store/auth";
 import SearchAndFilter from "@/components/common/SearchAndFilter";

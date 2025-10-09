@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 import type { Product, Module } from "@/store/auth";
 import api from "@/lib/api";
 

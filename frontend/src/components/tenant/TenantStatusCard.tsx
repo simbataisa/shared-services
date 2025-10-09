@@ -32,7 +32,7 @@ import type {
   TenantStatus,
   TenantDetail as TenantDetailType,
 } from "@/types/tenant";
-import { getStatusIcon } from "@/lib/status-icons";
+import { getStatusIcon } from "@/lib/status-utils";
 
 interface TenantStatusCardProps {
   tenant: TenantDetailType;

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import {
   Card,

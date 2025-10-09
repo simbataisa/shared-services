@@ -20,7 +20,7 @@ import {
 import { Plus, Edit, Trash2, Package, AlertCircle, Eye } from "lucide-react";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 
 export default function ProductList() {
   const { canViewProducts } = usePermissions();

@@ -1,7 +1,7 @@
 import React from "react";
 import { StatisticsCard, type StatisticItem } from "@/components/common";
 import type { RoleStats } from "@/types";
-import { getStatusIcon } from "@/lib/status-icons";
+import { getStatusIcon } from "@/lib/status-utils";
 
 interface RoleStatsCardProps {
   stats: RoleStats | null;

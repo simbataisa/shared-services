@@ -1,7 +1,7 @@
 import React from "react";
 import { Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getStatusColor, getStatusIcon } from "@/lib/status-icons";
+import { getStatusColor, getStatusIcon } from "@/lib/status-utils";
 import type { RoleDetails } from "@/types";
 import { Label } from "../ui/label";
 

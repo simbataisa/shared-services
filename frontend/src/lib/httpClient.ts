@@ -169,7 +169,39 @@ class HttpClient {
   }
 
   async getPermissions(): Promise<Permission[]> {
-    const response: AxiosResponse<Permission[]> = await api.get("/permissions");
+    const response: AxiosResponse<Permission[]> = await api.get(
+      "/v1/permissions"
+    );
+    return response.data;
+  }
+
+  async getPermissionById(id: number): Promise<Permission> {
+    const response: AxiosResponse<Permission> = await api.get(
+      `/v1/permissions/${id}`
+    );
+    console.log(response);
+    return response.data;
+  }
+
+  async updatePermission(
+    id: number,
+    permissionData: { name?: string; description?: string }
+  ): Promise<Permission> {
+    const response: AxiosResponse<Permission> = await api.put(
+      `/v1/permissions/${id}`,
+      permissionData
+    );
+    return response.data;
+  }
+
+  async updatePermissionStatus(
+    id: number,
+    isActive: boolean
+  ): Promise<Permission> {
+    const response: AxiosResponse<Permission> = await api.put(
+      `/v1/permissions/${id}`,
+      { isActive }
+    );
     return response.data;
   }
 

@@ -27,7 +27,9 @@ export const usePermissions = () => {
   const canManageRoles = canCreateRoles || canUpdateRoles || canDeleteRoles;
 
   const canViewPermissions = hasPermission("permission:read");
-  const canAssignPermissions = hasPermission("permission:assign");
+  const canUpdatePermissions = hasPermission("permission:update");
+  const canDeletePermissions = hasPermission("permission:delete");
+  const canManagePermissions = canUpdatePermissions || canDeletePermissions;
 
   // Product and module permissions
   const canViewProducts = hasPermission("product:read");
@@ -84,7 +86,9 @@ export const usePermissions = () => {
     canDeleteRoles,
     canManageRoles,
     canViewPermissions,
-    canAssignPermissions,
+    canUpdatePermissions,
+    canDeletePermissions,
+    canManagePermissions,
 
     // Product and module permissions
     canViewProducts,

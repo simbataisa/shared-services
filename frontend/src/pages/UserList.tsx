@@ -16,7 +16,7 @@ import {
 import { StatusBadge } from "@/components/common/StatusBadge";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-colors";
+import { normalizeEntityStatus } from "@/lib/status-utils";
 import { Shield, Eye } from "lucide-react";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import type { User, Role, UserGroup } from "@/types";
