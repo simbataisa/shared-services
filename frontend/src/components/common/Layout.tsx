@@ -199,6 +199,22 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </div>
             )}
+            {user && (
+              <div className="p-2 hidden group-data-[collapsible=icon]:block">
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      size="lg"
+                      tooltip="Logout"
+                      onClick={handleLogout}
+                      aria-label="Logout"
+                    >
+                      <LogOut className="size-4" />
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </div>
+            )}
           </SidebarFooter>
         </Sidebar>
 
