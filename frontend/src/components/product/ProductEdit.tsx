@@ -2,14 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Save, AlertCircle } from "lucide-react";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
   Card,
   CardContent,
   CardDescription,
@@ -29,6 +21,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { DetailHeaderCard } from "@/components/common";
 import type { Product } from "@/store/auth";
 import api from "@/lib/api";
 
@@ -246,40 +239,15 @@ const ProductEdit: React.FC = () => {
     >
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <Breadcrumb className="mb-4">
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to="/products">Products</Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link to={`/products/${id}`}>
-                      {product?.name || "Product"}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Edit</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  Edit Product
-                </h1>
-                <p className="mt-2 text-gray-600">
-                  Update product information and settings
-                </p>
-              </div>
-            </div>
-          </div>
+          <DetailHeaderCard
+            title="Edit Product"
+            description="Update product information and settings"
+            breadcrumbs={[
+              { label: "Products", href: "/products" },
+              { label: product?.name || "Product", href: `/products/${id}` },
+              { label: "Edit" }
+            ]}
+          />
 
           {error && (
             <Alert variant="destructive" className="mb-6">

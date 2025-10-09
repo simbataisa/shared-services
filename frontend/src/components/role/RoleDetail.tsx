@@ -2,14 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
   Card,
   CardContent,
   CardDescription,
@@ -18,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionsCard } from "@/components/common";
+import { PermissionsCard, DetailHeaderCard } from "@/components/common";
 import { RoleStatusCard } from "./RoleStatusCard";
 import { RoleInfoCard } from "./RoleInfoCard";
 import { RoleStatsCard } from "./RoleStatsCard";
@@ -152,28 +144,14 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <Breadcrumb className="mb-4">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/roles">Roles</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{role.name}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{role.name}</h1>
-              <p className="mt-2 text-gray-600">{role.description}</p>
-            </div>
-          </div>
-        </div>
+        <DetailHeaderCard
+          title={role.name}
+          description={role.description}
+          breadcrumbs={[
+            { label: "Roles", href: "/roles" },
+            { label: role.name }
+          ]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}

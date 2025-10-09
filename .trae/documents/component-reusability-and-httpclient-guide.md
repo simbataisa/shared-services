@@ -4,12 +4,13 @@
 1. [Overview](#overview)
 2. [Component Reusability Principles](#component-reusability-principles)
 3. [Card Components](#card-components)
-4. [Edit Toggle Functionality in Detail Pages](#edit-toggle-functionality-in-detail-pages)
-5. [HttpClient Architecture and Usage](#httpclient-architecture-and-usage)
-6. [Best Practices](#best-practices)
-7. [Implementation Examples](#implementation-examples)
-8. [Maintenance Guidelines](#maintenance-guidelines)
-9. [Common Patterns](#common-patterns)
+4. [DetailHeaderCard Component](#detailheadercard-component)
+5. [Edit Toggle Functionality in Detail Pages](#edit-toggle-functionality-in-detail-pages)
+6. [HttpClient Architecture and Usage](#httpclient-architecture-and-usage)
+7. [Best Practices](#best-practices)
+8. [Implementation Examples](#implementation-examples)
+9. [Maintenance Guidelines](#maintenance-guidelines)
+10. [Common Patterns](#common-patterns)
 
 ## Overview
 
@@ -749,6 +750,287 @@ export const PermissionsCard: React.FC<PermissionsCardProps> = ({
 />
 ```
 
+## DetailHeaderCard Component
+
+The `DetailHeaderCard` component provides a standardized header layout for detail pages across the application. It combines breadcrumb navigation, page title, description, and action buttons in a consistent format.
+
+### 1. Component Overview
+
+The `DetailHeaderCard` component is designed to replace custom header implementations in detail pages, ensuring visual consistency and reducing code duplication.
+
+**Location:** `/src/components/common/DetailHeaderCard.tsx`
+
+**Key Features:**
+- Consistent breadcrumb navigation
+- Flexible title and description display
+- Configurable action buttons
+- Responsive design
+- TypeScript support with proper interfaces
+
+### 2. Component Interface
+
+```typescript
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
+interface DetailHeaderCardProps {
+  title: string;
+  description?: string;
+  breadcrumbs: BreadcrumbItem[];
+  actions?: React.ReactNode;
+  className?: string;
+}
+```
+
+### 3. Implementation Structure
+
+```typescript
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+
+export const DetailHeaderCard: React.FC<DetailHeaderCardProps> = ({
+  title,
+  description,
+  breadcrumbs,
+  actions,
+  className = "",
+}) => {
+  return (
+    <div className={`mb-8 ${className}`}>
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          {breadcrumbs.map((breadcrumb, index) => (
+            <React.Fragment key={index}>
+              <BreadcrumbItem>
+                {breadcrumb.href ? (
+                  <BreadcrumbLink asChild>
+                    <Link to={breadcrumb.href}>{breadcrumb.label}</Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+              {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+            </React.Fragment>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">{title}</h1>
+          {description && (
+            <p className="mt-2 text-gray-600">{description}</p>
+          )}
+        </div>
+        {actions && <div className="flex items-center space-x-3">{actions}</div>}
+      </div>
+    </div>
+  );
+};
+```
+
+### 4. Usage Patterns
+
+#### Basic Usage
+Simple header with title and breadcrumbs:
+
+```typescript
+<DetailHeaderCard
+  title="User Details"
+  description="Manage user information and permissions"
+  breadcrumbs={[
+    { label: "Users", href: "/users" },
+    { label: "John Doe" }
+  ]}
+/>
+```
+
+#### With Actions
+Header including action buttons:
+
+```typescript
+<DetailHeaderCard
+  title="Product Details"
+  description="View and manage product information"
+  breadcrumbs={[
+    { label: "Products", href: "/products" },
+    { label: product.name }
+  ]}
+  actions={
+    <PermissionGuard permission="products:update">
+      <Button variant="outline" onClick={handleEdit}>
+        <Edit className="h-4 w-4 mr-2" />
+        Edit
+      </Button>
+    </PermissionGuard>
+  }
+/>
+```
+
+#### Complex Actions
+Multiple actions with permission guards:
+
+```typescript
+<DetailHeaderCard
+  title={product.name}
+  description={product.description}
+  breadcrumbs={[
+    { label: "Products", href: "/products" },
+    { label: product.name }
+  ]}
+  actions={
+    <>
+      <StatusBadge status={normalizeEntityStatus(product.status)} />
+      <PermissionGuard permission="products:update">
+        <Button
+          variant={product.status === 'ACTIVE' ? 'destructive' : 'default'}
+          onClick={handleToggleStatus}
+          disabled={updating}
+        >
+          {product.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+        </Button>
+      </PermissionGuard>
+      <PermissionGuard permission="products:update">
+        <Button variant="outline" asChild>
+          <Link to={`/products/${product.id}/edit`}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Link>
+        </Button>
+      </PermissionGuard>
+    </>
+  }
+/>
+```
+
+### 5. Best Practices
+
+#### Breadcrumb Structure
+1. **Consistent Navigation**: Always include the parent list page as the first breadcrumb
+2. **Current Page**: The last breadcrumb should represent the current page without a link
+3. **Meaningful Labels**: Use descriptive labels that help users understand their location
+
+```typescript
+// Good breadcrumb structure
+breadcrumbs={[
+  { label: "Users", href: "/users" },           // Parent list
+  { label: "User Groups", href: "/user-groups" }, // Sub-category (if applicable)
+  { label: userGroup.name }                     // Current page
+]}
+```
+
+#### Title and Description
+1. **Dynamic Titles**: Use actual entity names when available
+2. **Descriptive Content**: Provide helpful descriptions that explain the page purpose
+3. **Fallback Values**: Handle cases where data might not be available
+
+```typescript
+// Dynamic title with fallback
+title={user ? getFullName(user) : 'Loading...'}
+description={user ? `@${user.username} • ${user.email}` : undefined}
+```
+
+#### Action Integration
+1. **Permission Guards**: Wrap actions with appropriate permission checks
+2. **Loading States**: Disable actions during async operations
+3. **Visual Hierarchy**: Use appropriate button variants to indicate action importance
+
+```typescript
+// Well-structured actions
+actions={
+  <PermissionGuard permission="users:update">
+    <Button
+      variant="outline"
+      onClick={handleEdit}
+      disabled={loading}
+    >
+      <Edit className="h-4 w-4 mr-2" />
+      Edit
+    </Button>
+  </PermissionGuard>
+}
+```
+
+### 6. Migration from Custom Headers
+
+When migrating existing detail pages to use `DetailHeaderCard`:
+
+1. **Identify Header Elements**: Locate existing breadcrumb, title, and action components
+2. **Extract Data**: Gather the title, description, and breadcrumb information
+3. **Consolidate Actions**: Combine action buttons into the actions prop
+4. **Remove Old Code**: Delete the replaced header implementation
+5. **Test Navigation**: Verify breadcrumb links work correctly
+
+#### Before Migration
+```typescript
+// Old custom header implementation
+<div className="mb-8">
+  <Breadcrumb className="mb-4">
+    <BreadcrumbList>
+      <BreadcrumbItem>
+        <BreadcrumbLink asChild>
+          <Link to="/roles">Roles</Link>
+        </BreadcrumbLink>
+      </BreadcrumbItem>
+      <BreadcrumbSeparator />
+      <BreadcrumbItem>
+        <BreadcrumbPage>{role.name}</BreadcrumbPage>
+      </BreadcrumbItem>
+    </BreadcrumbList>
+  </Breadcrumb>
+  
+  <div className="flex items-center justify-between">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-900">{role.name}</h1>
+      <p className="mt-2 text-gray-600">{role.description}</p>
+    </div>
+  </div>
+</div>
+```
+
+#### After Migration
+```typescript
+// New DetailHeaderCard implementation
+<DetailHeaderCard
+  title={role.name}
+  description={role.description}
+  breadcrumbs={[
+    { label: "Roles", href: "/roles" },
+    { label: role.name }
+  ]}
+/>
+```
+
+### 7. Responsive Design
+
+The `DetailHeaderCard` component is designed to work across different screen sizes:
+
+- **Mobile**: Actions stack vertically on smaller screens
+- **Tablet**: Balanced layout with proper spacing
+- **Desktop**: Full horizontal layout with optimal spacing
+
+The component uses Tailwind CSS classes to ensure responsive behavior without additional configuration.
+
+### 8. Accessibility Features
+
+1. **Semantic HTML**: Uses proper heading hierarchy (h1 for main title)
+2. **Navigation**: Breadcrumbs provide clear navigation context
+3. **Focus Management**: Proper tab order for interactive elements
+4. **Screen Readers**: Descriptive text and proper ARIA attributes
+
 ## HttpClient Architecture and Usage
 
 ### 1. Centralized HTTP Client
@@ -864,6 +1146,107 @@ const filteredItems = useMemo(() => {
 }, [items, searchTerm]);
 ```
 
+#### 4. Standardize Header Components
+```typescript
+// ✅ Good - Use DetailHeaderCard for all detail pages
+const UserDetail: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <DetailHeaderCard
+          title={getFullName(user)}
+          description={`@${user.username} • ${user.email}`}
+          breadcrumbs={[
+            { label: "Users", href: "/users" },
+            { label: getFullName(user) }
+          ]}
+        />
+        {/* Page content */}
+      </div>
+    </div>
+  );
+};
+
+// ❌ Bad - Custom header implementation
+const UserDetail: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Custom breadcrumb and header implementation */}
+        <nav className="flex" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            {/* Manual breadcrumb implementation */}
+          </ol>
+        </nav>
+        <div className="mt-4">
+          <h1 className="text-3xl font-bold">{getFullName(user)}</h1>
+          <p className="text-gray-600">{user.email}</p>
+        </div>
+        {/* Inconsistent styling and structure */}
+      </div>
+    </div>
+  );
+};
+```
+
+#### 5. Header Component Guidelines
+- **Always use `DetailHeaderCard`** for detail pages to ensure consistency
+- **Include breadcrumbs** for navigation context using the `breadcrumbs` prop
+- **Use descriptive titles** that clearly identify the entity or page purpose
+- **Provide meaningful descriptions** that give additional context about the entity
+- **Group related actions** in the `actions` prop with proper permission guards
+- **Maintain responsive design** by leveraging the component's built-in responsive behavior
+- **Follow accessibility standards** by using the component's ARIA-compliant structure
+
+#### 6. Migration Strategy for Existing Headers
+When updating existing detail pages to use `DetailHeaderCard`:
+
+1. **Identify the current header structure** (breadcrumbs, title, description, actions)
+2. **Extract the title and description** from existing markup
+3. **Convert breadcrumb navigation** to the `breadcrumbs` prop format
+4. **Move action buttons** to the `actions` prop
+5. **Remove custom header markup** and replace with `DetailHeaderCard`
+6. **Test responsive behavior** and accessibility compliance
+7. **Verify permission guards** are properly applied to actions
+
+```typescript
+// Migration example - Before
+<div className="bg-white shadow">
+  <div className="px-4 py-6 sm:px-6">
+    <nav className="flex" aria-label="Breadcrumb">
+      {/* Custom breadcrumb */}
+    </nav>
+    <div className="mt-4 md:flex md:items-center md:justify-between">
+      <div className="flex-1 min-w-0">
+        <h2 className="text-2xl font-bold">{product.name}</h2>
+        <p className="text-sm text-gray-500">{product.description}</p>
+      </div>
+      <div className="mt-4 flex md:mt-0 md:ml-4">
+        {/* Action buttons */}
+      </div>
+    </div>
+  </div>
+</div>
+
+// Migration example - After
+<DetailHeaderCard
+  title={product.name}
+  description={product.description}
+  breadcrumbs={[
+    { label: "Products", href: "/products" },
+    { label: product.name }
+  ]}
+  actions={
+    <>
+      <StatusBadge status={normalizeEntityStatus(product.status)} />
+      <Button variant="outline" asChild>
+        <Link to={`/products/${product.id}/edit`}>Edit</Link>
+      </Button>
+    </>
+  }
+/>
+```
+
 ### HttpClient Usage
 
 #### 1. Use Specific Methods When Available
@@ -911,7 +1294,243 @@ const transformedUser: User = {
 
 ## Implementation Examples
 
-### 1. Reusable Search Component
+### 1. DetailHeaderCard Implementation Examples
+
+The following examples demonstrate real-world usage of the `DetailHeaderCard` component across different detail pages in the application.
+
+#### User Detail Page
+```typescript
+// UserDetail.tsx
+import { DetailHeaderCard } from "@/components/common";
+
+const UserDetail: React.FC = () => {
+  const { user, loading } = useUserData();
+  
+  if (loading) return <Skeleton />;
+  
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <DetailHeaderCard
+          title={getFullName(user)}
+          description={`@${user.username} • ${user.email}`}
+          breadcrumbs={[
+            { label: "Users", href: "/users" },
+            { label: getFullName(user) }
+          ]}
+        />
+        
+        {/* Rest of the page content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* User information cards */}
+        </div>
+      </div>
+    </div>
+  );
+};
+```
+
+#### Product Detail Page with Actions
+```typescript
+// ProductDetail.tsx
+import { DetailHeaderCard } from "@/components/common";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { PermissionGuard } from "@/components/common/PermissionGuard";
+
+const ProductDetail: React.FC = () => {
+  const { product, updating, handleToggleStatus, handleDelete } = useProductData();
+  
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <DetailHeaderCard
+          title={product.name}
+          description={product.description}
+          breadcrumbs={[
+            { label: "Products", href: "/products" },
+            { label: product.name }
+          ]}
+          actions={
+            <>
+              <StatusBadge status={normalizeEntityStatus(product.status)} />
+              <PermissionGuard permission="products:update">
+                <Button
+                  variant={product.status === 'ACTIVE' ? 'destructive' : 'default'}
+                  onClick={handleToggleStatus}
+                  disabled={updating}
+                >
+                  {product.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                </Button>
+              </PermissionGuard>
+              <PermissionGuard permission="products:update">
+                <Button variant="outline" asChild>
+                  <Link to={`/products/${product.id}/edit`}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Link>
+                </Button>
+              </PermissionGuard>
+              <PermissionGuard permission="products:delete">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this product? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </PermissionGuard>
+            </>
+          }
+        />
+        
+        {/* Product details content */}
+      </div>
+    </div>
+  );
+};
+```
+
+#### Role Detail Page
+```typescript
+// RoleDetail.tsx
+import { DetailHeaderCard } from "@/components/common";
+
+const RoleDetail: React.FC = () => {
+  const { role, loading } = useRoleData();
+  
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <DetailHeaderCard
+          title={role.name}
+          description={role.description}
+          breadcrumbs={[
+            { label: "Roles", href: "/roles" },
+            { label: role.name }
+          ]}
+        />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-8">
+            <RoleInfoCard role={role} />
+            <PermissionsCard
+              permissions={role.permissions}
+              title="Permissions"
+              defaultExpanded={false}
+            />
+          </div>
+          <div className="space-y-6">
+            <RoleStatusCard role={role} />
+            <RoleStatsCard stats={stats} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+```
+
+#### User Group Detail Page with Delete Action
+```typescript
+// UserGroupDetail.tsx
+import { DetailHeaderCard } from "@/components/common";
+
+const UserGroupDetail: React.FC = () => {
+  const { userGroup, handleDelete, deleting } = useUserGroupData();
+  
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <DetailHeaderCard
+          title={userGroup.name}
+          description={userGroup.description}
+          breadcrumbs={[
+            { label: "User Groups", href: "/user-groups" },
+            { label: userGroup.name }
+          ]}
+          actions={
+            <PermissionGuard permission="user-groups:delete">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={deleting}>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Group
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete User Group</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{userGroup.name}"? 
+                      This will remove all users from this group and cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDelete}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Delete Group
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </PermissionGuard>
+          }
+        />
+        
+        {/* User group content */}
+      </div>
+    </div>
+  );
+};
+```
+
+#### Edit Page Implementation
+```typescript
+// ProductEdit.tsx
+import { DetailHeaderCard } from "@/components/common";
+
+const ProductEdit: React.FC = () => {
+  const { product } = useProductData();
+  
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <DetailHeaderCard
+          title="Edit Product"
+          description="Update product information and settings"
+          breadcrumbs={[
+            { label: "Products", href: "/products" },
+            { label: product?.name || "Loading...", href: `/products/${product?.id}` },
+            { label: "Edit" }
+          ]}
+        />
+        
+        {/* Edit form content */}
+      </div>
+    </div>
+  );
+};
+```
+
+### 2. Reusable Search Component
 ```typescript
 interface SearchAndFilterProps<T> {
   items: T[];

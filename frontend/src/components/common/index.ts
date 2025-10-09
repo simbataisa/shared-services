@@ -1,3 +1,4 @@
+export { DetailHeaderCard } from "./DetailHeaderCard";
 export { default as ErrorBoundary } from "./ErrorBoundary";
 export { default as ErrorCard } from "./ErrorCard";
 export { default as ErrorDialog } from "./ErrorDialog";

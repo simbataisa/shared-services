@@ -2,14 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
   Card,
   CardContent,
   CardDescription,
@@ -19,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { StatisticsCard } from "@/components/common";
+import { StatisticsCard, DetailHeaderCard } from "@/components/common";
 import { usePermissions } from "@/hooks/usePermissions";
 import httpClient from "@/lib/httpClient";
 import { type User, type UserStats } from "@/types";
@@ -408,45 +400,14 @@ const UserDetail: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
-          <Breadcrumb className="mb-4">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/users">Users</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{getFullName(user)}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-
-          <div className="flex items-center justify-between">
-            {/* <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {getFullName(user)}
-              </h1>
-              <p className="mt-2 text-gray-600">@{user.username}</p>
-              <p className="text-gray-600">{user.email}</p>
-            </div> */}
-
-            {/* <div className="flex items-center space-x-3">
-              <PermissionGuard permission="user:delete">
-                <Button
-                  onClick={handleDeleteUser}
-                  disabled={updating}
-                  variant="destructive"
-                  size="sm"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </Button>
-              </PermissionGuard>
-            </div> */}
-          </div>
-        </div>
+        <DetailHeaderCard
+          title={getFullName(user)}
+          description={`@${user.username} • ${user.email}`}
+          breadcrumbs={[
+            { label: "Users", href: "/users" },
+            { label: getFullName(user) }
+          ]}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}

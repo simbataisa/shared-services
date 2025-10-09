@@ -11,21 +11,7 @@ import {
   User,
   Trash2,
 } from "lucide-react";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
@@ -41,7 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { StatisticsCard } from "@/components/common";
+import { StatisticsCard, DetailHeaderCard } from "@/components/common";
 import { usePermissions } from "@/hooks/usePermissions";
 import { BasicInformationCard } from "./BasicInformationCard";
 import { RoleAssignmentsCard } from "./RoleAssignmentsCard";
@@ -306,60 +292,44 @@ export default function UserGroupDetail() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-8">
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/user-groups">User Groups</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{userGroup.name}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">{userGroup.name}</h1>
-            <p className="text-muted-foreground">
-              {userGroup.description || "No description provided"}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <PermissionGuard permission="user-groups:delete">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm" disabled={updating}>
-                    <Trash2 className="h-4 w-4 mr-2" />
+      <DetailHeaderCard
+        title={userGroup.name}
+        description={userGroup.description || "No description provided"}
+        breadcrumbs={[
+          { label: "User Groups", href: "/user-groups" },
+          { label: userGroup.name },
+        ]}
+        actions={
+          <PermissionGuard permission="user-groups:delete">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" disabled={updating}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete User Group</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete the user group "
+                    {userGroup.name}"? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-white"
+                    onClick={handleDeleteUserGroup}
+                  >
                     Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete User Group</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete the user group "
-                      {userGroup.name}"? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-white"
-                      onClick={handleDeleteUserGroup}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </PermissionGuard>
-          </div>
-        </div>
-      </div>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </PermissionGuard>
+        }
+      />
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

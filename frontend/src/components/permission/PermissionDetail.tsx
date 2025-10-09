@@ -11,16 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { ErrorCard } from "@/components/common/ErrorCard";
+import { DetailHeaderCard } from "@/components/common";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { usePermissions } from "@/hooks/usePermissions";
 import { BasicInformationCard } from "./BasicInformationCard";
@@ -247,39 +240,15 @@ export default function PermissionDetail({
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Breadcrumb Navigation */}
-      <div className="flex items-center justify-between">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/permissions">Permissions</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{permission.name}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-
-      {/* Permission Header */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Shield className="h-8 w-8 text-blue-600" />
-              <div>
-                <CardTitle className="text-2xl">{permission.name}</CardTitle>
-                <CardDescription>
-                  Permission ID: {permission.id}
-                </CardDescription>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      {/* Header */}
+      <DetailHeaderCard
+        title={permission.name}
+        description={`Permission ID: ${permission.id}`}
+        breadcrumbs={[
+          { label: "Permissions", href: "/permissions" },
+          { label: permission.name }
+        ]}
+      />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { ArrowLeft, AlertCircle } from "lucide-react";
 import type {
   TenantType,
@@ -17,7 +9,7 @@ import type {
   TenantDetail as TenantDetailType,
 } from "@/types/tenant";
 import { httpClient } from "@/lib/httpClient";
-import { StatisticsCard } from "@/components/common";
+import { StatisticsCard, DetailHeaderCard } from "@/components/common";
 import TenantStatusCard from "./TenantStatusCard";
 import TenantBasicInfoCard from "./TenantBasicInfoCard";
 import TenantAuditInfoCard from "./TenantAuditInfoCard";
@@ -161,37 +153,21 @@ const TenantDetailComponent: React.FC = () => {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="mb-8">
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/tenants">Tenants</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{tenant.code}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/tenants">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">{tenant.name}</h1>
-              <p className="text-muted-foreground">
-                Tenant Details • {tenant.code}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DetailHeaderCard
+        title={tenant.name}
+        description={`Tenant Details • ${tenant.code}`}
+        breadcrumbs={[
+          { label: "Tenants", href: "/tenants" },
+          { label: tenant.code }
+        ]}
+        actions={
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/tenants">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
