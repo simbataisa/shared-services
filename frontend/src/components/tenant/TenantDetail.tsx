@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type {
   TenantType,
   TenantStatus,
@@ -9,16 +9,21 @@ import type {
   TenantDetail as TenantDetailType,
 } from "@/types/tenant";
 import { httpClient } from "@/lib/httpClient";
-import { StatisticsCard, DetailHeaderCard } from "@/components/common";
+import {
+  StatisticsCard,
+  DetailHeaderCard,
+  ErrorCard,
+} from "@/components/common";
+import type { ErrorWithActions } from "@/types/errors";
 import TenantStatusCard from "./TenantStatusCard";
 import TenantBasicInfoCard from "./TenantBasicInfoCard";
 import TenantAuditInfoCard from "./TenantAuditInfoCard";
+// Local overlay spinner removed; rely on global loader via axios interceptors
 
 const TenantDetailComponent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [tenant, setTenant] = useState<TenantDetailType | null>(null);
-  const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +33,6 @@ const TenantDetailComponent: React.FC = () => {
 
   const fetchTenantDetails = async () => {
     try {
-      setLoading(true);
       setError(null);
       const tenantData = await httpClient.getTenantById(Number(id));
       // Cast the basic Tenant to TenantDetailType with default values for missing properties
@@ -45,7 +49,6 @@ const TenantDetailComponent: React.FC = () => {
       console.error("Failed to fetch tenant details:", error);
       setError("Failed to load tenant details");
     } finally {
-      setLoading(false);
     }
   };
 
@@ -114,38 +117,43 @@ const TenantDetailComponent: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-64 bg-muted rounded"></div>
-            <div className="h-64 bg-muted rounded"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (error || !tenant) {
+    const notFoundError: ErrorWithActions = {
+      id: "tenant-detail-error",
+      message: error || "Tenant not found",
+      type: error ? "network" : "client",
+      severity: error ? "high" : "medium",
+      timestamp: new Date(),
+      code: error ? 404 : undefined,
+      details:
+        "The tenant you're looking for doesn't exist or couldn't be loaded.",
+      actions: [
+        {
+          id: "back",
+          label: "Back to Tenants",
+          action: "navigate",
+          variant: "default",
+          handler: () => navigate("/tenants"),
+        },
+        {
+          id: "retry",
+          label: "Retry",
+          action: "retry",
+          variant: "outline",
+          handler: () => fetchTenantDetails(),
+        },
+      ],
+      primaryAction: "back",
+    };
+
     return (
       <div className="p-6">
-        <div className="text-center py-12">
-          <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            {error || "Tenant not found"}
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            The tenant you're looking for doesn't exist or couldn't be loaded.
-          </p>
-          <Button asChild>
-            <Link to="/tenants">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Tenants
-            </Link>
-          </Button>
-        </div>
+        <ErrorCard
+          error={notFoundError}
+          dismissible
+          onDismiss={() => navigate("/tenants")}
+          showTimestamp
+        />
       </div>
     );
   }
@@ -158,15 +166,8 @@ const TenantDetailComponent: React.FC = () => {
         description={`Tenant Details • ${tenant.code}`}
         breadcrumbs={[
           { label: "Tenants", href: "/tenants" },
-          { label: tenant.code }
+          { label: tenant.code },
         ]}
-        actions={
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/tenants">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-        }
       />
 
       {/* Main Content */}

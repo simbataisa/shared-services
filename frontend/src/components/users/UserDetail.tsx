@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+// Removed inline Skeleton in favor of a reusable LoadingSpinner
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { StatisticsCard, DetailHeaderCard } from "@/components/common";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -27,11 +28,11 @@ const UserDetail: React.FC = () => {
 
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableRoles, setAvailableRoles] = useState<any[]>([]);
   const [availableGroups, setAvailableGroups] = useState<any[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
 
   useEffect(() => {
     if (!canViewUsers) {
@@ -59,8 +60,6 @@ const UserDetail: React.FC = () => {
 
   const fetchUserData = async () => {
     try {
-      setLoading(true);
-
       // Fetch user data from API
       const userData = await httpClient.getUserById(Number(id));
 
@@ -110,7 +109,7 @@ const UserDetail: React.FC = () => {
       console.error("Error fetching user data:", error);
       setError("Failed to load user data");
     } finally {
-      setLoading(false);
+      setHasFetched(true);
     }
   };
 
@@ -190,25 +189,6 @@ const UserDetail: React.FC = () => {
       throw error; // Re-throw to let the component handle the error display
     } finally {
       setUpdating(false);
-    }
-  };
-
-  const handleRolesUpdated = async () => {
-    try {
-      await fetchUserData();
-    } catch (error) {
-      console.error("Error refreshing user data after role update:", error);
-    }
-  };
-
-  const handleUserGroupsUpdated = async () => {
-    try {
-      await fetchUserData();
-    } catch (error) {
-      console.error(
-        "Error refreshing user data after user group update:",
-        error
-      );
     }
   };
 
@@ -357,43 +337,13 @@ const UserDetail: React.FC = () => {
     );
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
-            <Skeleton className="h-64" />
-          </div>
-        </div>
-      </div>
-    );
+  // Show a loading spinner until initial fetch completes
+  if (!hasFetched) {
+    return <LoadingSpinner variant="page" />;
   }
 
   if (error || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>User Not Found</CardTitle>
-            <CardDescription>
-              {error || "The requested user could not be found."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/users")} className="w-full">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Users
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    throw new Error(error || "User not found");
   }
 
   return (
@@ -405,7 +355,7 @@ const UserDetail: React.FC = () => {
           description={`@${user.username} • ${user.email}`}
           breadcrumbs={[
             { label: "Users", href: "/users" },
-            { label: getFullName(user) }
+            { label: getFullName(user) },
           ]}
         />
 
@@ -468,19 +418,25 @@ const UserDetail: React.FC = () => {
                   {
                     label: "Account Status",
                     value: stats.accountStatus,
-                    className: stats.accountStatus === "ACTIVE" ? "text-green-600" : "text-red-600",
+                    className:
+                      stats.accountStatus === "ACTIVE"
+                        ? "text-green-600"
+                        : "text-red-600",
                   },
                   ...(stats.lastLogin
                     ? [
                         {
                           label: "Last Login",
-                          value: new Date(stats.lastLogin).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }),
+                          value: new Date(stats.lastLogin).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }
+                          ),
                         },
                       ]
                     : []),

@@ -33,12 +33,15 @@ import ModuleEdit from "./components/module/ModuleEdit";
 import Unauthorized from "./pages/Unauthorized";
 import ErrorDemoPage from "./pages/ErrorDemoPage";
 import { useAuth } from "./store/auth";
+import GlobalLoader from "@/components/common/GlobalLoader";
+import { ErrorBoundary } from "./components/common";
 
 function App() {
   const { isAuthenticated } = useAuth();
 
   return (
     <Router>
+      <GlobalLoader />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
@@ -113,7 +116,9 @@ function App() {
             path="users/:id"
             element={
               <ProtectedRoute permission="user:read">
-                <UserDetail />
+                <ErrorBoundary>
+                  <UserDetail />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           />
