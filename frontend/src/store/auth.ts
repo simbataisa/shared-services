@@ -1,74 +1,9 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { decodeJwt, isTokenExpired } from "@/lib/jwt";
+import type { UserProfile, Tenant } from "@/types/entities";
 
-export interface Permission {
-  id: string;
-  name: string;
-  resource: string;
-  action: string;
-  conditions?: Record<string, any>;
-}
-
-export interface Role {
-  id: string;
-  name: string;
-  description?: string;
-  permissions: Permission[];
-  tenantId?: string;
-}
-
-export interface Tenant {
-  id: string;
-  name: string;
-  code: string;
-  type: "enterprise" | "standard" | "basic";
-  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  firstName?: string;
-  lastName?: string;
-  username?: string;
-  roles: Role[];
-  tenantId?: string;
-  permissions: Permission[];
-  lastLoginAt?: string;
-  createdAt: string;
-}
-
-export interface Product {
-  id: number;
-  name: string;
-  description: string;
-  code: string;
-  status: "active" | "inactive";
-  category: string;
-  version: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
-  modules?: Module[];
-}
-
-export interface Module {
-  id: number;
-  name: string;
-  description: string;
-  code: string;
-  status: "active" | "inactive";
-  productId: number;
-  version: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-type AuthState = {
+interface AuthState {
   token: string | null;
   user: UserProfile | null;
   tenant: Tenant | null;
@@ -82,7 +17,7 @@ type AuthState = {
   hasAnyRole: (roleNames: string[]) => boolean;
   canAccessResource: (resource: string, action: string) => boolean;
   logout: () => void;
-};
+}
 
 export const useAuth = create<AuthState>((set, get) => {
   // Initialize state from localStorage

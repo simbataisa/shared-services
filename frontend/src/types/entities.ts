@@ -20,26 +20,46 @@ export interface User {
   updatedBy?: string;
 }
 
-export interface Role {
-  id: number;
+export interface Permission {
+  id: string;
   name: string;
-  description: string;
+  resource: string;
+  action: string;
+  conditions?: Record<string, any>;
+  // Legacy fields for backward compatibility
+  description?: string;
+  isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  permissions?: Permission[];
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  permissions: Permission[];
+  tenantId?: string;
+  // Legacy fields for backward compatibility
+  createdAt?: string;
+  updatedAt?: string;
   status?: "active" | "inactive" | "draft" | "deprecated";
   moduleId?: number;
   moduleName?: string;
   isActive?: boolean;
 }
 
-export interface Permission {
-  id: number;
+export interface UserProfile {
+  id: string;
+  email: string;
   name: string;
-  description: string;
-  isActive: boolean;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  roles: Role[];
+  tenantId?: string;
+  permissions: Permission[];
+  lastLoginAt?: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 export interface UserGroup {
@@ -83,33 +103,49 @@ export interface RoleAssignment {
 }
 
 export interface Tenant {
-  id: number;
+  id: string;
   name: string;
-  description?: string;
-  status: string;
+  code: string;
+  type: "enterprise" | "standard" | "basic";
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   createdAt: string;
   updatedAt: string;
+  // Legacy fields for backward compatibility
+  description?: string;
+  userCount?: number;
+  roleCount?: number;
+  lastActivity?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
+
+export interface Product {
+  id: number;
+  name: string;
+  description: string;
+  code: string;
+  version: string;
+  productStatus: ProductStatus;
+  category?: string;
+  createdAt: string;
+  createdBy?: string;
+  updatedAt: string;
+  updatedBy?: string;
+  modules?: Module[];
 }
 
 export interface Module {
   id: number;
   name: string;
-  description?: string;
-  code?: string;
+  description: string;
   isActive: boolean;
-  productId?: number;
-  productName?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface Product {
-  id: number;
-  name: string;
-  description?: string;
-  code: string;
-  status: string;
-  version: string;
+  createdAt: string;
+  updatedAt: string;
+  productId: number;
+  productName: string;
+  roles?: Role[] | null;
 }
 
 export const ENTITY_STATUS_MAPPINGS = {
@@ -193,8 +229,6 @@ export interface TenantDetails extends Tenant {
   lastActivity?: string;
   createdBy?: string;
   updatedBy?: string;
-  code?: string;
-  type?: "enterprise" | "standard" | "basic";
 }
 
 // Statistics interfaces

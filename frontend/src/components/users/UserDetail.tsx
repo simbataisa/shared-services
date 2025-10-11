@@ -78,6 +78,7 @@ const UserDetail: React.FC = () => {
             id: role.id,
             name: role.name,
             description: role.description || "",
+            permissions: role.permissions || [],
           })) || [],
         userGroups:
           userData.userGroups?.map((group) => ({

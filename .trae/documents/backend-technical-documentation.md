@@ -438,7 +438,18 @@ public class ApiResponse<T> {
 
 ### Recent Fixes and Updates
 
-#### HikariCP Connection Pool Optimization (Latest)
+#### Status Management System Enhancement (Latest)
+- **Enhancement**: Improved status management across all entities with consistent UI components
+- **Components**: Enhanced status display and management through standardized status cards
+- **Features**:
+  - Unified status display with color-coded indicators
+  - Interactive status change buttons with permission controls
+  - Consistent "Danger Zone" sections for entity deletion
+  - Improved user experience with confirmation dialogs
+- **Entities Affected**: Products, Roles, Users, Tenants, Permissions, User Groups
+- **Impact**: Provides consistent status management interface across the entire application
+
+#### HikariCP Connection Pool Optimization
 - **Issue**: HikariCP thread starvation warning: "Thread starvation or clock leap detected (housekeeper delta=15m39s452ms)"
 - **Root Cause**: Default HikariCP configuration was insufficient for the application's database connection needs, leading to connection pool exhaustion
 - **Solution**: 

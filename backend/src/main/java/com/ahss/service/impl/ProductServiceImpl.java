@@ -1,17 +1,18 @@
 package com.ahss.service.impl;
 
-import com.ahss.dto.ProductDto;
-import com.ahss.entity.Product;
-import com.ahss.repository.ProductRepository;
-import com.ahss.service.ProductService;
-import com.ahss.service.ModuleService;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import com.ahss.dto.ProductDto;
+import com.ahss.entity.Product;
+import com.ahss.repository.ProductRepository;
+import com.ahss.service.ModuleService;
+import com.ahss.service.ProductService;
 
 @Service
 @Transactional
@@ -114,7 +115,7 @@ public class ProductServiceImpl implements ProductService {
         dto.setDescription(product.getDescription());
         dto.setCode(product.getCode());
         dto.setVersion("1.0.0"); // Default version for now
-        dto.setIsActive(product.getProductStatus() == com.ahss.entity.ProductStatus.ACTIVE);
+        dto.setProductStatus(product.getProductStatus());
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
         

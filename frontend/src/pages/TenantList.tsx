@@ -30,7 +30,7 @@ import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { getStatusIcon } from "@/lib/status-utils";
 import { normalizeEntityStatus } from "@/lib/status-utils";
 import api from "@/lib/api";
-import { type Tenant } from "@/store/auth";
+import { type Tenant } from "@/types/entities";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
 
 export default function TenantList() {

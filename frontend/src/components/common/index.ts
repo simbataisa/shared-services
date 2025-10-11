@@ -13,4 +13,5 @@ export { default as ProtectedRoute } from "./ProtectedRoute";
 export { default as SearchAndFilter } from "./SearchAndFilter";
 export { default as StatisticsCard, type StatisticItem } from "./StatisticsCard";
 export { default as StatusBadge } from "./StatusBadge";
+export { default as StatusCard } from "./StatusCard";
 export { default as StatusDisplayCard } from "./StatusDisplayCard";

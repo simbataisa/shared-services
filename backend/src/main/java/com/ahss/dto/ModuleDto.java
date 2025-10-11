@@ -1,5 +1,6 @@
 package com.ahss.dto;
 
+import com.ahss.entity.ModuleStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,12 +14,19 @@ public class ModuleDto {
     @Size(max = 100, message = "Module name must not exceed 100 characters")
     private String name;
     
+    @NotBlank(message = "Module code is required")
+    @Size(max = 50, message = "Module code must not exceed 50 characters")
+    private String code;
+    
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
     
-    private Boolean isActive;
+    private ModuleStatus moduleStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    private String createdBy;
+    private String updatedBy;
     
     @NotNull(message = "Product ID is required")
     private Long productId;
@@ -60,12 +68,36 @@ public class ModuleDto {
         this.description = description;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public String getCode() {
+        return code;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public ModuleStatus getModuleStatus() {
+        return moduleStatus;
+    }
+
+    public void setModuleStatus(ModuleStatus moduleStatus) {
+        this.moduleStatus = moduleStatus;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public LocalDateTime getCreatedAt() {

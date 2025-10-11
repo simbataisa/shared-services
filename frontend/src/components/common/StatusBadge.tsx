@@ -22,6 +22,7 @@ export function StatusBadge({
   showIcon = false,
   customLabel,
 }: StatusBadgeProps) {
+  console.log(status);
   const config = getStatusConfig(status);
 
   return (

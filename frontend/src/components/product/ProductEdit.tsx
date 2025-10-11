@@ -22,7 +22,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { DetailHeaderCard } from "@/components/common";
-import type { Product } from "@/store/auth";
+import type { Product } from "@/types/entities";
 import api from "@/lib/api";
 
 const ProductEdit: React.FC = () => {

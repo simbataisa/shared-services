@@ -1,5 +1,6 @@
 package com.ahss.dto;
 
+import com.ahss.entity.ProductStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
@@ -18,9 +19,11 @@ public class ProductDto {
     private String code;
     private String version;
     
-    private Boolean isActive;
+    private ProductStatus productStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String createdBy;
+    private String updatedBy;
     private List<ModuleDto> modules;
 
     // Constructors
@@ -72,12 +75,12 @@ public class ProductDto {
         this.version = version;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public ProductStatus getProductStatus() {
+        return productStatus;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setProductStatus(ProductStatus productStatus) {
+        this.productStatus = productStatus;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -94,6 +97,22 @@ public class ProductDto {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
     }
 
     public List<ModuleDto> getModules() {

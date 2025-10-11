@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Edit, Trash2 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Edit, Trash2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { DetailHeaderCard } from "@/components/common";
+import { DetailHeaderCard, StatusDisplayCard } from "@/components/common";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-utils";
-import type { Product, Module } from "@/store/auth";
-import api from "@/lib/api";
+import { getStatusColor, getStatusIcon } from "@/lib/status-utils";
+import {
+  type Product,
+  type Module,
+  type ProductStatus,
+  ENTITY_STATUS_MAPPINGS,
+} from "@/types/entities";
+import httpClient from "@/lib/httpClient";
+import LoadingSpinner from "../common/LoadingSpinner";
+import ProductDetailsCard from "./ProductDetailsCard";
+import ProductStatusCard from "./ProductStatusCard";
+import ProductList from "@/pages/ProductList";
 
 interface ProductStats {
   totalModules: number;
@@ -37,124 +39,204 @@ const ProductDetail: React.FC = () => {
   } = usePermissions();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    code: "",
+    status: "ACTIVE" as ProductStatus,
+    category: "",
+    version: "",
+  });
   const [modules, setModules] = useState<Module[]>([]);
   const [stats, setStats] = useState<ProductStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Add useEffect to monitor product state changes
+  useEffect(() => {
+    console.log("Product state changed:", product);
+  }, [product]);
+
   useEffect(() => {
     if (!canViewProducts) {
-      navigate("/unauthorized");
+      navigate("/products");
       return;
     }
 
-    fetchProductData();
+    if (id) {
+      fetchProductData();
+    }
   }, [id, canViewProducts, navigate]);
 
   const fetchProductData = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // Fetch product data from API
       const [productResponse, modulesResponse] = await Promise.all([
-        api.get(`/products/${id}`),
-        api.get(`/v1/modules/product/${id}`),
+        httpClient.getProductById(Number(id)),
+        httpClient.getModulesByProductId(Number(id)),
       ]);
 
-      const productData = productResponse.data;
-      const modulesData = modulesResponse.data || [];
+      const productData = productResponse;
+      const modulesData = modulesResponse;
+      console.log("modulesData", modulesData);
+      console.log("productData", productData);
+      setProduct(productData);
+      console.log("product set to:", productData); // Log the data being set, not the state
+
+      const normalizedModules = modulesData.map((module: any) => ({
+        ...module,
+        // Convert isActive boolean to status string for compatibility
+        status: module.isActive ? "active" : "inactive",
+      }));
+      setModules(normalizedModules);
 
       // Calculate stats
-      const stats: ProductStats = {
-        totalModules: modulesData.length,
-        activeModules: modulesData.filter((m: any) => m.isActive).length,
-        inactiveModules: modulesData.filter((m: any) => !m.isActive).length,
-        lastUpdated: productData.updatedAt,
-      };
+      const activeModules = normalizedModules.filter(
+        (m: any) => m.status === "active"
+      ).length;
+      const inactiveModules = normalizedModules.length - activeModules;
 
-      // Transform module data to match frontend interface
-      const transformedModules: Module[] = modulesData.map((module: any) => ({
-        id: module.id,
-        name: module.name,
-        description: module.description,
-        code: module.code || `MODULE_${module.id}`,
-        status: module.isActive ? "active" : "inactive",
-        productId: module.productId,
-        version: "1.0.0", // Default version if not provided
-        createdAt: module.createdAt,
-        updatedAt: module.updatedAt,
-      }));
-
-      // Transform product data to match frontend interface
-      const transformedProduct: Product = {
-        id: productData.id,
-        name: productData.name,
-        description: productData.description,
-        code: productData.productCode,
-        status: productData.productStatus?.toLowerCase() || "active",
-        category: productData.category || "general",
-        version: productData.version || "1.0.0",
-        createdAt: productData.createdAt,
-        updatedAt: productData.updatedAt,
-        createdBy: productData.createdBy || "system",
-        updatedBy: productData.updatedBy || "system",
-      };
-
-      setProduct(transformedProduct);
-      setModules(transformedModules);
-      setStats(stats);
-    } catch (error) {
-      console.error("Error fetching product data:", error);
-      setError("Failed to load product data");
+      setStats({
+        totalModules: normalizedModules.length,
+        activeModules,
+        inactiveModules,
+        lastUpdated: productData?.updatedAt || new Date().toISOString(),
+      });
+    } catch (err: any) {
+      console.error("Error fetching product data:", err);
+      setError(
+        err.response?.data?.message ||
+          "Failed to load product data. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (newStatus: "active" | "inactive") => {
-    if (!product || !canUpdateProducts) return;
+  const handleStartEdit = () => {
+    if (product) {
+      setEditForm({
+        name: product.name,
+        description: product.description || "",
+        code: product.code,
+        status: product.productStatus,
+        category: "", // Remove category as it's no longer in Product interface
+        version: product.version,
+      });
+      setIsEditing(true);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditForm({
+      name: "",
+      description: "",
+      code: "",
+      status: "ACTIVE",
+      category: "",
+      version: "",
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!product) return;
 
     try {
       setUpdating(true);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const updateData = {
+        name: editForm.name,
+        description: editForm.description,
+        productCode: editForm.code,
+        productStatus: editForm.status,
+        category: editForm.category,
+        version: editForm.version,
+      };
 
+      // Optimistic local update
       setProduct((prev) =>
         prev
-          ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() }
-          : null
+          ? {
+              ...prev,
+              name: updateData.name || prev.name,
+              description: updateData.description || prev.description,
+              code: updateData.productCode,
+              productStatus: updateData.productStatus,
+              version: updateData.version || prev.version,
+              updatedAt: new Date().toISOString(),
+            }
+          : prev
       );
-    } catch (error) {
-      console.error("Error updating product status:", error);
-      setError("Failed to update product status");
+
+      // API call
+      await httpClient.updateProduct(product.id, updateData);
+
+      setIsEditing(false);
+      await fetchProductData(); // Refresh to get server state
+    } catch (err: any) {
+      console.error("Error updating product:", err);
+      // Revert optimistic update on error
+      await fetchProductData();
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleFormChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleStatusUpdate = async (newStatus: ProductStatus) => {
+    if (!product) return;
+
+    try {
+      setUpdating(true);
+      const updateData: any = {
+        productStatus: newStatus,
+      };
+
+      await httpClient.updateProduct(product.id, updateData);
+
+      setProduct((prev) =>
+        prev ? { ...prev, productStatus: newStatus } : prev
+      );
+    } catch (err: any) {
+      console.error("Error updating product status:", err);
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDeleteProduct = async () => {
-    if (!product || !canDeleteProducts) return;
+    if (!product) return;
 
-    if (
-      !window.confirm(
-        `Are you sure you want to delete the product "${product.name}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${product.name}"? This action cannot be undone.`
+    );
+
+    if (!confirmed) return;
 
     try {
       setUpdating(true);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      await httpClient.deleteProduct(product.id);
       navigate("/products");
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      setError("Failed to delete product");
+    } catch (err: any) {
+      console.error("Error deleting product:", err);
+      alert(
+        err.response?.data?.message ||
+          "Failed to delete product. Please try again."
+      );
+    } finally {
       setUpdating(false);
     }
   };
@@ -162,77 +244,52 @@ const ProductDetail: React.FC = () => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
-  const getStatusBadge = (status: string) => {
-    const normalizedStatus = normalizeEntityStatus(
-      "product",
-      status.toUpperCase()
-    );
-    return <StatusBadge status={normalizedStatus} />;
-  };
-
   if (!canViewProducts) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Access Denied</CardTitle>
-            <CardDescription>
-              You don't have permission to view products.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/dashboard")} className="w-full">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-              <Skeleton className="h-32" />
-            </div>
-            <Skeleton className="h-64" />
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Access Denied
+          </h1>
+          <p className="text-gray-600 mb-6">
+            You don't have permission to view products.
+          </p>
+          <Button onClick={() => navigate("/")}>Go to Dashboard</Button>
         </div>
       </div>
     );
   }
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   if (error || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Product Not Found</CardTitle>
-            <CardDescription>
-              {error || "The requested product could not be found."}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/products")} className="w-full">
-              <ArrowLeft className="mr-2 h-4 w-4" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Product Not Found
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {error || "The requested product could not be found."}
+          </p>
+          <div className="space-x-4">
+            <Button onClick={() => navigate("/products")}>
               Back to Products
             </Button>
-          </CardContent>
-        </Card>
+            <Button variant="outline" onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -246,44 +303,10 @@ const ProductDetail: React.FC = () => {
           description={product.description}
           breadcrumbs={[
             { label: "Products", href: "/products" },
-            { label: product.name }
+            { label: product.name },
           ]}
           actions={
             <div className="flex items-center space-x-3">
-              {getStatusBadge(product.status)}
-
-              <PermissionGuard permission="product:update">
-                <div className="flex space-x-2">
-                  {product.status === "active" ? (
-                    <Button
-                      onClick={() => handleStatusUpdate("inactive")}
-                      disabled={updating}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      Deactivate
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={() => handleStatusUpdate("active")}
-                      disabled={updating}
-                      variant="default"
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      Activate
-                    </Button>
-                  )}
-
-                  <Button asChild size="sm">
-                    <Link to={`/products/${product.id}/edit`}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
-                    </Link>
-                  </Button>
-                </div>
-              </PermissionGuard>
-
               <PermissionGuard permission="product:delete">
                 <Button
                   onClick={handleDeleteProduct}
@@ -304,69 +327,164 @@ const ProductDetail: React.FC = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* Product Information */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Product Information
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Product Code
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 font-mono bg-gray-50 px-2 py-1 rounded">
-                    {product.code}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Category
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">
-                    {product.category}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Version
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 font-mono">
-                    {product.version}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Status
-                  </label>
-                  {getStatusBadge(product.status)}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Created
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {formatDate(product.createdAt)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    by {product.createdBy}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Last Updated
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {formatDate(product.updatedAt)}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    by {product.updatedBy}
-                  </p>
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Product Information
+                </h2>
+                <PermissionGuard permission="product:update">
+                  {isEditing ? (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSaveEdit}
+                        disabled={updating}
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        Save
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                        disabled={updating}
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button size="sm" onClick={handleStartEdit}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                  )}
+                </PermissionGuard>
               </div>
+
+              {isEditing ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Product Name
+                    </label>
+                    <Input
+                      name="name"
+                      value={editForm.name}
+                      onChange={handleFormChange}
+                      placeholder="Enter product name"
+                      disabled={updating}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Product Code
+                    </label>
+                    <Input
+                      name="code"
+                      value={editForm.code}
+                      onChange={handleFormChange}
+                      placeholder="Enter product code"
+                      disabled={updating}
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Description
+                    </label>
+                    <Textarea
+                      name="description"
+                      value={editForm.description}
+                      onChange={handleFormChange}
+                      placeholder="Enter description"
+                      rows={3}
+                      disabled={updating}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Category
+                    </label>
+                    <Input
+                      name="category"
+                      value={editForm.category}
+                      onChange={handleFormChange}
+                      placeholder="Enter category"
+                      disabled={updating}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Version
+                    </label>
+                    <Input
+                      name="version"
+                      value={editForm.version}
+                      onChange={handleFormChange}
+                      placeholder="e.g., 1.0.0"
+                      disabled={updating}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Status
+                    </label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={
+                          editForm.status === "DRAFT" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          setEditForm((prev) => ({ ...prev, status: "DRAFT" }))
+                        }
+                        disabled={updating}
+                      >
+                        Draft
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          editForm.status === "ACTIVE" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          setEditForm((prev) => ({ ...prev, status: "ACTIVE" }))
+                        }
+                        disabled={updating}
+                      >
+                        Active
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          editForm.status === "INACTIVE"
+                            ? "destructive"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            status: "INACTIVE",
+                          }))
+                        }
+                        disabled={updating}
+                      >
+                        Inactive
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <ProductDetailsCard product={product} />
+              )}
             </div>
 
             {/* Modules Section */}
@@ -398,9 +516,11 @@ const ProductDetail: React.FC = () => {
                               <h3 className="text-lg font-medium text-gray-900">
                                 {module.name}
                               </h3>
-                              {getStatusBadge(module.status)}
+                              {getStatusIcon(
+                                module.isActive ? "active" : "inactive"
+                              )}
                               <span className="text-sm text-gray-500 font-mono">
-                                v{module.version}
+                                v{product.version}
                               </span>
                             </div>
                             <p className="mt-1 text-sm text-gray-600">
@@ -408,8 +528,8 @@ const ProductDetail: React.FC = () => {
                             </p>
                             <p className="mt-2 text-xs text-gray-500">
                               Code:{" "}
-                              <span className="font-mono">{module.code}</span> •
-                              Updated: {formatDate(module.updatedAt)}
+                              <span className="font-mono">{product.code}</span>{" "}
+                              • Updated: {formatDate(module.updatedAt)}
                             </p>
                           </div>
 
@@ -452,10 +572,17 @@ const ProductDetail: React.FC = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Status Card */}
+            <ProductStatusCard
+              product={product}
+              onStatusUpdate={handleStatusUpdate}
+              onDelete={handleDeleteProduct}
+              updating={updating}
+            />
             {/* Statistics */}
             {stats && (
               <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Statistics
                 </h3>
 

@@ -1,18 +1,19 @@
 package com.ahss.service.impl;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.ahss.dto.ModuleDto;
 import com.ahss.entity.Module;
 import com.ahss.entity.Product;
 import com.ahss.repository.ModuleRepository;
 import com.ahss.repository.ProductRepository;
 import com.ahss.service.ModuleService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -131,7 +132,7 @@ public class ModuleServiceImpl implements ModuleService {
         dto.setId(module.getId());
         dto.setName(module.getName());
         dto.setDescription(module.getDescription());
-        dto.setIsActive(module.getModuleStatus() == com.ahss.entity.ModuleStatus.ACTIVE);
+        dto.setModuleStatus(module.getModuleStatus());
         dto.setCreatedAt(module.getCreatedAt());
         dto.setUpdatedAt(module.getUpdatedAt());
         dto.setProductId(module.getProduct().getId());
