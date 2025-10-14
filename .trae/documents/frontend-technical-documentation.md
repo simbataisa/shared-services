@@ -131,7 +131,43 @@ RBAC/ABAC Evaluation → Resource-Action-Condition Checks
 
 ### Recent Permission System Updates
 
-**Tenant Permission Standardization (Latest Update)**
+**Permission Format Standardization (Latest Update)**
+
+- **Issue Fixed**: Comprehensive migration from old permission format to new standardized format
+- **Change**: Updated all permissions from old format (`module:action`) to new format (`MODULE_MGMT:action`)
+  - `user:read` → `USER_MGMT:read`
+  - `user:create` → `USER_MGMT:create`
+  - `user:update` → `USER_MGMT:update`
+  - `user:delete` → `USER_MGMT:delete`
+  - `role:read` → `ROLE_MGMT:read`
+  - `role:create` → `ROLE_MGMT:create`
+  - `role:update` → `ROLE_MGMT:update`
+  - `tenants:read` → `TENANT_MGMT:read`
+  - `tenants:create` → `TENANT_MGMT:create`
+  - `tenants:update` → `TENANT_MGMT:update`
+  - `tenants:delete` → `TENANT_MGMT:delete`
+  - `product:read` → `PRODUCT_MGMT:read`
+  - `product:create` → `PRODUCT_MGMT:create`
+  - `product:update` → `PRODUCT_MGMT:update`
+  - `product:delete` → `PRODUCT_MGMT:delete`
+  - `user-groups:read` → `GROUP_MGMT:read`
+  - `user-groups:create` → `GROUP_MGMT:create`
+  - `user-groups:update` → `GROUP_MGMT:update`
+  - `user-groups:delete` → `GROUP_MGMT:delete`
+  - `user-groups:manage-roles` → `USER_MGMT:assign_roles`
+  - `permission:read` → `PERMISSION_MGMT:read`
+  - `audit:read` → `AUDIT_MGMT:read`
+  - `approval:read` → `APPROVAL_MGMT:read`
+  - `analytic:read` → `ANALYTICS_MGMT:read`
+- **Files Updated**:
+  - All `PermissionGuard` components across the application
+  - All `ProtectedRoute` components in `App.tsx`
+  - `usePermissions.ts` - Core permission hook definitions
+  - `Dashboard.tsx` - Dashboard permission guards
+  - Component files: `UserGroupDetail.tsx`, `RoleAssignmentsCard.tsx`, `TenantList.tsx`, `ProductStatusCard.tsx`, `RolePermissionCard.tsx`
+- **Impact**: Unified permission system aligned with backend PermissionDto structure, ensuring consistency across the entire application
+
+**Tenant Permission Standardization (Previous Update)**
 
 - **Issue Fixed**: Mismatch between JWT token permissions and frontend permission checks
 - **Change**: Updated all tenant-related permissions from singular to plural form
@@ -399,7 +435,7 @@ function App() {
           <Route
             path="/user-groups"
             element={
-              <ProtectedRoute permission="user:read">
+              <ProtectedRoute permission="GROUP_MGMT:read">
                 <UserGroups />
               </ProtectedRoute>
             }
@@ -408,7 +444,7 @@ function App() {
           <Route
             path="/tenants"
             element={
-              <ProtectedRoute permission="tenant:read">
+              <ProtectedRoute permission="TENANT_MGMT:read">
                 <TenantList />
               </ProtectedRoute>
             }
@@ -417,7 +453,7 @@ function App() {
           <Route
             path="/products"
             element={
-              <ProtectedRoute permission="product:read">
+              <ProtectedRoute permission="PRODUCT_MGMT:read">
                 <ProductList />
               </ProtectedRoute>
             }
@@ -476,12 +512,12 @@ function App() {
 **Key Navigation Items:**
 
 - Dashboard (always accessible to authenticated users)
-- User Groups (requires `user:read` permission)
-- Products (requires `product:read` permission)
-- Modules (requires `module:read` permission)
-- Roles (requires `role:read` permission)
-- Permissions (requires `permission:read` permission)
-- Tenants (requires `tenant:read` permission)
+- User Groups (requires `GROUP_MGMT:read` permission)
+- Products (requires `PRODUCT_MGMT:read` permission)
+- Modules (requires `MODULE_MGMT:read` permission)
+- Roles (requires `ROLE_MGMT:read` permission)
+- Permissions (requires `PERMISSION_MGMT:read` permission)
+- Tenants (requires `TENANT_MGMT:read` permission)
 
 **Implementation Highlights:**
 
@@ -505,7 +541,7 @@ function App() {
 - Flexible permission evaluation (requireAll vs any)
 
 ```typescript
-<PermissionGuard permission="product:update" fallback={<div>Access Denied</div>}>
+<PermissionGuard permission="PRODUCT_MGMT:update" fallback={<div>Access Denied</div>}>
   <EditButton />
 </PermissionGuard>
 
@@ -527,7 +563,7 @@ function App() {
 - Automatic redirection to login or unauthorized pages
 
 ```typescript
-<ProtectedRoute permission="tenant:read" redirectTo="/unauthorized">
+<ProtectedRoute permission="TENANT_MGMT:read" redirectTo="/unauthorized">
   <TenantList />
 </ProtectedRoute>
 ```
@@ -870,27 +906,27 @@ export const useAuth = create<AuthState>((set, get) => ({
 
 ```typescript
 // User Management Permissions
-const canViewUsers = hasPermission("user:read");
-const canCreateUsers = hasPermission("user:create");
-const canUpdateUsers = hasPermission("user:update");
-const canDeleteUsers = hasPermission("user:delete");
+const canViewUsers = hasPermission("USER_MGMT:read");
+const canCreateUsers = hasPermission("USER_MGMT:create");
+const canUpdateUsers = hasPermission("USER_MGMT:update");
+const canDeleteUsers = hasPermission("USER_MGMT:delete");
 
-// Tenant Management Permissions (Updated to plural form)
-const canViewTenants = hasPermission("tenants:read");
-const canCreateTenants = hasPermission("tenants:create");
-const canUpdateTenants = hasPermission("tenants:update");
-const canDeleteTenants = hasPermission("tenants:delete");
+// Tenant Management Permissions
+const canViewTenants = hasPermission("TENANT_MGMT:read");
+const canCreateTenants = hasPermission("TENANT_MGMT:create");
+const canUpdateTenants = hasPermission("TENANT_MGMT:update");
+const canDeleteTenants = hasPermission("TENANT_MGMT:delete");
 
 // Product and Module Permissions
-const canViewProducts = hasPermission("product:read");
-const canCreateProducts = hasPermission("product:create");
-const canUpdateProducts = hasPermission("product:update");
-const canDeleteProducts = hasPermission("product:delete");
+const canViewProducts = hasPermission("PRODUCT_MGMT:read");
+const canCreateProducts = hasPermission("PRODUCT_MGMT:create");
+const canUpdateProducts = hasPermission("PRODUCT_MGMT:update");
+const canDeleteProducts = hasPermission("PRODUCT_MGMT:delete");
 
 // Role and Permission Management
-const canViewRoles = hasPermission("role:read");
-const canCreateRoles = hasPermission("role:create");
-const canAssignPermissions = hasPermission("permission:assign");
+const canViewRoles = hasPermission("ROLE_MGMT:read");
+const canCreateRoles = hasPermission("ROLE_MGMT:create");
+const canAssignPermissions = hasPermission("USER_MGMT:assign_roles");
 
 // Admin and Multi-tenant Checks
 const isAdmin = hasRole("admin");

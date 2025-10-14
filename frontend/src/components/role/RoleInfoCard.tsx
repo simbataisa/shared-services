@@ -91,7 +91,7 @@ export const RoleInfoCard: React.FC<RoleInfoCardProps> = ({
             <Shield className="mr-2 h-5 w-5" />
             Role Information
           </CardTitle>
-          <PermissionGuard permission="role:update">
+          <PermissionGuard permission="ROLE_MGMT:update">
             {mode === "create" ? null : (
               isEditing ? (
                 <div className="flex gap-2">

@@ -212,7 +212,7 @@ export default function TenantList() {
           },
         ]}
         actions={
-          <PermissionGuard permission="tenants:create">
+          <PermissionGuard permission="TENANT_MGMT:create">
             <Button asChild>
               <Link to="/tenants/create">
                 <Plus className="h-4 w-4 mr-2" />
@@ -263,7 +263,7 @@ export default function TenantList() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <PermissionGuard permission="tenants:read">
+                      <PermissionGuard permission="TENANT_MGMT:read">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -297,7 +297,7 @@ export default function TenantList() {
               {!searchTerm &&
                 statusFilter === "all" &&
                 typeFilter === "all" && (
-                  <PermissionGuard permission="tenants:create">
+                  <PermissionGuard permission="TENANT_MGMT:create">
                     <Button className="mt-4" asChild>
                       <Link to="/tenants/create">
                         <Plus className="h-4 w-4 mr-2" />

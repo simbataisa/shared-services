@@ -22,7 +22,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { DetailHeaderCard } from "@/components/common";
-import type { Product } from "@/types/entities";
+import { ENTITY_STATUS_MAPPINGS, type Product } from "@/types/entities";
 import api from "@/lib/api";
 
 const ProductEdit: React.FC = () => {
@@ -34,8 +34,7 @@ const ProductEdit: React.FC = () => {
     name: "",
     description: "",
     code: "",
-    status: "active" as "active" | "inactive",
-    category: "",
+    productStatus: ENTITY_STATUS_MAPPINGS.product.ACTIVE,
     version: "",
   });
   const [loading, setLoading] = useState(true);
@@ -83,8 +82,7 @@ const ProductEdit: React.FC = () => {
         name: productData.name,
         description: productData.description,
         code: productData.productCode,
-        status: productData.productStatus?.toLowerCase() || "active",
-        category: productData.category || "general",
+        productStatus: productData.productStatus,
         version: productData.version || "1.0.0",
         createdAt: productData.createdAt,
         updatedAt: productData.updatedAt,
@@ -97,8 +95,7 @@ const ProductEdit: React.FC = () => {
         name: transformedProduct.name,
         description: transformedProduct.description,
         code: transformedProduct.code,
-        status: transformedProduct.status,
-        category: transformedProduct.category,
+        productStatus: transformedProduct.productStatus,
         version: transformedProduct.version,
       });
     } catch (error) {
@@ -146,8 +143,7 @@ const ProductEdit: React.FC = () => {
         name: formData.name.trim(),
         description: formData.description.trim(),
         productCode: formData.code.trim(),
-        productStatus: formData.status.toUpperCase(),
-        category: formData.category.trim(),
+        productStatus: formData.productStatus,
         version: formData.version.trim(),
       };
 
@@ -217,7 +213,7 @@ const ProductEdit: React.FC = () => {
 
   return (
     <PermissionGuard
-      permission="product:update"
+      permission="PRODUCT_MGMT:update"
       fallback={
         <div className="min-h-screen flex items-center justify-center">
           <Card className="w-full max-w-md">
@@ -245,7 +241,7 @@ const ProductEdit: React.FC = () => {
             breadcrumbs={[
               { label: "Products", href: "/products" },
               { label: product?.name || "Product", href: `/products/${id}` },
-              { label: "Edit" }
+              { label: "Edit" },
             ]}
           />
 
@@ -313,19 +309,6 @@ const ProductEdit: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Category
-                      </label>
-                      <Input
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        placeholder="Enter category"
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
                         Version
                       </label>
                       <Input
@@ -351,11 +334,13 @@ const ProductEdit: React.FC = () => {
                         Status
                       </label>
                       <Select
-                        value={formData.status}
+                        value={formData.productStatus}
                         onValueChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
-                            status: value as "active" | "inactive",
+                            productStatus: value as
+                              | typeof ENTITY_STATUS_MAPPINGS.product.ACTIVE
+                              | typeof ENTITY_STATUS_MAPPINGS.product.INACTIVE,
                           }))
                         }
                       >

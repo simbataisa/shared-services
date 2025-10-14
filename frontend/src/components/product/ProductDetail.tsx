@@ -307,7 +307,7 @@ const ProductDetail: React.FC = () => {
           ]}
           actions={
             <div className="flex items-center space-x-3">
-              <PermissionGuard permission="product:delete">
+              <PermissionGuard permission="PRODUCT_MGMT:delete">
                 <Button
                   onClick={handleDeleteProduct}
                   disabled={updating}
@@ -331,7 +331,7 @@ const ProductDetail: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gray-900">
                   Product Information
                 </h2>
-                <PermissionGuard permission="product:update">
+                <PermissionGuard permission="PRODUCT_MGMT:update">
                   {isEditing ? (
                     <div className="flex gap-2">
                       <Button
@@ -492,7 +492,7 @@ const ProductDetail: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900">Modules</h2>
 
-                <PermissionGuard permission="module:create">
+                <PermissionGuard permission="MODULE_MGMT:create">
                   <Link
                     to={`/products/${product.id}/modules/create`}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
@@ -629,7 +629,7 @@ const ProductDetail: React.FC = () => {
               </h3>
 
               <div className="space-y-3">
-                <PermissionGuard permission="module:read">
+                <PermissionGuard permission="MODULE_MGMT:read">
                   <Link
                     to={`/products/${product.id}/modules`}
                     className="block w-full px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-center"
@@ -638,7 +638,7 @@ const ProductDetail: React.FC = () => {
                   </Link>
                 </PermissionGuard>
 
-                <PermissionGuard permission="module:create">
+                <PermissionGuard permission="MODULE_MGMT:create">
                   <Link
                     to={`/products/${product.id}/modules/create`}
                     className="block w-full px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 text-center"
@@ -647,7 +647,7 @@ const ProductDetail: React.FC = () => {
                   </Link>
                 </PermissionGuard>
 
-                <PermissionGuard permission="product:update">
+                <PermissionGuard permission="PRODUCT_MGMT:update">
                   <Link
                     to={`/products/${product.id}/edit`}
                     className="block w-full px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 text-center"

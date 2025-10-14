@@ -4,51 +4,76 @@ export const usePermissions = () => {
   const { user, hasPermission, hasRole, hasAnyRole, canAccessResource } =
     useAuth();
 
-  // Basic permission checks
-  const canViewUsers = hasPermission("user:read");
-  const canCreateUsers = hasPermission("user:create");
-  const canUpdateUsers = hasPermission("user:update");
-  const canDeleteUsers = hasPermission("user:delete");
-  const canManageUsers = canCreateUsers || canUpdateUsers || canDeleteUsers;
+  // User management permissions
+  const canViewUsers = hasPermission("USER_MGMT:read");
+  const canCreateUsers = hasPermission("USER_MGMT:create");
+  const canUpdateUsers = hasPermission("USER_MGMT:update");
+  const canDeleteUsers = hasPermission("USER_MGMT:delete");
+  const canAdminUsers = hasPermission("USER_MGMT:admin");
+  const canAssignRoles = hasPermission("USER_MGMT:assign_roles");
+  const canAssignGroups = hasPermission("USER_MGMT:assign_groups");
+  const canManageUsers = canCreateUsers || canUpdateUsers || canDeleteUsers || canAdminUsers;
 
   // Tenant management permissions
-  const canViewTenants = hasPermission("tenants:read");
-  const canCreateTenants = hasPermission("tenants:create");
-  const canUpdateTenants = hasPermission("tenants:update");
-  const canDeleteTenants = hasPermission("tenants:delete");
+  const canViewTenants = hasPermission("TENANT_MGMT:read");
+  const canCreateTenants = hasPermission("TENANT_MGMT:create");
+  const canUpdateTenants = hasPermission("TENANT_MGMT:update");
+  const canDeleteTenants = hasPermission("TENANT_MGMT:delete");
+  const canAdminTenants = hasPermission("TENANT_MGMT:admin");
   const canManageTenants =
-    canCreateTenants || canUpdateTenants || canDeleteTenants;
+    canCreateTenants || canUpdateTenants || canDeleteTenants || canAdminTenants;
 
-  // Role and permission management
-  const canViewRoles = hasPermission("role:read");
-  const canCreateRoles = hasPermission("role:create");
-  const canUpdateRoles = hasPermission("role:update");
-  const canDeleteRoles = hasPermission("role:delete");
-  const canManageRoles = canCreateRoles || canUpdateRoles || canDeleteRoles;
+  // Role management permissions
+  const canViewRoles = hasPermission("ROLE_MGMT:read");
+  const canCreateRoles = hasPermission("ROLE_MGMT:create");
+  const canUpdateRoles = hasPermission("ROLE_MGMT:update");
+  const canDeleteRoles = hasPermission("ROLE_MGMT:delete");
+  const canAdminRoles = hasPermission("ROLE_MGMT:admin");
+  const canManageRoles = canCreateRoles || canUpdateRoles || canDeleteRoles || canAdminRoles;
 
-  const canViewPermissions = hasPermission("permission:read");
-  const canUpdatePermissions = hasPermission("permission:update");
-  const canDeletePermissions = hasPermission("permission:delete");
-  const canManagePermissions = canUpdatePermissions || canDeletePermissions;
+  // Permission management permissions
+  const canViewPermissions = hasPermission("PERMISSION_MGMT:read");
+  const canCreatePermissions = hasPermission("PERMISSION_MGMT:create");
+  const canUpdatePermissions = hasPermission("PERMISSION_MGMT:update");
+  const canDeletePermissions = hasPermission("PERMISSION_MGMT:delete");
+  const canAdminPermissions = hasPermission("PERMISSION_MGMT:admin");
+  const canManagePermissions = canCreatePermissions || canUpdatePermissions || canDeletePermissions || canAdminPermissions;
 
   // Product and module permissions
-  const canViewProducts = hasPermission("product:read");
-  const canCreateProducts = hasPermission("product:create");
-  const canUpdateProducts = hasPermission("product:update");
-  const canDeleteProducts = hasPermission("product:delete");
+  const canViewProducts = hasPermission("PRODUCT_MGMT:read");
+  const canCreateProducts = hasPermission("PRODUCT_MGMT:create");
+  const canUpdateProducts = hasPermission("PRODUCT_MGMT:update");
+  const canDeleteProducts = hasPermission("PRODUCT_MGMT:delete");
+  const canAdminProducts = hasPermission("PRODUCT_MGMT:admin");
   const canManageProducts =
-    canCreateProducts || canUpdateProducts || canDeleteProducts;
+    canCreateProducts || canUpdateProducts || canDeleteProducts || canAdminProducts;
 
-  const canViewModules = hasPermission("module:read");
-  const canCreateModules = hasPermission("module:create");
-  const canUpdateModules = hasPermission("module:update");
-  const canDeleteModules = hasPermission("module:delete");
+  const canViewModules = hasPermission("MODULE_MGMT:read");
+  const canCreateModules = hasPermission("MODULE_MGMT:create");
+  const canUpdateModules = hasPermission("MODULE_MGMT:update");
+  const canDeleteModules = hasPermission("MODULE_MGMT:delete");
+  const canAdminModules = hasPermission("MODULE_MGMT:admin");
+  const canConfigModules = hasPermission("MODULE_MGMT:config");
   const canManageModules =
-    canCreateModules || canUpdateModules || canDeleteModules;
+    canCreateModules || canUpdateModules || canDeleteModules || canAdminModules;
 
-  // Audit and logging
-  const canViewAuditLogs = hasPermission("audit:read");
-  const canExportAuditLogs = hasPermission("audit:export");
+  // Group management permissions
+  const canViewGroups = hasPermission("GROUP_MGMT:read");
+  const canCreateGroups = hasPermission("GROUP_MGMT:create");
+  const canUpdateGroups = hasPermission("GROUP_MGMT:update");
+  const canDeleteGroups = hasPermission("GROUP_MGMT:delete");
+  const canAdminGroups = hasPermission("GROUP_MGMT:admin");
+  const canManageGroups =
+    canCreateGroups || canUpdateGroups || canDeleteGroups || canAdminGroups;
+
+  // Analytics permissions
+  const canViewAnalytics = hasPermission("ANALYTICS_USER:read");
+  const canCreateAnalytics = hasPermission("ANALYTICS_USER:create");
+  const canAdminAnalytics = hasPermission("ANALYTICS_USER:admin");
+
+  // Audit and logging permissions
+  const canViewAuditLogs = hasPermission("CORE_AUDIT:read");
+  const canAdminAuditLogs = hasPermission("CORE_AUDIT:admin");
 
   // Admin checks
   const isAdmin = hasRole("admin");
@@ -70,6 +95,9 @@ export const usePermissions = () => {
     canCreateUsers,
     canUpdateUsers,
     canDeleteUsers,
+    canAdminUsers,
+    canAssignRoles,
+    canAssignGroups,
     canManageUsers,
 
     // Tenant permissions
@@ -77,17 +105,23 @@ export const usePermissions = () => {
     canCreateTenants,
     canUpdateTenants,
     canDeleteTenants,
+    canAdminTenants,
     canManageTenants,
 
-    // Role and permission management
+    // Role management permissions
     canViewRoles,
     canCreateRoles,
     canUpdateRoles,
     canDeleteRoles,
+    canAdminRoles,
     canManageRoles,
+
+    // Permission management permissions
     canViewPermissions,
+    canCreatePermissions,
     canUpdatePermissions,
     canDeletePermissions,
+    canAdminPermissions,
     canManagePermissions,
 
     // Product and module permissions
@@ -95,16 +129,32 @@ export const usePermissions = () => {
     canCreateProducts,
     canUpdateProducts,
     canDeleteProducts,
+    canAdminProducts,
     canManageProducts,
     canViewModules,
     canCreateModules,
     canUpdateModules,
     canDeleteModules,
+    canAdminModules,
+    canConfigModules,
     canManageModules,
+
+    // Group management permissions
+    canViewGroups,
+    canCreateGroups,
+    canUpdateGroups,
+    canDeleteGroups,
+    canAdminGroups,
+    canManageGroups,
+
+    // Analytics permissions
+    canViewAnalytics,
+    canCreateAnalytics,
+    canAdminAnalytics,
 
     // Audit permissions
     canViewAuditLogs,
-    canExportAuditLogs,
+    canAdminAuditLogs,
 
     // Admin checks
     isAdmin,
@@ -126,15 +176,51 @@ export const usePermissions = () => {
 export const useCrudPermissions = (resource: string) => {
   const { hasPermission } = useAuth();
 
+  // Map old resource names to new MODULE_MGMT format
+  const getModulePermission = (action: string) => {
+    switch (resource.toLowerCase()) {
+      case 'user':
+      case 'users':
+        return `USER_MGMT:${action}`;
+      case 'tenant':
+      case 'tenants':
+        return `TENANT_MGMT:${action}`;
+      case 'product':
+      case 'products':
+        return `PRODUCT_MGMT:${action}`;
+      case 'module':
+      case 'modules':
+        return `MODULE_MGMT:${action}`;
+      case 'role':
+      case 'roles':
+        return `ROLE_MGMT:${action}`;
+      case 'permission':
+      case 'permissions':
+        return `PERMISSION_MGMT:${action}`;
+      case 'group':
+      case 'groups':
+        return `GROUP_MGMT:${action}`;
+      case 'analytics':
+        return `ANALYTICS_USER:${action}`;
+      case 'audit':
+        return `CORE_AUDIT:${action}`;
+      default:
+        // Fallback to old format for unknown resources
+        return `${resource}:${action}`;
+    }
+  };
+
   return {
-    canView: hasPermission(`${resource}:read`),
-    canCreate: hasPermission(`${resource}:create`),
-    canUpdate: hasPermission(`${resource}:update`),
-    canDelete: hasPermission(`${resource}:delete`),
+    canView: hasPermission(getModulePermission('read')),
+    canCreate: hasPermission(getModulePermission('create')),
+    canUpdate: hasPermission(getModulePermission('update')),
+    canDelete: hasPermission(getModulePermission('delete')),
+    canAdmin: hasPermission(getModulePermission('admin')),
     canManage:
-      hasPermission(`${resource}:create`) ||
-      hasPermission(`${resource}:update`) ||
-      hasPermission(`${resource}:delete`),
+      hasPermission(getModulePermission('create')) ||
+      hasPermission(getModulePermission('update')) ||
+      hasPermission(getModulePermission('delete')) ||
+      hasPermission(getModulePermission('admin')),
   };
 };
 

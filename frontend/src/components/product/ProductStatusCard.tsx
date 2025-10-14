@@ -66,7 +66,7 @@ const ProductStatusCard: React.FC<ProductStatusCardProps> = ({
         />
 
         {/* Status Change Actions */}
-        <PermissionGuard permission="products:update">
+        <PermissionGuard permission="PRODUCT_MGMT:update">
           <div className="space-y-3">
             <Label className="text-sm font-medium text-gray-900">
               Change Status
@@ -92,7 +92,7 @@ const ProductStatusCard: React.FC<ProductStatusCardProps> = ({
         </PermissionGuard>
 
         {/* Danger Zone */}
-        <PermissionGuard permission="products:delete">
+        <PermissionGuard permission="PRODUCT_MGMT:delete">
           <div className="pt-4 border-t border-red-200">
             <div className="space-y-3">
               <Label className="text-red-600 font-medium">Danger Zone</Label>

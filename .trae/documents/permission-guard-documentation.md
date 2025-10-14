@@ -19,12 +19,34 @@ frontend/src/components/PermissionGuard.tsx
 - **Flexible fallback content**: Custom content when access is denied
 - **Multiple validation modes**: Require all permissions or any permission
 
+## Permission Format
+
+The component uses the standardized permission format: `MODULE_MGMT:action`
+
+**Available Permission Modules:**
+- `USER_MGMT` - User management operations
+- `ROLE_MGMT` - Role management operations
+- `TENANT_MGMT` - Tenant management operations
+- `GROUP_MGMT` - User group management operations
+- `PRODUCT_MGMT` - Product management operations
+- `PERMISSION_MGMT` - Permission management operations
+- `AUDIT_MGMT` - Audit log access
+- `ANALYTICS_MGMT` - Analytics and reporting
+- `APPROVAL_MGMT` - Approval workflow management
+
+**Common Actions:**
+- `read` - View/read access
+- `create` - Create new resources
+- `update` - Modify existing resources
+- `delete` - Delete resources
+- `assign_roles` - Assign roles to users
+
 ## Component Interface
 
 ```typescript
 interface PermissionGuardProps {
   children: ReactNode           // Content to render when access is granted
-  permission?: string          // Single permission to check (e.g., "module:read")
+  permission?: string          // Single permission to check (e.g., "USER_MGMT:read")
   role?: string               // Single role to check (e.g., "admin")
   roles?: string[]            // Multiple roles to check
   resource?: string           // Resource type for resource-based permissions
@@ -41,8 +63,8 @@ interface PermissionGuardProps {
 Protect content based on a specific permission:
 
 ```tsx
-<PermissionGuard permission="module:read">
-  <ModuleList />
+<PermissionGuard permission="USER_MGMT:read">
+  <UserList />
 </PermissionGuard>
 ```
 
@@ -83,17 +105,17 @@ Provide custom content when access is denied:
 
 ```tsx
 <PermissionGuard 
-  permission="module:create"
+  permission="PRODUCT_MGMT:create"
   fallback={
     <Alert>
       <Shield className="h-4 w-4" />
       <AlertDescription>
-        You don't have permission to create modules.
+        You don't have permission to create products.
       </AlertDescription>
     </Alert>
   }
 >
-  <CreateModuleForm />
+  <CreateProductForm />
 </PermissionGuard>
 ```
 
@@ -102,7 +124,7 @@ Provide custom content when access is denied:
 Conditionally render buttons, links, and other UI elements:
 
 ```tsx
-<PermissionGuard permission="product:create">
+<PermissionGuard permission="PRODUCT_MGMT:create">
   <Button asChild>
     <Link to="/products/create">
       <Plus className="mr-2 h-4 w-4" />
@@ -114,21 +136,21 @@ Conditionally render buttons, links, and other UI elements:
 
 ## Real-World Examples
 
-### Module Management Components
+### User Management Components
 
 ```tsx
-// ModuleList.tsx - Protect entire page
-<PermissionGuard permission="module:read">
+// UserList.tsx - Protect entire page
+<PermissionGuard permission="USER_MGMT:read">
   <div className="container mx-auto py-10">
-    {/* Module list content */}
+    {/* User list content */}
   </div>
 </PermissionGuard>
 
-// ModuleCreate.tsx - Protect creation form
-<PermissionGuard permission="module:create">
+// UserCreate.tsx - Protect creation form
+<PermissionGuard permission="USER_MGMT:create">
   <Card>
     <CardHeader>
-      <CardTitle>Create New Module</CardTitle>
+      <CardTitle>Create New User</CardTitle>
     </CardHeader>
     <CardContent>
       {/* Form content */}
@@ -136,8 +158,8 @@ Conditionally render buttons, links, and other UI elements:
   </Card>
 </PermissionGuard>
 
-// ModuleEdit.tsx - Protect edit form
-<PermissionGuard permission="module:update">
+// UserEdit.tsx - Protect edit form
+<PermissionGuard permission="USER_MGMT:update">
   <form onSubmit={handleSubmit}>
     {/* Edit form content */}
   </form>
@@ -148,7 +170,7 @@ Conditionally render buttons, links, and other UI elements:
 
 ```tsx
 // Dashboard.tsx - Conditional statistics display
-<PermissionGuard permission="analytics:read">
+<PermissionGuard permission="ANALYTICS_MGMT:read">
   <Card>
     <CardHeader>
       <CardTitle>System Statistics</CardTitle>
@@ -162,7 +184,7 @@ Conditionally render buttons, links, and other UI elements:
   </Card>
 </PermissionGuard>
 
-<PermissionGuard permission="audit:read">
+<PermissionGuard permission="AUDIT_MGMT:read">
   <Card>
     <CardHeader>
       <CardTitle>Recent Activities</CardTitle>
@@ -227,11 +249,11 @@ Protect individual UI elements for better user experience:
     </Button>
   </PermissionGuard>
   
-  <PermissionGuard permission="module:delete">
+  <PermissionGuard permission="USER_MGMT:delete">
     <Button
       variant="ghost"
       size="sm"
-      onClick={() => handleDelete(module.id)}
+      onClick={() => handleDelete(user.id)}
     >
       <Trash2 className="h-4 w-4" />
     </Button>
@@ -245,20 +267,20 @@ When appropriate, provide informative fallback content:
 
 ```tsx
 <PermissionGuard 
-  permission="advanced:features"
+  permission="ANALYTICS_MGMT:read"
   fallback={
     <Card>
       <CardContent className="p-6 text-center">
         <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
         <h3 className="text-lg font-semibold mb-2">Premium Feature</h3>
         <p className="text-muted-foreground">
-          Upgrade your plan to access advanced features.
+          Upgrade your plan to access advanced analytics.
         </p>
       </CardContent>
     </Card>
   }
 >
-  <AdvancedFeaturePanel />
+  <AdvancedAnalyticsPanel />
 </PermissionGuard>
 ```
 
@@ -267,11 +289,11 @@ When appropriate, provide informative fallback content:
 Handle loading states appropriately:
 
 ```tsx
-const ModuleDetail: React.FC = () => {
+const UserDetail: React.FC = () => {
   const [loading, setLoading] = useState(true)
   
   return (
-    <PermissionGuard permission="module:read">
+    <PermissionGuard permission="USER_MGMT:read">
       {loading ? (
         <div className="space-y-4">
           <Skeleton className="h-8 w-64" />
@@ -279,7 +301,7 @@ const ModuleDetail: React.FC = () => {
         </div>
       ) : (
         <div>
-          {/* Module detail content */}
+          {/* User detail content */}
         </div>
       )}
     </PermissionGuard>
@@ -293,22 +315,22 @@ const ModuleDetail: React.FC = () => {
 
 ```tsx
 // Create
-<PermissionGuard permission="resource:create">
+<PermissionGuard permission="PRODUCT_MGMT:create">
   <CreateButton />
 </PermissionGuard>
 
 // Read
-<PermissionGuard permission="resource:read">
-  <ResourceList />
+<PermissionGuard permission="PRODUCT_MGMT:read">
+  <ProductList />
 </PermissionGuard>
 
 // Update
-<PermissionGuard permission="resource:update">
+<PermissionGuard permission="PRODUCT_MGMT:update">
   <EditButton />
 </PermissionGuard>
 
 // Delete
-<PermissionGuard permission="resource:delete">
+<PermissionGuard permission="PRODUCT_MGMT:delete">
   <DeleteButton />
 </PermissionGuard>
 ```
@@ -317,7 +339,7 @@ const ModuleDetail: React.FC = () => {
 
 ```tsx
 // User management
-<PermissionGuard permission="user:manage">
+<PermissionGuard permission="USER_MGMT:read">
   <UserManagementPanel />
 </PermissionGuard>
 
@@ -378,23 +400,23 @@ For custom conditional rendering logic:
 ### Before (Manual Checks)
 
 ```tsx
-const ModuleList: React.FC = () => {
-  const { canViewModules } = usePermissions()
+const UserList: React.FC = () => {
+  const { canViewUsers } = usePermissions()
   const navigate = useNavigate()
   
   useEffect(() => {
-    if (!canViewModules) {
+    if (!canViewUsers) {
       navigate('/unauthorized')
       return
     }
-  }, [canViewModules, navigate])
+  }, [canViewUsers, navigate])
   
-  if (!canViewModules) {
+  if (!canViewUsers) {
     return (
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          You don't have permission to view modules.
+          You don't have permission to view users.
         </AlertDescription>
       </Alert>
     )
@@ -407,9 +429,9 @@ const ModuleList: React.FC = () => {
 ### After (PermissionGuard)
 
 ```tsx
-const ModuleList: React.FC = () => {
+const UserList: React.FC = () => {
   return (
-    <PermissionGuard permission="module:read">
+    <PermissionGuard permission="USER_MGMT:read">
       <div>{/* Component content */}</div>
     </PermissionGuard>
   )
@@ -431,24 +453,24 @@ const ModuleList: React.FC = () => {
 Example test cases for components using PermissionGuard:
 
 ```typescript
-describe('ModuleList with PermissionGuard', () => {
+describe('UserList with PermissionGuard', () => {
   it('renders content when user has permission', () => {
-    // Mock user with module:read permission
-    render(<ModuleList />)
-    expect(screen.getByText('Module Management')).toBeInTheDocument()
+    // Mock user with USER_MGMT:read permission
+    render(<UserList />)
+    expect(screen.getByText('User Management')).toBeInTheDocument()
   })
   
   it('renders nothing when user lacks permission', () => {
-    // Mock user without module:read permission
-    render(<ModuleList />)
-    expect(screen.queryByText('Module Management')).not.toBeInTheDocument()
+    // Mock user without USER_MGMT:read permission
+    render(<UserList />)
+    expect(screen.queryByText('User Management')).not.toBeInTheDocument()
   })
   
   it('renders fallback when provided', () => {
     // Test custom fallback content
     render(
       <PermissionGuard 
-        permission="module:read" 
+        permission="USER_MGMT:read" 
         fallback={<div>Access Denied</div>}
       >
         <div>Protected Content</div>
@@ -458,5 +480,21 @@ describe('ModuleList with PermissionGuard', () => {
   })
 })
 ```
+
+## Migration from Old Format
+
+The permission format has been updated from `module:action` to `MODULE_MGMT:action` for better consistency and clarity:
+
+**Old Format:**
+- `user:read` → `USER_MGMT:read`
+- `role:create` → `ROLE_MGMT:create`
+- `tenant:update` → `TENANT_MGMT:update`
+- `product:delete` → `PRODUCT_MGMT:delete`
+
+**Migration Steps:**
+1. Update all `PermissionGuard` components with new permission format
+2. Update `ProtectedRoute` components in routing configuration
+3. Update permission checks in hooks and utilities
+4. Test all permission-protected components
 
 This documentation provides a comprehensive guide for effectively using the `PermissionGuard` component to implement secure, maintainable access control throughout your React application.

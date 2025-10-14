@@ -36,6 +36,10 @@ public class Permission {
     @Column(name = "updated_by", nullable = false)
     private String updatedBy = "system";
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "module_id", nullable = false)
+    private Module module;
+
     @ManyToMany(mappedBy = "permissions", fetch = FetchType.LAZY)
     private List<Role> roles;
 
@@ -53,9 +57,10 @@ public class Permission {
     // Constructors
     public Permission() {}
 
-    public Permission(String name, String description) {
+    public Permission(String name, String description, Module module) {
         this.name = name;
         this.description = description;
+        this.module = module;
     }
 
     // Getters and Setters
@@ -137,5 +142,13 @@ public class Permission {
 
     public void setRoles(List<Role> roles) {
         this.roles = roles;
+    }
+
+    public Module getModule() {
+        return module;
+    }
+
+    public void setModule(Module module) {
+        this.module = module;
     }
 }

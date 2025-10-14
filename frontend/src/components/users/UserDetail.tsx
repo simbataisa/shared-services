@@ -372,7 +372,7 @@ const UserDetail: React.FC = () => {
             />
 
             {/* Password Management */}
-            <PermissionGuard permission="user:update">
+            <PermissionGuard permission="USER_MGMT:update">
               <UserPasswordCard
                 onPasswordChange={handlePasswordChange}
                 loading={updating}

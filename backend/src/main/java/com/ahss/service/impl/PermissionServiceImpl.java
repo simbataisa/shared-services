@@ -98,6 +98,13 @@ public class PermissionServiceImpl implements PermissionService {
         dto.setIsActive(true); // Since there's no active field, assume all permissions are active
         dto.setCreatedAt(permission.getCreatedAt());
         dto.setUpdatedAt(permission.getUpdatedAt());
+        
+        // Set module information if available
+        if (permission.getModule() != null) {
+            dto.setModuleId(permission.getModule().getId());
+            dto.setModuleName(permission.getModule().getName());
+        }
+        
         return dto;
     }
 

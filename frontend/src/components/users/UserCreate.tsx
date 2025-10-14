@@ -146,7 +146,7 @@ const UserCreate: React.FC = () => {
   }
 
   return (
-    <PermissionGuard permission="user:create">
+    <PermissionGuard permission="USER_MGMT:create">
       <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
         {/* Breadcrumb */}
         <Breadcrumb>

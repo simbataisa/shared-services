@@ -114,14 +114,16 @@ export default function PermissionDetail({
   // Check permissions
   if (!canViewPermissions) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            You don't have permission to view permission details.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <PermissionGuard permission="PERMISSION_MGMT:read">
+        <div className="container mx-auto px-4 py-8">
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              You don't have permission to view permission details.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </PermissionGuard>
     );
   }
 

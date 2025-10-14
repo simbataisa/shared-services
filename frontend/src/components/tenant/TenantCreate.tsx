@@ -112,7 +112,7 @@ export default function TenantCreate() {
   }
 
   return (
-    <PermissionGuard permission="tenants:create">
+    <PermissionGuard permission="TENANT_MGMT:create">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

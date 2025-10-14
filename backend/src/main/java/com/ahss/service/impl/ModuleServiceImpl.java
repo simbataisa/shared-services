@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ahss.dto.ModuleDto;
+import com.ahss.dto.PermissionDto;
 import com.ahss.entity.Module;
 import com.ahss.entity.Product;
 import com.ahss.repository.ModuleRepository;
@@ -137,6 +138,27 @@ public class ModuleServiceImpl implements ModuleService {
         dto.setUpdatedAt(module.getUpdatedAt());
         dto.setProductId(module.getProduct().getId());
         dto.setProductName(module.getProduct().getName());
+        
+        // Include permissions if they exist
+        if (module.getPermissions() != null && !module.getPermissions().isEmpty()) {
+            List<PermissionDto> permissionDtos = module.getPermissions().stream()
+                .map(permission -> {
+                    PermissionDto permissionDto = new PermissionDto();
+                    permissionDto.setId(permission.getId());
+                    permissionDto.setName(permission.getName());
+                    permissionDto.setDescription(permission.getDescription());
+                    permissionDto.setResourceType(permission.getResourceType());
+                    permissionDto.setAction(permission.getAction());
+                    permissionDto.setCreatedAt(permission.getCreatedAt());
+                    permissionDto.setUpdatedAt(permission.getUpdatedAt());
+                    permissionDto.setModuleId(module.getId());
+                    permissionDto.setModuleName(module.getName());
+                    return permissionDto;
+                })
+                .collect(Collectors.toList());
+            dto.setPermissions(permissionDtos);
+        }
+        
         return dto;
     }
 

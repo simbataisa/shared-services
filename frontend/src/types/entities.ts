@@ -140,8 +140,9 @@ export interface Product {
 export interface Module {
   id: number;
   name: string;
+  code: string;
   description: string;
-  isActive: boolean;
+  moduleStatus: EntityStatus;
   createdAt: string;
   updatedAt: string;
   productId: number;
@@ -165,12 +166,12 @@ export const ENTITY_STATUS_MAPPINGS = {
     INACTIVE: "INACTIVE",
   },
   module: {
-    active: "ACTIVE",
-    inactive: "INACTIVE",
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
   },
   product: {
-    active: "ACTIVE",
-    inactive: "INACTIVE",
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
   },
 };
 

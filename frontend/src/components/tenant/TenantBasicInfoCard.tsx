@@ -108,7 +108,7 @@ const TenantBasicInfoCard: React.FC<TenantBasicInfoCardProps> = ({
               Core tenant details and configuration
             </CardDescription>
           </div>
-          <PermissionGuard permission="tenants:update">
+          <PermissionGuard permission="TENANT_MGMT:update">
             {!isEditing ? (
               <Button
                 variant="outline"

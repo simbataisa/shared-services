@@ -35,7 +35,7 @@ export const RoleStatusCard: React.FC<RoleStatusCardProps> = ({
         />
 
         <div className="flex gap-2">
-          <PermissionGuard permission="role:update">
+          <PermissionGuard permission="ROLE_MGMT:update">
             <Button
               onClick={() =>
                 handleStatusUpdate(
