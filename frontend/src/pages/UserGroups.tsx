@@ -22,9 +22,7 @@ const UserGroups: React.FC = () => {
 
   // Role assignment state
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<UserGroup | null>(
-    null
-  );
+  const [selectedGroup, setSelectedGroup] = useState<UserGroup | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [selectedModule, setSelectedModule] = useState<string>("");
@@ -60,8 +58,10 @@ const UserGroups: React.FC = () => {
   const fetchGroups = async () => {
     try {
       setLoading(true);
-      const groups = await httpClient.getUserGroups();
-      setGroups(groups);
+      const response = await httpClient.getUserGroups();
+      console.log("response", response);
+      // Extract the content array from the paginated response
+      setGroups(response.content || []);
       setError(null);
     } catch (e) {
       setError("Failed to fetch groups");

@@ -7,6 +7,19 @@ export interface ApiResponse<T> {
   success?: boolean;
 }
 
+// Pagination interface for paginated responses
+export interface Page<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
+}
+
 // Authentication types
 export interface LoginRequest {
   username: string;

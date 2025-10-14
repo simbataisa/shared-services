@@ -22,14 +22,16 @@ public class UserGroupServiceImpl implements UserGroupService {
     public UserGroupResponse create(CreateUserGroupRequest request) {
         UserGroup saved = repo.save(new UserGroup(request.getName(), request.getDescription()));
         int memberCount = saved.getUsers() != null ? saved.getUsers().size() : 0;
-        return new UserGroupResponse(saved.getId(), saved.getName(), saved.getDescription(), memberCount);
+        int roleCount = saved.getRoles() != null ? saved.getRoles().size() : 0;
+        return new UserGroupResponse(saved.getId(), saved.getName(), saved.getDescription(), memberCount, roleCount, saved.getUserGroupStatus());
     }
 
     @Override
     public Page<UserGroupResponse> list(Pageable pageable) {
         return repo.findAllWithUsers(pageable).map(ug -> {
             int memberCount = ug.getUsers() != null ? ug.getUsers().size() : 0;
-            return new UserGroupResponse(ug.getId(), ug.getName(), ug.getDescription(), memberCount);
+            int roleCount = ug.getRoles() != null ? ug.getRoles().size() : 0;
+            return new UserGroupResponse(ug.getId(), ug.getName(), ug.getDescription(), memberCount, roleCount, ug.getUserGroupStatus());
         });
     }
 
@@ -43,7 +45,8 @@ public class UserGroupServiceImpl implements UserGroupService {
         
         UserGroup saved = repo.save(userGroup);
         int memberCount = saved.getUsers() != null ? saved.getUsers().size() : 0;
-        return new UserGroupResponse(saved.getId(), saved.getName(), saved.getDescription(), memberCount);
+        int roleCount = saved.getRoles() != null ? saved.getRoles().size() : 0;
+        return new UserGroupResponse(saved.getId(), saved.getName(), saved.getDescription(), memberCount, roleCount, saved.getUserGroupStatus());
     }
 
     @Override
@@ -51,9 +54,24 @@ public class UserGroupServiceImpl implements UserGroupService {
         UserGroup userGroup = repo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User group not found with id: " + id));
         
-        int memberCount = userGroup.getUsers() != null ? userGroup.getUsers().size() : 0;
+        // Fetch users and roles separately to avoid MultipleBagFetchException
+        UserGroup userGroupWithUsers = repo.findAllWithUsers(org.springframework.data.domain.PageRequest.of(0, 1))
+                .getContent().stream()
+                .filter(ug -> ug.getId().equals(id))
+                .findFirst()
+                .orElse(userGroup);
         
-        return new UserGroupResponse(userGroup.getId(), userGroup.getName(), userGroup.getDescription(), memberCount);
+        UserGroup userGroupWithRoles = repo.findByIdWithRoles(id).orElse(userGroup);
+        
+        int memberCount = userGroupWithUsers.getUsers() != null ? userGroupWithUsers.getUsers().size() : 0;
+        int roleCount = userGroupWithRoles.getRoles() != null ? userGroupWithRoles.getRoles().size() : 0;
+        
+        System.out.println("DEBUG: UserGroup ID: " + userGroup.getId() + 
+                          ", memberCount: " + memberCount + 
+                          ", roleCount: " + roleCount + 
+                          ", roles: " + (userGroupWithRoles.getRoles() != null ? userGroupWithRoles.getRoles().size() : "null"));
+        
+        return new UserGroupResponse(userGroup.getId(), userGroup.getName(), userGroup.getDescription(), memberCount, roleCount, userGroup.getUserGroupStatus());
     }
 
     @Override

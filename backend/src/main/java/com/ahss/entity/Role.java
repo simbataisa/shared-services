@@ -47,6 +47,9 @@ public class Role {
     )
     private List<Permission> permissions;
 
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    private List<UserGroup> userGroups;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -140,5 +143,13 @@ public class Role {
 
     public void setPermissions(List<Permission> permissions) {
         this.permissions = permissions;
+    }
+
+    public List<UserGroup> getUserGroups() {
+        return userGroups;
+    }
+
+    public void setUserGroups(List<UserGroup> userGroups) {
+        this.userGroups = userGroups;
     }
 }

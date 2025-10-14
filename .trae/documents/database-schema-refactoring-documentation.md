@@ -108,6 +108,71 @@ WHERE resource_type = 'MODULE_MGMT'
 AND name IN ('MODULE_MGMT:system_admin', 'MODULE_MGMT:system_read');
 ```
 
+### V13: Add User Group Roles Relationship
+**File:** `V13__add_user_group_roles_relationship.sql`
+
+#### Problem Identified
+- User groups existed but had no mechanism to assign roles to them
+- No many-to-many relationship between user groups and roles
+- Limited functionality for role-based access control at the group level
+
+#### Solution Implemented
+```sql
+-- Create junction table for user group roles relationship
+CREATE TABLE user_group_roles (
+    user_group_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_group_id, role_id),
+    FOREIGN KEY (user_group_id) REFERENCES user_group(user_group_id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES role(role_id) ON DELETE CASCADE
+);
+
+-- Add indexes for performance
+CREATE INDEX idx_user_group_roles_user_group_id ON user_group_roles(user_group_id);
+CREATE INDEX idx_user_group_roles_role_id ON user_group_roles(role_id);
+```
+
+#### Results
+- Established many-to-many relationship between user groups and roles
+- Enabled role assignment at the group level
+- Improved performance with proper indexing
+- Cascade delete ensures data integrity
+
+### V14: Add User Group Status Column
+**File:** `V14__add_user_group_status_column.sql`
+
+#### Problem Identified
+- User groups lacked status management functionality
+- No way to activate/deactivate user groups
+- Inconsistent with other entities that have status management
+
+#### Solution Implemented
+```sql
+-- Add user_group_status column with enum constraint
+ALTER TABLE user_group 
+ADD COLUMN user_group_status VARCHAR(20) DEFAULT 'ACTIVE' NOT NULL;
+
+-- Add check constraint for valid status values
+ALTER TABLE user_group 
+ADD CONSTRAINT chk_user_group_status 
+CHECK (user_group_status IN ('ACTIVE', 'INACTIVE', 'SUSPENDED'));
+
+-- Update existing records to have ACTIVE status
+UPDATE user_group SET user_group_status = 'ACTIVE' WHERE user_group_status IS NULL;
+
+-- Add index for status-based queries
+CREATE INDEX idx_user_group_status ON user_group(user_group_status);
+```
+
+#### Results
+- Added comprehensive status management for user groups
+- Three status levels: ACTIVE, INACTIVE, SUSPENDED
+- Default status is ACTIVE for new user groups
+- Improved query performance with status index
+- Consistent with other entity status management patterns
+
 ## Final Schema State
 
 ### Modules
@@ -115,6 +180,25 @@ AND name IN ('MODULE_MGMT:system_admin', 'MODULE_MGMT:system_read');
 |-----------|------|------|
 | 1 | PRODUCT_MGMT | Product Management |
 | 2 | MODULE_MGMT | Module Management |
+
+### User Groups
+| Column | Type | Constraints |
+|--------|------|-------------|
+| user_group_id | BIGINT | PRIMARY KEY |
+| name | VARCHAR(255) | NOT NULL |
+| description | TEXT | |
+| user_group_status | VARCHAR(20) | DEFAULT 'ACTIVE', CHECK (ACTIVE/INACTIVE/SUSPENDED) |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP |
+| updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP |
+
+### User Group Roles Junction Table
+| Column | Type | Constraints |
+|--------|------|-------------|
+| user_group_id | BIGINT | FOREIGN KEY → user_group(user_group_id) |
+| role_id | BIGINT | FOREIGN KEY → role(role_id) |
+| created_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP |
+| updated_at | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP |
+| | | PRIMARY KEY (user_group_id, role_id) |
 
 ### Permissions (Final Format)
 | Name | Resource Type | Action |
@@ -130,6 +214,10 @@ AND name IN ('MODULE_MGMT:system_admin', 'MODULE_MGMT:system_read');
 | PRODUCT_MGMT:delete | PRODUCT_MGMT | delete |
 | PRODUCT_MGMT:read | PRODUCT_MGMT | read |
 | PRODUCT_MGMT:update | PRODUCT_MGMT | update |
+| user-groups:create | USER_GROUPS | create |
+| user-groups:read | USER_GROUPS | read |
+| user-groups:update | USER_GROUPS | update |
+| user-groups:delete | USER_GROUPS | delete |
 
 ## Naming Convention Standards
 
@@ -211,8 +299,27 @@ curl -s "http://localhost:8080/api/v1/permissions" | jq '.[] | select(.name | st
 ## Rollback Strategy
 
 If rollback is needed, migrations should be reverted in reverse order:
-1. Revert V12 (restore original permission names)
-2. Revert V11 (restore original module codes)
-3. Revert V10 (restore original orphaned state if needed)
+1. Revert V14 (remove user_group_status column)
+2. Revert V13 (drop user_group_roles table)
+3. Revert V12 (restore original permission names)
+4. Revert V11 (restore original module codes)
+5. Revert V10 (restore original orphaned state if needed)
+
+### Rollback Scripts
+
+#### V14 Rollback
+```sql
+-- Remove user_group_status column
+ALTER TABLE user_group DROP COLUMN user_group_status;
+DROP INDEX IF EXISTS idx_user_group_status;
+```
+
+#### V13 Rollback
+```sql
+-- Drop user group roles junction table
+DROP INDEX IF EXISTS idx_user_group_roles_user_group_id;
+DROP INDEX IF EXISTS idx_user_group_roles_role_id;
+DROP TABLE IF EXISTS user_group_roles;
+```
 
 **Note:** Rollback scripts should be created and tested before applying migrations in production.

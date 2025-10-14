@@ -516,6 +516,15 @@ public class UserServiceImpl implements UserService {
         dto.setCreatedBy(userGroup.getCreatedBy());
         dto.setUpdatedBy(userGroup.getUpdatedBy());
         dto.setDeletedAt(userGroup.getDeletedAt());
+        
+        // Convert roles
+        if (userGroup.getRoles() != null) {
+            List<RoleDto> roleDtos = userGroup.getRoles().stream()
+                    .map(this::convertRoleToDto)
+                    .collect(Collectors.toList());
+            dto.setRoles(roleDtos);
+        }
+        
         return dto;
     }
 

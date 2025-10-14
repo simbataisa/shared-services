@@ -52,7 +52,18 @@ const UserDetail: React.FC = () => {
       ]);
 
       setAvailableRoles(rolesData || []);
-      setAvailableGroups(groupsData || []);
+      // Extract content array from paginated response and transform to match UserGroup interface
+      const groups = groupsData?.content || [];
+      const transformedGroups = groups.map((group: any) => ({
+        id: group.userGroupId,
+        userGroupId: group.userGroupId,
+        name: group.name,
+        description: group.description || "",
+        memberCount: group.memberCount || 0,
+        roleCount: group.roleCount || 0,
+        userGroupStatus: group.userGroupStatus || "ACTIVE",
+      }));
+      setAvailableGroups(transformedGroups);
     } catch (error) {
       console.error("Error fetching available roles and groups:", error);
     }
@@ -87,6 +98,8 @@ const UserDetail: React.FC = () => {
             name: group.name,
             description: group.description || "",
             memberCount: group.memberCount || 0,
+            roleCount: group.roleCount || 0,
+            userGroupStatus: group.userGroupStatus || "ACTIVE",
           })) || [],
         phoneNumber: userData.phoneNumber,
         emailVerified: userData.emailVerified,

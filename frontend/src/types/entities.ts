@@ -69,6 +69,8 @@ export interface UserGroup {
   name: string;
   description?: string;
   memberCount: number;
+  roleCount: number;
+  userGroupStatus: UserGroupStatus;
   roleAssignments?: RoleAssignment[];
   createdAt?: string;
   updatedAt?: string;
@@ -81,6 +83,7 @@ export interface UserGroupDetails {
   name: string;
   description: string;
   memberCount: number;
+  roleCount: number;
   roleAssignments?: RoleAssignment[];
   createdAt?: string;
   updatedAt?: string;
@@ -161,6 +164,10 @@ export const ENTITY_STATUS_MAPPINGS = {
     ACTIVE: "ACTIVE",
     INACTIVE: "INACTIVE",
   },
+  userGroup: {
+    ACTIVE: "ACTIVE",
+    INACTIVE: "INACTIVE",
+  },
   tenant: {
     ACTIVE: "ACTIVE",
     INACTIVE: "INACTIVE",
@@ -184,6 +191,10 @@ export const ENTITY_STATUS_MAPPINGS_1 = {
     active: "ACTIVE",
     inactive: "INACTIVE",
   },
+  userGroup: {
+    active: "ACTIVE",
+    inactive: "INACTIVE",
+  },
   tenant: {
     active: "ACTIVE",
     inactive: "INACTIVE",
@@ -204,11 +215,20 @@ export type EntityStatus =
 export type RoleStatus =
   (typeof ENTITY_STATUS_MAPPINGS.role)[keyof typeof ENTITY_STATUS_MAPPINGS.role];
 
+export type UserStatus =
+  (typeof ENTITY_STATUS_MAPPINGS.user)[keyof typeof ENTITY_STATUS_MAPPINGS.user];
+
+export type UserGroupStatus =
+  (typeof ENTITY_STATUS_MAPPINGS.userGroup)[keyof typeof ENTITY_STATUS_MAPPINGS.userGroup];
+
 export type EntityStatus1 =
   (typeof ENTITY_STATUS_MAPPINGS_1)[keyof typeof ENTITY_STATUS_MAPPINGS_1][keyof (typeof ENTITY_STATUS_MAPPINGS_1)[keyof typeof ENTITY_STATUS_MAPPINGS_1]];
 
 export type RoleStatus1 =
   (typeof ENTITY_STATUS_MAPPINGS_1.role)[keyof typeof ENTITY_STATUS_MAPPINGS_1.role];
+
+export type UserGroupStatus1 =
+  (typeof ENTITY_STATUS_MAPPINGS_1.userGroup)[keyof typeof ENTITY_STATUS_MAPPINGS_1.userGroup];
 
 // Extended entity types for detailed views
 export interface RoleDetails {

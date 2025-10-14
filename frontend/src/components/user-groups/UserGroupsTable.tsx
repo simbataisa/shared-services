@@ -11,18 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-utils";
+import { getStatusIcon, normalizeEntityStatus } from "@/lib/status-utils";
 import { Edit, Trash2, Users, Eye } from "lucide-react";
-import type { RoleAssignment } from "@/types";
-
-interface UserGroup {
-  userGroupId: number;
-  name: string;
-  description?: string;
-  memberCount: number;
-  roleAssignments?: RoleAssignment[];
-  status?: "active" | "inactive" | "pending";
-}
+import type { RoleAssignment, UserGroup } from "@/types";
 
 interface UserGroupsTableProps {
   filteredGroups: UserGroup[];
@@ -35,6 +26,7 @@ const UserGroupsTable: React.FC<UserGroupsTableProps> = ({
   loading,
   onDeleteGroup,
 }) => {
+  console.log(filteredGroups);
   if (filteredGroups.length === 0 && !loading) {
     return (
       <div className="text-center py-12">
@@ -85,17 +77,10 @@ const UserGroupsTable: React.FC<UserGroupsTableProps> = ({
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge variant="outline">
-                  {group.roleAssignments?.length || 0} roles
-                </Badge>
+                <Badge variant="secondary">{group.roleCount} roles</Badge>
               </TableCell>
               <TableCell>
-                <StatusBadge
-                  status={normalizeEntityStatus(
-                    "role",
-                    group.status || "ACTIVE"
-                  )}
-                />
+                <StatusBadge status={group.userGroupStatus} showIcon={true} />
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">

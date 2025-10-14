@@ -226,6 +226,14 @@ spring:
 - **GET** `/{id}` - Get user group by ID
 - **PUT** `/{id}` - Update user group
 - **DELETE** `/{id}` - Delete user group (soft delete)
+- **PATCH** `/{id}/activate` - Activate user group
+- **PATCH** `/{id}/deactivate` - Deactivate user group
+- **GET** `/{id}/members` - Get user group members
+- **POST** `/{id}/members` - Add members to user group
+- **DELETE** `/{id}/members/{userId}` - Remove member from user group
+- **GET** `/{id}/roles` - Get user group roles
+- **POST** `/{id}/roles` - Assign roles to user group
+- **DELETE** `/{id}/roles/{roleId}` - Remove role from user group
 
 ### Products
 - **Base Path**: `/api/products`
@@ -411,7 +419,7 @@ public class ApiResponse<T> {
 ### Flyway Configuration
 - **Location**: `src/main/resources/db/migration`
 - **Naming Convention**: `V{version}__{description}.sql`
-- **Current Version**: V1__init.sql (Initial schema)
+- **Current Version**: V14__add_user_group_status_column.sql (Latest migration)
 
 ### Migration Features
 - Complete schema creation
@@ -419,6 +427,8 @@ public class ApiResponse<T> {
 - Enum types for status fields
 - Foreign key constraints
 - Audit fields on all tables
+- User group relationships and status management
+- Permission system standardization
 
 ## Development Notes
 
@@ -478,6 +488,8 @@ public class ApiResponse<T> {
 
 #### Database Schema Updates
 - **V5 Migration**: Added missing permissions for frontend compatibility
+- **V13 Migration**: Added user group roles relationship with junction table
+- **V14 Migration**: Added user group status column with ACTIVE/INACTIVE/SUSPENDED values
 - **Tenant Permissions**: Added plural forms (`tenants:*`) alongside existing singular forms (`tenant:*`)
 - **User Groups**: Added complete CRUD permissions (`user-groups:*`)
 - **Role Assignments**: Automatically assigned new permissions to Super Administrator role

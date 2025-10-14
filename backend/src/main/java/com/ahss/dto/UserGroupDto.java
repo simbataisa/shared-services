@@ -23,6 +23,7 @@ public class UserGroupDto {
     
     // Relationships
     private List<UserDto> users;
+    private List<RoleDto> roles;
     private Integer memberCount;
     
     // Constructors
@@ -112,5 +113,13 @@ public class UserGroupDto {
     
     public void setMemberCount(Integer memberCount) {
         this.memberCount = memberCount;
+    }
+    
+    public List<RoleDto> getRoles() {
+        return roles;
+    }
+    
+    public void setRoles(List<RoleDto> roles) {
+        this.roles = roles;
     }
 }

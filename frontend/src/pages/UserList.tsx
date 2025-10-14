@@ -2,22 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { StatusBadge } from "@/components/common/StatusBadge";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
+import { UserTable } from "@/components/users/UserTable";
 import { usePermissions } from "@/hooks/usePermissions";
-import { normalizeEntityStatus } from "@/lib/status-utils";
-import { Shield, Eye } from "lucide-react";
+import { Shield } from "lucide-react";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import type { User, Role, UserGroup } from "@/types";
 import httpClient from "@/lib/httpClient";
@@ -189,103 +178,7 @@ const UserList: React.FC = () => {
 
       <Card>
         <CardContent>
-          {loading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Roles</TableHead>
-                  <TableHead>User Groups</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.username}
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        status={normalizeEntityStatus("user", user.userStatus)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {user.roles?.map((role) => (
-                          <Badge
-                            key={role.id}
-                            variant="outline"
-                            className="text-xs cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
-                            onClick={() => navigate(`/roles/${role.id}`)}
-                            title={`View ${role.name} role details`}
-                          >
-                            {role.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {user.userGroups?.map((group) => (
-                          <Badge
-                            key={group.userGroupId}
-                            variant="outline"
-                            className="text-xs"
-                          >
-                            {group.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => navigate(`/users/${user.id}`)}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {/* {canManageUsers && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditUser(user)}
-                              className="text-yellow-600 hover:text-yellow-700"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteUser(user.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )} */}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <UserTable users={filteredUsers} loading={loading} />
         </CardContent>
       </Card>
     </div>

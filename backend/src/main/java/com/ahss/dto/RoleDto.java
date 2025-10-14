@@ -21,6 +21,7 @@ public class RoleDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<PermissionDto> permissions;
+    private List<UserGroupDto> userGroups;
 
     // Constructors
     public RoleDto() {}
@@ -85,5 +86,13 @@ public class RoleDto {
 
     public void setPermissions(List<PermissionDto> permissions) {
         this.permissions = permissions;
+    }
+    
+    public List<UserGroupDto> getUserGroups() {
+        return userGroups;
+    }
+    
+    public void setUserGroups(List<UserGroupDto> userGroups) {
+        this.userGroups = userGroups;
     }
 }

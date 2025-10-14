@@ -1,6 +1,11 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { getStatusConfig, type StatusType } from "@/lib/status-utils";
+import {
+  getStatusColor,
+  getStatusConfig,
+  getStatusIcon,
+  type StatusType,
+} from "@/lib/status-utils";
 import { cn } from "@/lib/utils";
 
 interface StatusBadgeProps {
@@ -26,7 +31,15 @@ export function StatusBadge({
   const config = getStatusConfig(status);
 
   return (
-    <Badge variant={config.variant} className={cn(config.className, className)}>
+    <Badge
+      variant={config.variant}
+      className={cn(
+        "inline-flex items-center gap-1.5",
+        config.className,
+        className
+      )}
+    >
+      {showIcon && getStatusIcon(status)}
       {customLabel || config.label}
     </Badge>
   );

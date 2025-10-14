@@ -28,6 +28,7 @@ interface UserGroup {
   name: string;
   description: string;
   memberCount: number;
+  roleCount: number;
   roleAssignments?: RoleAssignment[];
 }
 

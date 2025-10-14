@@ -2,6 +2,7 @@ import api from "./api";
 import type { AxiosResponse } from "axios";
 import type {
   ApiResponse,
+  Page,
   User,
   Role,
   RoleDetails,
@@ -168,12 +169,20 @@ class HttpClient {
     await api.delete(`/v1/roles/${id}`);
   }
 
-  async assignPermissionsToRole(roleId: number, permissionIds: number[]): Promise<void> {
+  async assignPermissionsToRole(
+    roleId: number,
+    permissionIds: number[]
+  ): Promise<void> {
     await api.put(`/v1/roles/${roleId}/permissions`, permissionIds);
   }
 
-  async removePermissionsFromRole(roleId: number, permissionIds: number[]): Promise<void> {
-    await api.delete(`/v1/roles/${roleId}/permissions`, { data: permissionIds });
+  async removePermissionsFromRole(
+    roleId: number,
+    permissionIds: number[]
+  ): Promise<void> {
+    await api.delete(`/v1/roles/${roleId}/permissions`, {
+      data: permissionIds,
+    });
   }
 
   async getPermissions(): Promise<Permission[]> {
@@ -230,25 +239,18 @@ class HttpClient {
   }
 
   // User Group API methods
-  async getUserGroups(): Promise<UserGroup[]> {
-    const response: AxiosResponse<{ data: { content: any[] } }> = await api.get(
+  async getUserGroups(): Promise<Page<UserGroup>> {
+    const response: AxiosResponse<ApiResponse<Page<UserGroup>>> = await api.get(
       "/v1/user-groups"
     );
-    return response.data.data.content.map((group: any) => ({
-      id: group.userGroupId,
-      userGroupId: group.userGroupId,
-      name: group.name,
-      description: group.description,
-      memberCount: group.memberCount || 0,
-      roleAssignments: group.roleAssignments || [],
-    }));
+    return response.data.data;
   }
 
   async getUserGroupById(id: number): Promise<UserGroup> {
-    const response: AxiosResponse<ApiResponse<UserGroup>> = await api.get(
+    const response: AxiosResponse<UserGroup> = await api.get(
       `/v1/user-groups/${id}`
     );
-    return response.data.data;
+    return response.data;
   }
 
   async createUserGroup(groupData: {

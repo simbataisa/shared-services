@@ -32,6 +32,10 @@ public class UserGroup {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "user_group_status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UserGroupStatus userGroupStatus = UserGroupStatus.ACTIVE;
+
     // Relationships
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -40,6 +44,14 @@ public class UserGroup {
         inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private List<User> users;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_group_roles",
+        joinColumns = @JoinColumn(name = "user_group_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<Role> roles;
 
     @PrePersist
     protected void onCreate() {
@@ -57,6 +69,7 @@ public class UserGroup {
     public UserGroup(String name, String description) {
         this.name = name;
         this.description = description;
+        this.userGroupStatus = UserGroupStatus.ACTIVE;
     }
 
     // Getters and Setters
@@ -86,4 +99,10 @@ public class UserGroup {
     
     public List<User> getUsers() { return users; }
     public void setUsers(List<User> users) { this.users = users; }
+    
+    public List<Role> getRoles() { return roles; }
+    public void setRoles(List<Role> roles) { this.roles = roles; }
+    
+    public UserGroupStatus getUserGroupStatus() { return userGroupStatus; }
+    public void setUserGroupStatus(UserGroupStatus userGroupStatus) { this.userGroupStatus = userGroupStatus; }
 }

@@ -425,7 +425,8 @@ public class UserController {
                 userGroupDto.getId(),
                 userGroupDto.getName(),
                 userGroupDto.getDescription(),
-                userGroupDto.getUsers() != null ? userGroupDto.getUsers().size() : 0
+                userGroupDto.getUsers() != null ? userGroupDto.getUsers().size() : 0,
+                userGroupDto.getRoles() != null ? userGroupDto.getRoles().size() : 0
         );
     }
 
