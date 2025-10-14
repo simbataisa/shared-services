@@ -492,9 +492,17 @@ public class UserServiceImpl implements UserService {
         dto.setId(permission.getId());
         dto.setName(permission.getName());
         dto.setDescription(permission.getDescription());
-        dto.setIsActive(true); // Since Permission no longer has active field, default to true
+        dto.setResourceType(permission.getResourceType());
+        dto.setAction(permission.getAction());
         dto.setCreatedAt(permission.getCreatedAt());
         dto.setUpdatedAt(permission.getUpdatedAt());
+        
+        // Include module information if permission has a module
+        if (permission.getModule() != null) {
+            dto.setModuleId(permission.getModule().getId());
+            dto.setModuleName(permission.getModule().getName());
+        }
+        
         return dto;
     }
 

@@ -43,6 +43,9 @@ public class Module {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @OneToMany(mappedBy = "module", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Permission> permissions;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -142,5 +145,13 @@ public class Module {
 
     public void setProduct(Product product) {
         this.product = product;
+    }
+
+    public List<Permission> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(List<Permission> permissions) {
+        this.permissions = permissions;
     }
 }

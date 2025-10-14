@@ -32,6 +32,9 @@ public class ModuleDto {
     private Long productId;
     
     private String productName;
+    
+    // Permissions relationship
+    private List<PermissionDto> permissions;
 
     // Constructors
     public ModuleDto() {}
@@ -129,5 +132,13 @@ public class ModuleDto {
 
     public void setProductName(String productName) {
         this.productName = productName;
+    }
+
+    public List<PermissionDto> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(List<PermissionDto> permissions) {
+        this.permissions = permissions;
     }
 }
