@@ -300,7 +300,7 @@ export default function UserGroupDetail() {
           { label: userGroup.name },
         ]}
         actions={
-          <PermissionGuard permission="user-groups:delete">
+          <PermissionGuard permission="GROUP_MGMT:delete">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" disabled={updating}>
@@ -397,7 +397,7 @@ export default function UserGroupDetail() {
           )}
 
           {/* Audit Information */}
-          <PermissionGuard permission="audit:read">
+          <PermissionGuard permission="GROUP_MGMT:read">
             <Card>
               <CardHeader>
                 <CardTitle>Audit Information</CardTitle>
@@ -453,7 +453,7 @@ export default function UserGroupDetail() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <PermissionGuard permission="users:read">
+              <PermissionGuard permission="USER_MGMT:read">
                 <Button
                   variant="outline"
                   className="w-full justify-start"
@@ -466,14 +466,14 @@ export default function UserGroupDetail() {
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="user-groups:manage-roles">
+              <PermissionGuard permission="USER_MGMT:assign_roles">
                 <Button variant="outline" className="w-full justify-start">
                   <Shield className="h-4 w-4 mr-2" />
                   Manage Roles ({userGroup.roleAssignments?.length || 0})
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="audit:read">
+              <PermissionGuard permission="AUDIT_MGMT:read">
                 <Button
                   variant="outline"
                   className="w-full justify-start"

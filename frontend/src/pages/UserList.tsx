@@ -178,7 +178,7 @@ const UserList: React.FC = () => {
           },
         ]}
         actions={[
-          <PermissionGuard key="create-user" permission="user:create">
+          <PermissionGuard key="create-user" permission="USER_MGMT:create">
             <Button asChild>
               <Link to="/users/create">Create New User</Link>
             </Button>

@@ -213,7 +213,7 @@ export const RolePermissionCard: React.FC<RolePermissionCardProps> = ({
           </div>
           <div className="flex items-center gap-2">
             {mode === "create" ? null : (
-              <PermissionGuard permission="role:update">
+              <PermissionGuard permission="ROLE_MGMT:update">
                 {isEditing ? (
                   <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
@@ -438,7 +438,7 @@ export const RolePermissionCard: React.FC<RolePermissionCardProps> = ({
               <div className="text-center py-8">
                 <Activity className="mx-auto h-12 w-12 text-gray-400" />
                 <p className="mt-2 text-sm text-gray-500">{emptyMessage}</p>
-                <PermissionGuard permission="role:update">
+                <PermissionGuard permission="ROLE_MGMT:update">
                   <Button
                     variant="outline"
                     className="mt-4"

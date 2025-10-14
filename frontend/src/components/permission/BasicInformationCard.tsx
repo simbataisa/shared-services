@@ -62,7 +62,7 @@ export const BasicInformationCard: React.FC<BasicInformationCardProps> = ({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Basic Information</CardTitle>
-          <PermissionGuard permission="permission:update">
+          <PermissionGuard permission="PERMISSION_MGMT:update">
             {isEditing ? (
               <div className="flex gap-2">
                 <Button

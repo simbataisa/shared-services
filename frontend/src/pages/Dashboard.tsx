@@ -125,7 +125,7 @@ export default function Dashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <PermissionGuard permission="user:read">
+        <PermissionGuard permission="USER_MGMT:read">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -143,7 +143,7 @@ export default function Dashboard() {
           </Card>
         </PermissionGuard>
 
-        <PermissionGuard permission="tenants:read">
+        <PermissionGuard permission="TENANT_MGMT:read">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -161,7 +161,7 @@ export default function Dashboard() {
           </Card>
         </PermissionGuard>
 
-        <PermissionGuard permission="role:read">
+        <PermissionGuard permission="ROLE_MGMT:read">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -206,7 +206,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activities */}
-        <PermissionGuard permission="audit:read">
+        <PermissionGuard permission="AUDIT_MGMT:read">
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -253,7 +253,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <PermissionGuard permission="user:create">
+              <PermissionGuard permission="USER_MGMT:create">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-auto p-3"
@@ -263,7 +263,7 @@ export default function Dashboard() {
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="tenants:create">
+              <PermissionGuard permission="TENANT_MGMT:create">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-auto p-3"
@@ -273,7 +273,7 @@ export default function Dashboard() {
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="role:create">
+              <PermissionGuard permission="ROLE_MGMT:create">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-auto p-3"
@@ -283,7 +283,7 @@ export default function Dashboard() {
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="audit:read">
+              <PermissionGuard permission="AUDIT_MGMT:read">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-auto p-3"
@@ -293,7 +293,7 @@ export default function Dashboard() {
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="tenants:read">
+              <PermissionGuard permission="TENANT_MGMT:read">
                 <Button
                   variant="outline"
                   className="w-full justify-start h-auto p-3"
@@ -314,7 +314,7 @@ export default function Dashboard() {
 
       {/* Pending Approvals */}
       {stats.pendingApprovals > 0 && (
-        <PermissionGuard permission="approval:read">
+        <PermissionGuard permission="APPROVAL_MGMT:read">
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription className="flex items-center justify-between">
@@ -332,7 +332,7 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PermissionGuard permission="analytic:read">
+        <PermissionGuard permission="ANALYTICS_MGMT:read">
           <Card>
             <CardHeader>
               <CardTitle>User Growth</CardTitle>
@@ -348,7 +348,7 @@ export default function Dashboard() {
           </Card>
         </PermissionGuard>
 
-        <PermissionGuard permission="analytic:read">
+        <PermissionGuard permission="ANALYTICS_MGMT:read">
           <Card>
             <CardHeader>
               <CardTitle>Permission Distribution</CardTitle>

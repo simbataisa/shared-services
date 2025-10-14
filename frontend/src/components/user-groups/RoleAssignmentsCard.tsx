@@ -81,7 +81,7 @@ export function RoleAssignmentsCard({
             <CardTitle>Role Assignments</CardTitle>
             <CardDescription>Roles assigned to this user group</CardDescription>
           </div>
-          <PermissionGuard permission="user-groups:update">
+          <PermissionGuard permission="GROUP_MGMT:update">
             {isEditing ? (
               <div className="flex gap-2">
                 <Button
@@ -114,7 +114,7 @@ export function RoleAssignmentsCard({
       <CardContent>
         {/* Add Role Section - Only visible in edit mode */}
         {isEditing && (
-          <PermissionGuard permission="user-groups:update">
+          <PermissionGuard permission="GROUP_MGMT:update">
             <div className="mb-6 p-4 border border-dashed border-gray-300 rounded-lg">
               <h4 className="text-sm font-medium mb-3">Add New Roles</h4>
               <div className="space-y-3">
@@ -210,7 +210,7 @@ export function RoleAssignmentsCard({
                       {assignment.roleDescription}
                     </p>
                   </div>
-                  <PermissionGuard permission="user-groups:manage-roles">
+                  <PermissionGuard permission="USER_MGMT:assign_roles">
                     {isEditing ? (
                       <Button
                         variant="destructive"
@@ -237,7 +237,7 @@ export function RoleAssignmentsCard({
             <p className="mt-2 text-gray-500">
               No roles assigned to this user group.
             </p>
-            <PermissionGuard permission="user-groups:manage-roles">
+            <PermissionGuard permission="USER_MGMT:assign_roles">
               {!isEditing && (
                 <Button
                   variant="outline"

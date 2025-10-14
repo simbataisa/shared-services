@@ -75,7 +75,8 @@ export default function ProductList() {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.code.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
-      statusFilter === "all" || product.status === statusFilter;
+      statusFilter === "all" ||
+      product.productStatus === statusFilter.toUpperCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -147,7 +148,7 @@ export default function ProductList() {
           },
         ]}
         actions={
-          <PermissionGuard permission="product:create">
+          <PermissionGuard permission="PRODUCT_MGMT:create">
             <Button asChild>
               <Link to="/products/create">
                 <Plus className="mr-2 h-4 w-4" />
@@ -201,7 +202,7 @@ export default function ProductList() {
                           <StatusBadge
                             status={normalizeEntityStatus(
                               "product",
-                              product.status.toUpperCase()
+                              product.productStatus
                             )}
                           />
                         </TableCell>
@@ -227,7 +228,7 @@ export default function ProductList() {
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
-                          <PermissionGuard permission="product:update">
+                          <PermissionGuard permission="PRODUCT_MGMT:update">
                             <Button
                               variant="ghost"
                               size="icon"
@@ -242,7 +243,7 @@ export default function ProductList() {
                               </Link>
                             </Button>
                           </PermissionGuard>
-                          <PermissionGuard permission="product:delete">
+                          <PermissionGuard permission="PRODUCT_MGMT:delete">
                             <Button
                               variant="ghost"
                               size="icon"

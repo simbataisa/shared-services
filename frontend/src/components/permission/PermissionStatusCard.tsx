@@ -54,7 +54,7 @@ export const PermissionStatusCard: React.FC<PermissionStatusCardProps> = ({
           status={status}
         />
 
-        <PermissionGuard permission="permission:update">
+        <PermissionGuard permission="PERMISSION_MGMT:update">
           <Button
             variant={permission.isActive ? "destructive" : "default"}
             size="sm"

@@ -131,7 +131,7 @@ const ProductCreate: React.FC = () => {
 
   return (
     <PermissionGuard
-      permission="product:create"
+      permission="PRODUCT_MGMT:create"
       fallback={
         <div className="min-h-screen flex items-center justify-center">
           <Card className="w-full max-w-md">

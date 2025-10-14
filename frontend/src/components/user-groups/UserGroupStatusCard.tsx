@@ -56,7 +56,7 @@ const UserGroupStatusCard: React.FC<UserGroupStatusCardProps> = ({
         />
 
         {/* Status Actions */}
-        <PermissionGuard permission="user-groups:update">
+        <PermissionGuard permission="GROUP_MGMT:update">
           <div className="space-y-2">
             {memberCount > 0 ? (
               <Button

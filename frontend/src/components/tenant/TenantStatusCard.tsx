@@ -69,7 +69,7 @@ const TenantStatusCard: React.FC<TenantStatusCardProps> = ({
         />
 
         {/* Status Change Actions */}
-        <PermissionGuard permission="tenants:update">
+        <PermissionGuard permission="TENANT_MGMT:update">
           <div className="space-y-3">
             <Label className="text-sm font-medium text-gray-900">
               Change Status
@@ -95,7 +95,7 @@ const TenantStatusCard: React.FC<TenantStatusCardProps> = ({
         </PermissionGuard>
 
         {/* Danger Zone */}
-        <PermissionGuard permission="tenants:delete">
+        <PermissionGuard permission="TENANT_MGMT:delete">
           <div className="pt-4 border-t border-red-200">
             <div className="space-y-3">
               <Label className="text-red-600 font-medium">Danger Zone</Label>

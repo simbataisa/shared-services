@@ -102,7 +102,7 @@ export default function UserGroupCreate() {
   }
 
   return (
-    <PermissionGuard permission="user-groups:create">
+    <PermissionGuard permission="GROUP_MGMT:create">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">

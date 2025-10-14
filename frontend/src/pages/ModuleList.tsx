@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import api from "@/lib/api";
-import type { Module } from "@/types";
+import { ENTITY_STATUS_MAPPINGS, type Module } from "@/types";
 
 const ModuleList: React.FC = () => {
   const [modules, setModules] = useState<Module[]>([]);
@@ -33,7 +33,9 @@ const ModuleList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "active" | "inactive"
+    | "all"
+    | typeof ENTITY_STATUS_MAPPINGS.module.ACTIVE
+    | typeof ENTITY_STATUS_MAPPINGS.module.INACTIVE
   >("all");
   const [productFilter, setProductFilter] = useState<string>("all");
 
@@ -112,8 +114,10 @@ const ModuleList: React.FC = () => {
 
     const matchesStatus =
       statusFilter === "all" ||
-      (statusFilter === "active" && module.isActive) ||
-      (statusFilter === "inactive" && !module.isActive);
+      (statusFilter === ENTITY_STATUS_MAPPINGS.module.ACTIVE &&
+        module.moduleStatus === ENTITY_STATUS_MAPPINGS.module.ACTIVE) ||
+      (statusFilter === ENTITY_STATUS_MAPPINGS.module.INACTIVE &&
+        module.moduleStatus === ENTITY_STATUS_MAPPINGS.module.INACTIVE);
 
     const matchesProduct =
       productFilter === "all" || module.productId?.toString() === productFilter;
@@ -122,7 +126,7 @@ const ModuleList: React.FC = () => {
   });
 
   return (
-    <PermissionGuard permission="module:read">
+    <PermissionGuard permission="MODULE_MGMT:read">
       <div className="container mx-auto py-10">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -234,7 +238,7 @@ const ModuleList: React.FC = () => {
                         <StatusBadge
                           status={normalizeEntityStatus(
                             "module",
-                            module.isActive ? "ACTIVE" : "INACTIVE"
+                            module.moduleStatus
                           )}
                         />
                       </TableCell>
@@ -255,7 +259,7 @@ const ModuleList: React.FC = () => {
                               <Eye className="h-4 w-4" />
                             </Link>
                           </Button>
-                          <PermissionGuard permission="module:update">
+                          <PermissionGuard permission="MODULE_MGMT:update">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -267,7 +271,7 @@ const ModuleList: React.FC = () => {
                               </Link>
                             </Button>
                           </PermissionGuard>
-                          <PermissionGuard permission="module:delete">
+                          <PermissionGuard permission="MODULE_MGMT:delete">
                             <Button
                               variant="ghost"
                               size="sm"

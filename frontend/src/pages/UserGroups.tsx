@@ -137,7 +137,7 @@ const UserGroups: React.FC = () => {
           },
         ]}
         actions={
-          <PermissionGuard permission="user-groups:create">
+          <PermissionGuard permission="GROUP_MGMT:create">
             <Button asChild>
               <Link to="/user-groups/create">
                 <Plus className="h-4 w-4 mr-2" />

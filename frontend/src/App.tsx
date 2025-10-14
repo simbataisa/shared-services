@@ -71,7 +71,7 @@ function App() {
           <Route
             path="user-groups"
             element={
-              <ProtectedRoute permission="user-groups:read">
+              <ProtectedRoute permission="GROUP_MGMT:read">
                 <UserGroups />
               </ProtectedRoute>
             }
@@ -80,7 +80,7 @@ function App() {
           <Route
             path="user-groups/create"
             element={
-              <ProtectedRoute permission="user-groups:create">
+              <ProtectedRoute permission="GROUP_MGMT:create">
                 <UserGroupCreate />
               </ProtectedRoute>
             }
@@ -89,7 +89,7 @@ function App() {
           <Route
             path="user-groups/:id"
             element={
-              <ProtectedRoute permission="user-groups:read">
+              <ProtectedRoute permission="GROUP_MGMT:read">
                 <UserGroupDetail />
               </ProtectedRoute>
             }
@@ -98,7 +98,7 @@ function App() {
           <Route
             path="users"
             element={
-              <ProtectedRoute permission="user:read">
+              <ProtectedRoute permission="USER_MGMT:read">
                 <UserList />
               </ProtectedRoute>
             }
@@ -107,7 +107,7 @@ function App() {
           <Route
             path="users/create"
             element={
-              <ProtectedRoute permission="user:create">
+              <ProtectedRoute permission="USER_MGMT:create">
                 <UserCreate />
               </ProtectedRoute>
             }
@@ -116,7 +116,7 @@ function App() {
           <Route
             path="users/:id"
             element={
-              <ProtectedRoute permission="user:read">
+              <ProtectedRoute permission="USER_MGMT:read">
                 <ErrorBoundary>
                   <UserDetail />
                 </ErrorBoundary>
@@ -127,7 +127,7 @@ function App() {
           <Route
             path="users/:id/edit"
             element={
-              <ProtectedRoute permission="user:update">
+              <ProtectedRoute permission="USER_MGMT:update">
                 <Navigate to="../" replace />
               </ProtectedRoute>
             }
@@ -136,7 +136,7 @@ function App() {
           <Route
             path="roles"
             element={
-              <ProtectedRoute permission="role:read">
+              <ProtectedRoute permission="ROLE_MGMT:read">
                 <RoleList roles={[]} permissions={[]} />
               </ProtectedRoute>
             }
@@ -145,7 +145,7 @@ function App() {
           <Route
             path="roles/new"
             element={
-              <ProtectedRoute permission="role:create">
+              <ProtectedRoute permission="ROLE_MGMT:create">
                 <RoleForm mode="create" />
               </ProtectedRoute>
             }
@@ -154,7 +154,7 @@ function App() {
           <Route
             path="roles/:id"
             element={
-              <ProtectedRoute permission="role:read">
+              <ProtectedRoute permission="ROLE_MGMT:read">
                 <RoleDetail />
               </ProtectedRoute>
             }
@@ -163,7 +163,7 @@ function App() {
           <Route
             path="roles/:id/edit"
             element={
-              <ProtectedRoute permission="role:update">
+              <ProtectedRoute permission="ROLE_MGMT:update">
                 <RoleForm mode="edit" />
               </ProtectedRoute>
             }
@@ -172,7 +172,7 @@ function App() {
           <Route
             path="permissions"
             element={
-              <ProtectedRoute permission="permission:read">
+              <ProtectedRoute permission="PERMISSION_MGMT:read">
                 <PermissionList />
               </ProtectedRoute>
             }
@@ -181,7 +181,7 @@ function App() {
           <Route
             path="permissions/:id"
             element={
-              <ProtectedRoute permission="permission:read">
+              <ProtectedRoute permission="PERMISSION_MGMT:read">
                 <PermissionDetail />
               </ProtectedRoute>
             }
@@ -190,7 +190,7 @@ function App() {
           <Route
             path="tenants"
             element={
-              <ProtectedRoute permission="tenants:read">
+              <ProtectedRoute permission="TENANT_MGMT:read">
                 <TenantList />
               </ProtectedRoute>
             }
@@ -199,7 +199,7 @@ function App() {
           <Route
             path="tenants/create"
             element={
-              <ProtectedRoute permission="tenants:create">
+              <ProtectedRoute permission="TENANT_MGMT:create">
                 <TenantCreate />
               </ProtectedRoute>
             }
@@ -208,7 +208,7 @@ function App() {
           <Route
             path="tenants/:id/edit"
             element={
-              <ProtectedRoute permission="tenants:update">
+              <ProtectedRoute permission="TENANT_MGMT:update">
                 <TenantDetail />
               </ProtectedRoute>
             }
@@ -217,7 +217,7 @@ function App() {
           <Route
             path="tenants/:id"
             element={
-              <ProtectedRoute permission="tenants:read">
+              <ProtectedRoute permission="TENANT_MGMT:read">
                 <TenantDetail />
               </ProtectedRoute>
             }
@@ -226,7 +226,7 @@ function App() {
           <Route
             path="products"
             element={
-              <ProtectedRoute permission="product:read">
+              <ProtectedRoute permission="PRODUCT_MGMT:read">
                 <ProductList />
               </ProtectedRoute>
             }
@@ -235,7 +235,7 @@ function App() {
           <Route
             path="products/create"
             element={
-              <ProtectedRoute permission="product:create">
+              <ProtectedRoute permission="PRODUCT_MGMT:create">
                 <ProductCreate />
               </ProtectedRoute>
             }
@@ -244,7 +244,7 @@ function App() {
           <Route
             path="products/:id"
             element={
-              <ProtectedRoute permission="product:read">
+              <ProtectedRoute permission="PRODUCT_MGMT:read">
                 <ProductDetail />
               </ProtectedRoute>
             }
@@ -253,7 +253,7 @@ function App() {
           <Route
             path="products/:id/edit"
             element={
-              <ProtectedRoute permission="product:update">
+              <ProtectedRoute permission="PRODUCT_MGMT:update">
                 <ProductEdit />
               </ProtectedRoute>
             }
@@ -262,7 +262,7 @@ function App() {
           <Route
             path="modules"
             element={
-              <ProtectedRoute permission="module:read">
+              <ProtectedRoute permission="MODULE_MGMT:read">
                 <ModuleList />
               </ProtectedRoute>
             }
@@ -271,7 +271,7 @@ function App() {
           <Route
             path="modules/create"
             element={
-              <ProtectedRoute permission="module:create">
+              <ProtectedRoute permission="MODULE_MGMT:create">
                 <ModuleCreate />
               </ProtectedRoute>
             }
@@ -280,7 +280,7 @@ function App() {
           <Route
             path="modules/:id"
             element={
-              <ProtectedRoute permission="module:read">
+              <ProtectedRoute permission="MODULE_MGMT:read">
                 <ModuleDetail />
               </ProtectedRoute>
             }
@@ -289,7 +289,7 @@ function App() {
           <Route
             path="modules/:id/edit"
             element={
-              <ProtectedRoute permission="module:update">
+              <ProtectedRoute permission="MODULE_MGMT:update">
                 <ModuleEdit />
               </ProtectedRoute>
             }
