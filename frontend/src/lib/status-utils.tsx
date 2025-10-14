@@ -319,6 +319,24 @@ export function getStatusVariant(status: string): BadgeVariant {
 // =============================================================================
 
 /**
+ * Utility function to get tenant type label for display
+ * @param type - The tenant type string (BUSINESS_IN, BUSINESS_OUT, INDIVIDUAL)
+ * @returns Human-readable label for the tenant type
+ */
+export function getTenantTypeLabel(type: string): string {
+  switch (type) {
+    case "BUSINESS_IN":
+      return "Business Internal";
+    case "BUSINESS_OUT":
+      return "Business External";
+    case "INDIVIDUAL":
+      return "Individual";
+    default:
+      return type;
+  }
+}
+
+/**
  * Utility function to normalize entity status to standard status type
  */
 export function normalizeEntityStatus(

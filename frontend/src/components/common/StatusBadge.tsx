@@ -24,7 +24,7 @@ interface StatusBadgeProps {
 export function StatusBadge({
   status,
   className,
-  showIcon = false,
+  showIcon = true,
   customLabel,
 }: StatusBadgeProps) {
   console.log(status);

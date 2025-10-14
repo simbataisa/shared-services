@@ -10,20 +10,6 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
@@ -32,6 +18,7 @@ import { normalizeEntityStatus } from "@/lib/status-utils";
 import api from "@/lib/api";
 import { type Tenant } from "@/types/entities";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
+import TenantTable from "@/components/tenant/TenantTable";
 
 export default function TenantList() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -88,21 +75,6 @@ export default function TenantList() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  // Remove the local getStatusIcon function since it's now in the common utility
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "BUSINESS_IN":
-        return "Business Internal";
-      case "BUSINESS_OUT":
-        return "Business External";
-      case "INDIVIDUAL":
-        return "Individual";
-      default:
-        return type;
-    }
-  };
-
   if (loading) {
     return (
       <div className="p-6 space-y-6">
@@ -127,41 +99,24 @@ export default function TenantList() {
         </Card>
 
         <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tenant</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {[...Array(5)].map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="space-y-1">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-4 w-24" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-6 w-20" />
-                    </TableCell>
-                    <TableCell>
-                      <Skeleton className="h-8 w-24" />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-4 border rounded-lg"
+                >
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="flex-1 space-y-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -226,64 +181,7 @@ export default function TenantList() {
       {/* Tenants Table */}
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tenant</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTenants.map((tenant) => (
-                <TableRow key={tenant.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 p-2 rounded-full">
-                        <Building2 className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <div className="font-medium">{tenant.name}</div>
-                        <div className="text-sm text-muted-foreground font-mono">
-                          {tenant.code}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm">{getTypeLabel(tenant.type)}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge
-                        status={normalizeEntityStatus("tenant", tenant.status)}
-                      />
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <PermissionGuard permission="TENANT_MGMT:read">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          asChild
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          <Link
-                            to={`/tenants/${tenant.id}`}
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </PermissionGuard>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <TenantTable tenants={filteredTenants} />
 
           {filteredTenants.length === 0 && (
             <div className="text-center py-12">
