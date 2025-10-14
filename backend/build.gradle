@@ -25,6 +25,7 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     implementation 'org.flywaydb:flyway-core:10.18.2'
     implementation 'org.flywaydb:flyway-database-postgresql:10.18.2'
+    implementation 'com.vladmihalcea:hibernate-types-60:2.21.1'
     runtimeOnly 'org.postgresql:postgresql:42.7.3'
 
     runtimeOnly 'com.h2database:h2'

@@ -102,7 +102,6 @@ CREATE TABLE IF NOT EXISTS module (
 -- Role & Permission Management
 CREATE TABLE IF NOT EXISTS role (
     role_id BIGSERIAL PRIMARY KEY,
-    module_id BIGINT NOT NULL REFERENCES module(module_id),
     name TEXT NOT NULL,
     description TEXT,
     role_status role_status NOT NULL DEFAULT 'DRAFT',
@@ -110,6 +109,7 @@ CREATE TABLE IF NOT EXISTS role (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(50) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(50) NOT NULL DEFAULT 'system',
+    module_id BIGINT NOT NULL REFERENCES module(module_id),
     UNIQUE(module_id, name)
 );
 

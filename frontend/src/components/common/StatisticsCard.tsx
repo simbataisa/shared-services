@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getStatusColor, getStatusIcon } from "@/lib/status-utils";
 
 export interface StatisticItem {
   label: string;
@@ -34,11 +35,25 @@ const StatisticsCard: React.FC<StatisticsCardProps> = ({
       {statistics.map((stat, index) => (
         <div key={index} className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            {stat.icon && <span className="text-muted-foreground">{stat.icon}</span>}
             <span className="text-sm text-gray-600">{stat.label}</span>
           </div>
-          <span className={`text-sm font-medium ${stat.className || "text-gray-900"}`}>
-            {stat.value}
+          <span
+            className={`text-sm font-medium ${
+              stat.className || "text-gray-900"
+            }`}
+          >
+            {stat.icon ? (
+              <div
+                className={`flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(
+                  stat.value as string
+                )}`}
+              >
+                {getStatusIcon(stat.value as string)}
+                {stat.value}
+              </div>
+            ) : (
+              stat.value
+            )}
           </span>
         </div>
       ))}
@@ -50,11 +65,11 @@ const StatisticsCard: React.FC<StatisticsCardProps> = ({
       {statistics.map((stat, index) => (
         <div key={index} className="text-center p-4 bg-muted/50 rounded-lg">
           {stat.icon && (
-            <div className="flex justify-center mb-2">
-              {stat.icon}
-            </div>
+            <div className="flex justify-center mb-2">{stat.icon}</div>
           )}
-          <div className={`text-2xl font-bold ${stat.className || "text-primary"}`}>
+          <div
+            className={`text-2xl font-bold ${stat.className || "text-primary"}`}
+          >
             {stat.value}
           </div>
           <div className="text-xs text-muted-foreground">{stat.label}</div>
@@ -69,9 +84,7 @@ const StatisticsCard: React.FC<StatisticsCardProps> = ({
         <CardTitle className="text-lg font-semibold text-gray-900">
           {title}
         </CardTitle>
-        {description && (
-          <CardDescription>{description}</CardDescription>
-        )}
+        {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
         {layout === "grid" ? renderGridLayout() : renderListLayout()}

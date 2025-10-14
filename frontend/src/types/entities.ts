@@ -21,7 +21,7 @@ export interface User {
 }
 
 export interface Permission {
-  id: string;
+  id: number;
   name: string;
   resource: string;
   action: string;
@@ -34,7 +34,7 @@ export interface Permission {
 }
 
 export interface Role {
-  id: string;
+  id: number;
   name: string;
   description?: string;
   permissions: Permission[];
@@ -42,7 +42,8 @@ export interface Role {
   // Legacy fields for backward compatibility
   createdAt?: string;
   updatedAt?: string;
-  status?: "active" | "inactive" | "draft" | "deprecated";
+  status?: "DRAFT" | "ACTIVE" | "INACTIVE" | "DEPRECATED";
+  roleStatus?: "DRAFT" | "ACTIVE" | "INACTIVE" | "DEPRECATED";
   moduleId?: number;
   moduleName?: string;
   isActive?: boolean;
@@ -150,8 +151,10 @@ export interface Module {
 
 export const ENTITY_STATUS_MAPPINGS = {
   role: {
+    DRAFT: "DRAFT",
     ACTIVE: "ACTIVE",
     INACTIVE: "INACTIVE",
+    DEPRECATED: "DEPRECATED",
   },
   user: {
     ACTIVE: "ACTIVE",

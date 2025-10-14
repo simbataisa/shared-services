@@ -20,20 +20,14 @@ public class RoleDto {
     private RoleStatus roleStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
-    @NotNull(message = "Module ID is required")
-    private Long moduleId;
-    
-    private String moduleName;
     private List<PermissionDto> permissions;
 
     // Constructors
     public RoleDto() {}
 
-    public RoleDto(String name, String description, Long moduleId) {
+    public RoleDto(String name, String description) {
         this.name = name;
         this.description = description;
-        this.moduleId = moduleId;
     }
 
     // Getters and Setters
@@ -83,22 +77,6 @@ public class RoleDto {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public Long getModuleId() {
-        return moduleId;
-    }
-
-    public void setModuleId(Long moduleId) {
-        this.moduleId = moduleId;
-    }
-
-    public String getModuleName() {
-        return moduleName;
-    }
-
-    public void setModuleName(String moduleName) {
-        this.moduleName = moduleName;
     }
 
     public List<PermissionDto> getPermissions() {

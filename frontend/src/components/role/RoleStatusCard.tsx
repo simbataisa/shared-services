@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import StatusDisplayCard from "@/components/common/StatusDisplayCard";
-import type { RoleDetails, RoleStatus } from "@/types";
+import type { RoleDetails } from "@/types";
+import type { RoleStatus } from "@/types/entities";
+import { ENTITY_STATUS_MAPPINGS } from "@/types/entities";
 
 interface RoleStatusCardProps {
   role: RoleDetails;
@@ -33,27 +35,26 @@ export const RoleStatusCard: React.FC<RoleStatusCardProps> = ({
         />
 
         <div className="flex gap-2">
-          <PermissionGuard permission="ROLE_UPDATE">
-            {role.roleStatus === "INACTIVE" && (
-              <Button
-                onClick={() => handleStatusUpdate("ACTIVE")}
-                disabled={updating}
-                variant="default"
-                size="sm"
-              >
-                {updating ? "Updating..." : "Activate Role"}
-              </Button>
-            )}
-            {role.roleStatus === "ACTIVE" && (
-              <Button
-                onClick={() => handleStatusUpdate("INACTIVE")}
-                disabled={updating}
-                variant="destructive"
-                size="sm"
-              >
-                {updating ? "Updating..." : "Deactivate Role"}
-              </Button>
-            )}
+          <PermissionGuard permission="role:update">
+            <Button
+              onClick={() =>
+                handleStatusUpdate(
+                  role.roleStatus === ENTITY_STATUS_MAPPINGS.role.ACTIVE 
+                    ? ENTITY_STATUS_MAPPINGS.role.INACTIVE 
+                    : ENTITY_STATUS_MAPPINGS.role.ACTIVE
+                )
+              }
+              disabled={updating}
+              variant="destructive"
+              size="sm"
+              className="w-full"
+            >
+              {updating
+                ? "Updating..."
+                : role.roleStatus === ENTITY_STATUS_MAPPINGS.role.ACTIVE
+                ? "Deactivate Role"
+                : "Activate Role"}
+            </Button>
           </PermissionGuard>
         </div>
       </CardContent>

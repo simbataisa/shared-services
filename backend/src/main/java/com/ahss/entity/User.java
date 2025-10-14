@@ -1,6 +1,8 @@
 package com.ahss.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,7 +33,7 @@ public class User {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_status", nullable = false)
+    @Column(name = "user_status", nullable = false, columnDefinition = "user_status")
     private UserStatus userStatus = UserStatus.ACTIVE;
 
     @Column(name = "email_verified", nullable = false)

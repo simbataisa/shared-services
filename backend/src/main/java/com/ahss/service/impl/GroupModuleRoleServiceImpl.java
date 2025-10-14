@@ -44,18 +44,10 @@ public class GroupModuleRoleServiceImpl implements GroupModuleRoleService {
         Module module = moduleRepository.findById(moduleId)
                 .orElseThrow(() -> new IllegalArgumentException("Module not found with id: " + moduleId));
 
-        // Validate roles exist and belong to the module
+        // Verify all roles exist
         List<Role> roles = roleRepository.findAllById(roleIds);
         if (roles.size() != roleIds.size()) {
             throw new IllegalArgumentException("One or more roles not found");
-        }
-
-        // Check if all roles belong to the specified module
-        List<Role> invalidRoles = roles.stream()
-                .filter(role -> !role.getModule().getId().equals(moduleId))
-                .collect(Collectors.toList());
-        if (!invalidRoles.isEmpty()) {
-            throw new IllegalArgumentException("Some roles do not belong to the specified module");
         }
 
         List<GroupModuleRole> assignments = new ArrayList<>();

@@ -31,6 +31,7 @@ export interface RoleFormData {
   name: string;
   description: string;
   permissionIds: number[];
+  moduleId: number;
 }
 
 // User Group forms

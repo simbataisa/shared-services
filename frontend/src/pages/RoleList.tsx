@@ -155,7 +155,7 @@ const RoleList: React.FC<RoleListProps> = ({
 
     const matchesStatus =
       searchFilters.status === "all" ||
-      (role.status || "active") === searchFilters.status;
+      (role.status || "ACTIVE") === searchFilters.status;
 
     return matchesSearch && matchesStatus;
   });
@@ -212,7 +212,7 @@ const RoleList: React.FC<RoleListProps> = ({
           canManageRoles &&
           showActions && (
             <>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Button onClick={() => navigate("/roles/new")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Role
               </Button>

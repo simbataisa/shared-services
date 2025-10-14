@@ -417,8 +417,6 @@ public class UserController {
         response.setRoleStatus(roleDto.getRoleStatus());
         response.setCreatedAt(roleDto.getCreatedAt());
         response.setUpdatedAt(roleDto.getUpdatedAt());
-        response.setModuleId(roleDto.getModuleId());
-        response.setModuleName(roleDto.getModuleName());
         return response;
     }
 

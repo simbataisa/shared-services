@@ -24,12 +24,6 @@ public class RoleController {
         return ResponseEntity.ok(roles);
     }
 
-    @GetMapping("/module/{moduleId}")
-    public ResponseEntity<List<RoleDto>> getRolesByModuleId(@PathVariable Long moduleId) {
-        List<RoleDto> roles = roleService.getRolesByModuleId(moduleId);
-        return ResponseEntity.ok(roles);
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<RoleDto> getRoleById(@PathVariable Long id) {
         Optional<RoleDto> role = roleService.getRoleById(id);
@@ -88,7 +82,7 @@ public class RoleController {
         }
     }
 
-    @PostMapping("/{id}/permissions")
+    @PutMapping("/{id}/permissions")
     public ResponseEntity<RoleDto> assignPermissions(@PathVariable Long id, 
                                                     @RequestBody List<Long> permissionIds) {
         try {

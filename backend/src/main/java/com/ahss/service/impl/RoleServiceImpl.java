@@ -25,9 +25,6 @@ public class RoleServiceImpl implements RoleService {
     private RoleRepository roleRepository;
 
     @Autowired
-    private ModuleRepository moduleRepository;
-
-    @Autowired
     private PermissionRepository permissionRepository;
 
     @Override
@@ -35,16 +32,7 @@ public class RoleServiceImpl implements RoleService {
     public List<RoleDto> getAllActiveRoles() {
         return roleRepository.findAll()
                 .stream()
-                .filter(role -> role.getRoleStatus() == com.ahss.entity.RoleStatus.ACTIVE)
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<RoleDto> getRolesByModuleId(Long moduleId) {
-        return roleRepository.findByModuleId(moduleId)
-                .stream()
+                .filter(role -> role.getRoleStatus() != null && role.getRoleStatus().name().equals("ACTIVE"))
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -53,25 +41,17 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     public Optional<RoleDto> getRoleById(Long id) {
         return roleRepository.findWithPermissions(id)
-                .filter(role -> role.getRoleStatus() == com.ahss.entity.RoleStatus.ACTIVE)
+                .filter(role -> role.getRoleStatus() != null && role.getRoleStatus().name().equals("ACTIVE"))
                 .map(this::convertToDto);
     }
 
     @Override
     public RoleDto createRole(RoleDto roleDto) {
-        // Verify module exists and is active
-        Module module = moduleRepository.findById(roleDto.getModuleId())
-                .orElseThrow(() -> new IllegalArgumentException("Module not found with id: " + roleDto.getModuleId()));
-        
-        if (module.getModuleStatus() != com.ahss.entity.ModuleStatus.ACTIVE) {
-            throw new IllegalArgumentException("Cannot create role for inactive module");
+        if (roleRepository.existsByName(roleDto.getName())) {
+            throw new IllegalArgumentException("Role with name '" + roleDto.getName() + "' already exists");
         }
         
-        if (roleRepository.existsByModuleIdAndName(roleDto.getModuleId(), roleDto.getName())) {
-            throw new IllegalArgumentException("Role with name '" + roleDto.getName() + "' already exists for this module");
-        }
-        
-        Role role = convertToEntity(roleDto, module);
+        Role role = convertToEntity(roleDto);
         Role savedRole = roleRepository.save(role);
         return convertToDto(savedRole);
     }
@@ -81,14 +61,14 @@ public class RoleServiceImpl implements RoleService {
         Role existingRole = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
         
-        if (existingRole.getRoleStatus() != com.ahss.entity.RoleStatus.ACTIVE) {
+        if (existingRole.getRoleStatus() == null || !existingRole.getRoleStatus().name().equals("ACTIVE")) {
             throw new IllegalArgumentException("Cannot update inactive role");
         }
         
         // Check if name is being changed and if new name already exists
         if (!existingRole.getName().equals(roleDto.getName()) && 
-            roleRepository.existsByModuleIdAndName(existingRole.getModule().getId(), roleDto.getName())) {
-            throw new IllegalArgumentException("Role with name '" + roleDto.getName() + "' already exists for this module");
+            roleRepository.existsByName(roleDto.getName())) {
+            throw new IllegalArgumentException("Role with name '" + roleDto.getName() + "' already exists");
         }
         
         existingRole.setName(roleDto.getName());
@@ -111,7 +91,6 @@ public class RoleServiceImpl implements RoleService {
     public void activateRole(Long id) {
         Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + id));
-        
         role.setRoleStatus(com.ahss.entity.RoleStatus.ACTIVE);
         roleRepository.save(role);
     }
@@ -127,8 +106,8 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsByNameAndModuleId(String name, Long moduleId) {
-        return roleRepository.existsByModuleIdAndName(moduleId, name);
+    public boolean existsByName(String name) {
+        return roleRepository.existsByName(name);
     }
 
     @Override
@@ -136,7 +115,7 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findWithPermissions(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
         
-        if (role.getRoleStatus() != com.ahss.entity.RoleStatus.ACTIVE) {
+        if (role.getRoleStatus() == null || !role.getRoleStatus().name().equals("ACTIVE")) {
             throw new IllegalArgumentException("Cannot assign permissions to inactive role");
         }
         
@@ -148,7 +127,12 @@ public class RoleServiceImpl implements RoleService {
         // Check if all permissions are active - since Permission no longer has active field, skip this check
         // All permissions are considered active by default
         
-        role.getPermissions().addAll(permissions);
+        // Filter out permissions that are already assigned to avoid duplicates
+        List<Permission> newPermissions = permissions.stream()
+                .filter(permission -> !role.getPermissions().contains(permission))
+                .collect(Collectors.toList());
+        
+        role.getPermissions().addAll(newPermissions);
         Role updatedRole = roleRepository.save(role);
         return convertToDto(updatedRole);
     }
@@ -158,7 +142,7 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findWithPermissions(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found with id: " + roleId));
         
-        if (role.getRoleStatus() != com.ahss.entity.RoleStatus.ACTIVE) {
+        if (role.getRoleStatus() == null || !role.getRoleStatus().name().equals("ACTIVE")) {
             throw new IllegalArgumentException("Cannot remove permissions from inactive role");
         }
         
@@ -177,8 +161,6 @@ public class RoleServiceImpl implements RoleService {
         dto.setRoleStatus(role.getRoleStatus());
         dto.setCreatedAt(role.getCreatedAt());
         dto.setUpdatedAt(role.getUpdatedAt());
-        dto.setModuleId(role.getModule().getId());
-        dto.setModuleName(role.getModule().getName());
         
         // Convert permissions
         if (role.getPermissions() != null) {
@@ -202,11 +184,10 @@ public class RoleServiceImpl implements RoleService {
         return dto;
     }
 
-    private Role convertToEntity(RoleDto dto, Module module) {
+    private Role convertToEntity(RoleDto dto) {
         Role role = new Role();
         role.setName(dto.getName());
         role.setDescription(dto.getDescription());
-        role.setModule(module);
         
         // Set roleStatus from DTO if provided, otherwise default to ACTIVE
         if (dto.getRoleStatus() != null) {

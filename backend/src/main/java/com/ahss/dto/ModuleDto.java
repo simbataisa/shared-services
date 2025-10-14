@@ -32,7 +32,6 @@ public class ModuleDto {
     private Long productId;
     
     private String productName;
-    private List<RoleDto> roles;
 
     // Constructors
     public ModuleDto() {}
@@ -130,13 +129,5 @@ public class ModuleDto {
 
     public void setProductName(String productName) {
         this.productName = productName;
-    }
-
-    public List<RoleDto> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<RoleDto> roles) {
-        this.roles = roles;
     }
 }

@@ -475,10 +475,6 @@ public class UserServiceImpl implements UserService {
         dto.setRoleStatus(role.getRoleStatus());
         dto.setCreatedAt(role.getCreatedAt());
         dto.setUpdatedAt(role.getUpdatedAt());
-        if (role.getModule() != null) {
-            dto.setModuleId(role.getModule().getId());
-            dto.setModuleName(role.getModule().getName());
-        }
         
         // Convert permissions
         if (role.getPermissions() != null) {

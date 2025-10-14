@@ -1,6 +1,8 @@
 package com.ahss.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,6 +22,7 @@ public class Role {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role_status", nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private RoleStatus roleStatus = RoleStatus.DRAFT;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -34,9 +37,7 @@ public class Role {
     @Column(name = "updated_by", nullable = false)
     private String updatedBy = "system";
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id", nullable = false)
-    private Module module;
+
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -60,10 +61,9 @@ public class Role {
     // Constructors
     public Role() {}
 
-    public Role(String name, String description, Module module) {
+    public Role(String name, String description) {
         this.name = name;
         this.description = description;
-        this.module = module;
         this.roleStatus = RoleStatus.ACTIVE;
     }
 
@@ -132,13 +132,7 @@ public class Role {
         this.updatedAt = updatedAt;
     }
 
-    public Module getModule() {
-        return module;
-    }
 
-    public void setModule(Module module) {
-        this.module = module;
-    }
 
     public List<Permission> getPermissions() {
         return permissions;

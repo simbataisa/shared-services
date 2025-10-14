@@ -17,6 +17,7 @@ import UserDetail from "./components/users/UserDetail";
 import UserCreate from "./components/users/UserCreate";
 import RoleList from "./pages/RoleList";
 import RoleDetail from "./components/role/RoleDetail";
+import RoleForm from "./components/role/RoleForm";
 import PermissionList from "./pages/PermissionList";
 import PermissionDetail from "./components/permission/PermissionDetail";
 import TenantList from "./pages/TenantList";
@@ -142,10 +143,28 @@ function App() {
           />
 
           <Route
+            path="roles/new"
+            element={
+              <ProtectedRoute permission="role:create">
+                <RoleForm mode="create" />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="roles/:id"
             element={
               <ProtectedRoute permission="role:read">
                 <RoleDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="roles/:id/edit"
+            element={
+              <ProtectedRoute permission="role:update">
+                <RoleForm mode="edit" />
               </ProtectedRoute>
             }
           />

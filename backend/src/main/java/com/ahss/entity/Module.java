@@ -1,6 +1,8 @@
 package com.ahss.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,7 +24,7 @@ public class Module {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "module_status", nullable = false)
+    @Column(name = "module_status", nullable = false, columnDefinition = "module_status")
     private ModuleStatus moduleStatus = ModuleStatus.DRAFT;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -40,9 +42,6 @@ public class Module {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-
-    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Role> roles;
 
     @PrePersist
     protected void onCreate() {
@@ -143,13 +142,5 @@ public class Module {
 
     public void setProduct(Product product) {
         this.product = product;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
     }
 }

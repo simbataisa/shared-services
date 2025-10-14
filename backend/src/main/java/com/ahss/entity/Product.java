@@ -1,6 +1,8 @@
 package com.ahss.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,7 +24,7 @@ public class Product {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "product_status", nullable = false)
+    @Column(name = "product_status", nullable = false, columnDefinition = "product_status")
     private ProductStatus productStatus = ProductStatus.DRAFT;
 
     @Column(name = "created_at", nullable = false, updatable = false)

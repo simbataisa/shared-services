@@ -1614,6 +1614,159 @@ const FormCard: React.FC<FormCardProps> = ({
 ```
 
 ### 3. HttpClient Service Layer
+
+The `HttpClient` service layer provides a centralized approach to API communication with built-in error handling, loading states, and consistent response formatting.
+
+#### Enhanced HttpClient Architecture
+
+```typescript
+// utils/httpClient.ts
+export class HttpClient {
+  // Generic HTTP methods with proper typing
+  async get<T>(endpoint: string): Promise<T> {
+    const response = await api.get(endpoint);
+    return response.data;
+  }
+
+  async post<T, D = any>(endpoint: string, data: D): Promise<T> {
+    const response = await api.post(endpoint, data);
+    return response.data;
+  }
+
+  async put<T, D = any>(endpoint: string, data: D): Promise<T> {
+    const response = await api.put(endpoint, data);
+    return response.data;
+  }
+
+  async patch<T, D = any>(endpoint: string, data: D): Promise<T> {
+    const response = await api.patch(endpoint, data);
+    return response.data;
+  }
+
+  async delete<T>(endpoint: string): Promise<T> {
+    const response = await api.delete(endpoint);
+    return response.data;
+  }
+
+  // Specialized API methods for different entities
+  // Users
+  async getUsers(): Promise<User[]> {
+    return this.get<User[]>('/api/v1/users');
+  }
+
+  async getUserById(id: number): Promise<User> {
+    return this.get<User>(`/api/v1/users/${id}`);
+  }
+
+  async createUser(userData: CreateUserRequest): Promise<User> {
+    return this.post<User, CreateUserRequest>('/api/v1/users', userData);
+  }
+
+  async updateUser(id: number, userData: UpdateUserRequest): Promise<User> {
+    return this.put<User, UpdateUserRequest>(`/api/v1/users/${id}`, userData);
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    return this.delete<void>(`/api/v1/users/${id}`);
+  }
+
+  // Roles
+  async getRoles(): Promise<Role[]> {
+    return this.get<Role[]>('/api/v1/roles');
+  }
+
+  async getRoleById(id: number): Promise<Role> {
+    return this.get<Role>(`/api/v1/roles/${id}`);
+  }
+
+  async createRole(roleData: CreateRoleRequest): Promise<Role> {
+    return this.post<Role, CreateRoleRequest>('/api/v1/roles', roleData);
+  }
+
+  async updateRole(id: number, roleData: UpdateRoleRequest): Promise<Role> {
+    return this.put<Role, UpdateRoleRequest>(`/api/v1/roles/${id}`, roleData);
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    return this.delete<void>(`/api/v1/roles/${id}`);
+  }
+}
+
+export const httpClient = new HttpClient();
+```
+
+#### API Configuration with Interceptors
+
+```typescript
+// utils/api.ts
+import axios from 'axios';
+import { useLoadingStore } from '../stores/loadingStore';
+import { useErrorStore } from '../stores/errorStore';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor for loading states and auth
+api.interceptors.request.use(
+  (config) => {
+    const loadingStore = useLoadingStore.getState();
+    loadingStore.setLoading(true);
+    
+    // Add auth token if available
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => {
+    const loadingStore = useLoadingStore.getState();
+    loadingStore.setLoading(false);
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling and loading states
+api.interceptors.response.use(
+  (response) => {
+    const loadingStore = useLoadingStore.getState();
+    loadingStore.setLoading(false);
+    return response;
+  },
+  (error) => {
+    const loadingStore = useLoadingStore.getState();
+    const errorStore = useErrorStore.getState();
+    
+    loadingStore.setLoading(false);
+    
+    // Handle different error types
+    if (error.response?.status === 401) {
+      // Handle unauthorized access
+      localStorage.removeItem('authToken');
+      window.location.href = '/login';
+    } else if (error.response?.status >= 500) {
+      errorStore.setError('Server error occurred. Please try again later.');
+    } else if (error.response?.data?.message) {
+      errorStore.setError(error.response.data.message);
+    } else {
+      errorStore.setError('An unexpected error occurred.');
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export { api };
+```
+
+#### Service Layer Pattern
+
 ```typescript
 // Create service layer for complex business logic
 class UserService {
@@ -1630,6 +1783,28 @@ class UserService {
     await this.sendWelcomeEmail(user.email);
     
     return user;
+  }
+
+  static async getUsers(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ users: User[]; total: number; page: number; limit: number }> {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
+    if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+    
+    const endpoint = `/api/v1/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return httpClient.get(endpoint);
+  }
+
+  async bulkDeleteUsers(userIds: number[]): Promise<void> {
+    return this.httpClient.post('/api/v1/users/bulk-delete', { userIds });
   }
 
   private async validateUserData(userData: CreateUserRequest): Promise<void> {
@@ -1650,6 +1825,84 @@ class UserService {
     }
   }
 }
+```
+
+#### Custom Hooks for API Integration
+
+```typescript
+// hooks/useUsers.ts
+import { useState, useEffect } from 'react';
+import { UserService } from '../services/UserService';
+import { User } from '../types/api';
+
+export const useUsers = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}) => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await UserService.getUsers(params);
+      setUsers(response.users);
+      setTotal(response.total);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, [params?.page, params?.limit, params?.search, params?.sortBy, params?.sortOrder]);
+
+  const refetch = () => fetchUsers();
+
+  return {
+    users,
+    total,
+    loading,
+    error,
+    refetch,
+  };
+};
+
+// hooks/useUser.ts
+export const useUser = (id: number) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const userData = await UserService.getUserById(id);
+        setUser(userData);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch user');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchUser();
+    }
+  }, [id]);
+
+  return { user, loading, error };
+};
 ```
 
 ## Maintenance Guidelines

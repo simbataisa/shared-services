@@ -8,8 +8,6 @@ public interface RoleService {
     
     List<RoleDto> getAllActiveRoles();
     
-    List<RoleDto> getRolesByModuleId(Long moduleId);
-    
     Optional<RoleDto> getRoleById(Long id);
     
     RoleDto createRole(RoleDto roleDto);
@@ -22,7 +20,7 @@ public interface RoleService {
     
     void deactivateRole(Long id);
     
-    boolean existsByNameAndModuleId(String name, Long moduleId);
+    boolean existsByName(String name);
     
     RoleDto assignPermissions(Long roleId, List<Long> permissionIds);
     

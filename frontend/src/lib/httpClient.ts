@@ -168,6 +168,14 @@ class HttpClient {
     await api.delete(`/v1/roles/${id}`);
   }
 
+  async assignPermissionsToRole(roleId: number, permissionIds: number[]): Promise<void> {
+    await api.put(`/v1/roles/${roleId}/permissions`, permissionIds);
+  }
+
+  async removePermissionsFromRole(roleId: number, permissionIds: number[]): Promise<void> {
+    await api.delete(`/v1/roles/${roleId}/permissions`, { data: permissionIds });
+  }
+
   async getPermissions(): Promise<Permission[]> {
     const response: AxiosResponse<Permission[]> = await api.get(
       "/v1/permissions"

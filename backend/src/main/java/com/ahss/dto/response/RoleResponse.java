@@ -12,8 +12,6 @@ public class RoleResponse {
     private RoleStatus roleStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long moduleId;
-    private String moduleName;
 
     // Default constructor
     public RoleResponse() {}
@@ -73,21 +71,5 @@ public class RoleResponse {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public Long getModuleId() {
-        return moduleId;
-    }
-
-    public void setModuleId(Long moduleId) {
-        this.moduleId = moduleId;
-    }
-
-    public String getModuleName() {
-        return moduleName;
-    }
-
-    public void setModuleName(String moduleName) {
-        this.moduleName = moduleName;
     }
 }

@@ -10,10 +10,11 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PermissionsCard, DetailHeaderCard } from "@/components/common";
+import { DetailHeaderCard } from "@/components/common";
 import { RoleStatusCard } from "./RoleStatusCard";
 import { RoleInfoCard } from "./RoleInfoCard";
 import { RoleStatsCard } from "./RoleStatsCard";
+import { RolePermissionCard } from "./RolePermissionCard";
 import { usePermissions } from "@/hooks/usePermissions";
 import httpClient from "@/lib/httpClient";
 import {
@@ -21,6 +22,7 @@ import {
   type RoleStats,
   type RoleDetailProps,
   type RoleStatus,
+  type Permission,
   ENTITY_STATUS_MAPPINGS,
 } from "@/types";
 
@@ -95,6 +97,44 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
     }
   };
 
+  const handleRoleUpdate = async (updatedData: { name: string; description: string }) => {
+    if (!role) return;
+
+    try {
+      setUpdating(true);
+      await httpClient.updateRole(role.id, updatedData);
+
+      // Refetch role details to get the complete RoleDetails object
+      await fetchRoleDetails();
+      setError(null);
+    } catch (err: any) {
+      console.error("Error updating role:", err);
+      setError(err.response?.data?.message || "Failed to update role");
+      throw err; // Re-throw to let RoleInfoCard handle the error
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handlePermissionsUpdate = async (updatedPermissions: Permission[]) => {
+    if (!role) return;
+
+    try {
+      // Update the role state with new permissions
+      setRole({ ...role, permissions: updatedPermissions });
+      
+      // Update stats
+      if (stats) {
+        setStats({ ...stats, totalPermissions: updatedPermissions.length });
+      }
+      
+      setError(null);
+    } catch (err: any) {
+      console.error("Error updating permissions:", err);
+      setError(err.response?.data?.message || "Failed to update permissions");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -157,14 +197,21 @@ const RoleDetail: React.FC<RoleDetailProps> = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* Role Information */}
-            <RoleInfoCard role={role} />
+            <RoleInfoCard 
+              role={role} 
+              onUpdate={handleRoleUpdate}
+              updating={updating}
+            />
 
             {/* Permissions */}
-            <PermissionsCard
+            <RolePermissionCard
+              roleId={role.id}
               permissions={role.permissions}
               title="Permissions"
               defaultExpanded={false}
               emptyMessage="No permissions assigned to this role."
+              onPermissionsUpdate={handlePermissionsUpdate}
+              updating={updating}
             />
           </div>
 

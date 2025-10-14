@@ -29,6 +29,8 @@ spring:
         format_sql: true
         show_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        type:
+          preferred_uuid_jdbc_type: VARCHAR
         jdbc:
           lob:
             non_contextual_creation: true
@@ -47,5 +49,7 @@ cors:
 logging:
   level:
     org.springframework.security: INFO
-    org.hibernate.SQL: INFO
+    org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.postgresql: DEBUG
+    com.ahss: DEBUG

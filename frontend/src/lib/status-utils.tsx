@@ -176,7 +176,9 @@ export const ENTITY_STATUS_MAPPINGS = {
   },
   role: {
     ACTIVE: 'active',
-    INACTIVE: 'inactive'
+    INACTIVE: 'inactive',
+    DRAFT: 'draft',
+    DEPRECATED: 'archived'
   }
 } as const;
 
@@ -320,7 +322,7 @@ export const mapRoleStatusToStatusType = (roleStatus: string): LegacyStatusType 
     case "DRAFT":
       return "SUSPENDED"; // Map DRAFT to SUSPENDED as closest match
     case "DEPRECATED":
-      return "INACTIVE";
+      return "INACTIVE"; // Map DEPRECATED to INACTIVE
     default:
       return "INACTIVE";
   }

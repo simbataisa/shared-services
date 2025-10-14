@@ -171,45 +171,45 @@ INSERT INTO permission (name, description, resource_type, action, created_by, up
 -- 8. ROLES - Collections of Permissions
 -- =====================================================
 
-INSERT INTO role (module_id, name, description, role_status, created_by, updated_by) VALUES
+INSERT INTO role (name, description, role_status, module_id, created_by, updated_by) VALUES
 -- System Administration Roles
-((SELECT module_id FROM module WHERE code = 'CORE_CONFIG'), 'Super Administrator', 'Full system access with all permissions', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'CORE_CONFIG'), 'System Administrator', 'System-level administration access', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'CORE_CONFIG'), 'System Viewer', 'Read-only system access', 'ACTIVE', 'system', 'system'),
+('Super Administrator', 'Full system access with all permissions', 'ACTIVE', 1, 'system', 'system'),
+('System Administrator', 'System-level administration access', 'ACTIVE', 1, 'system', 'system'),
+('System Viewer', 'Read-only system access', 'ACTIVE', 1, 'system', 'system'),
 
 -- User Management Roles
-((SELECT module_id FROM module WHERE code = 'USER_ADMIN'), 'User Administrator', 'Full user management capabilities', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'USER_ADMIN'), 'User Manager', 'Standard user management operations', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'USER_ADMIN'), 'User Viewer', 'Read-only user information access', 'ACTIVE', 'system', 'system'),
+('User Administrator', 'Full user management capabilities', 'ACTIVE', 4, 'system', 'system'),
+('User Manager', 'Standard user management operations', 'ACTIVE', 4, 'system', 'system'),
+('User Viewer', 'Read-only user information access', 'ACTIVE', 4, 'system', 'system'),
 
 -- Tenant Management Roles
-((SELECT module_id FROM module WHERE code = 'TENANT_ADMIN'), 'Tenant Administrator', 'Full tenant management capabilities', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'TENANT_ADMIN'), 'Tenant Manager', 'Standard tenant operations', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'TENANT_ADMIN'), 'Tenant Viewer', 'Read-only tenant information', 'ACTIVE', 'system', 'system'),
+('Tenant Administrator', 'Full tenant management capabilities', 'ACTIVE', 8, 'system', 'system'),
+('Tenant Manager', 'Standard tenant operations', 'ACTIVE', 8, 'system', 'system'),
+('Tenant Viewer', 'Read-only tenant information', 'ACTIVE', 8, 'system', 'system'),
 
 -- Product Management Roles
-((SELECT module_id FROM module WHERE code = 'CORE_DASHBOARD'), 'Product Administrator', 'Full product management capabilities', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'CORE_DASHBOARD'), 'Product Manager', 'Standard product operations', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'CORE_DASHBOARD'), 'Product Viewer', 'Read-only product information', 'ACTIVE', 'system', 'system'),
+('Product Administrator', 'Full product management capabilities', 'ACTIVE', 1, 'system', 'system'),
+('Product Manager', 'Standard product operations', 'ACTIVE', 1, 'system', 'system'),
+('Product Viewer', 'Read-only product information', 'ACTIVE', 1, 'system', 'system'),
 
 -- Module Management Roles
-((SELECT module_id FROM module WHERE code = 'CORE_DASHBOARD'), 'Module Administrator', 'Full module management capabilities', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'CORE_DASHBOARD'), 'Module Manager', 'Standard module operations', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'CORE_DASHBOARD'), 'Module Viewer', 'Read-only module information', 'ACTIVE', 'system', 'system'),
+('Module Administrator', 'Full module management capabilities', 'ACTIVE', 1, 'system', 'system'),
+('Module Manager', 'Standard module operations', 'ACTIVE', 1, 'system', 'system'),
+('Module Viewer', 'Read-only module information', 'ACTIVE', 1, 'system', 'system'),
 
 -- RBAC Management Roles
-((SELECT module_id FROM module WHERE code = 'RBAC_ROLES'), 'RBAC Administrator', 'Full role and permission management', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'RBAC_ROLES'), 'Role Manager', 'Role management operations', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'RBAC_PERMISSIONS'), 'Permission Manager', 'Permission management operations', 'ACTIVE', 'system', 'system'),
+('RBAC Administrator', 'Full role and permission management', 'ACTIVE', 11, 'system', 'system'),
+('Role Manager', 'Role management operations', 'ACTIVE', 11, 'system', 'system'),
+('Permission Manager', 'Permission management operations', 'ACTIVE', 12, 'system', 'system'),
 
 -- Analytics Roles
-((SELECT module_id FROM module WHERE code = 'ANALYTICS_USER'), 'Analytics Administrator', 'Full analytics and reporting access', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'ANALYTICS_USER'), 'Report Viewer', 'Read-only analytics access', 'ACTIVE', 'system', 'system'),
+('Analytics Administrator', 'Full analytics and reporting access', 'ACTIVE', 14, 'system', 'system'),
+('Report Viewer', 'Read-only analytics access', 'ACTIVE', 14, 'system', 'system'),
 
 -- General User Roles
-((SELECT module_id FROM module WHERE code = 'USER_GROUPS'), 'Standard User', 'Standard user with basic access', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'USER_GROUPS'), 'Guest User', 'Limited guest access', 'ACTIVE', 'system', 'system'),
-((SELECT module_id FROM module WHERE code = 'USER_GROUPS'), 'Read Only User', 'Read-only access to assigned resources', 'ACTIVE', 'system', 'system');
+('Standard User', 'Standard user with basic access', 'ACTIVE', 1, 'system', 'system'),
+('Guest User', 'Limited guest access', 'ACTIVE', 1, 'system', 'system'),
+('Read Only User', 'Read-only access to assigned resources', 'ACTIVE', 1, 'system', 'system');
 
 -- =====================================================
 -- 9. ROLE-PERMISSION ASSIGNMENTS
