@@ -17,7 +17,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/tenants")
-@CrossOrigin(origins = "http://localhost:5173")
 public class TenantController {
 
     @Autowired
