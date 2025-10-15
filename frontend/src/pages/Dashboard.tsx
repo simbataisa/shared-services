@@ -4,22 +4,12 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Users,
-  Building2,
-  Shield,
-  Activity,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle,
-  BarChart3,
-  PieChart,
-} from "lucide-react";
-import api from "@/lib/api";
-import type { DashboardStats, RecentActivity } from "@/types";
+import { Users, Building2, Shield, Activity, BarChart3 } from "lucide-react";
+import httpClient from "@/lib/httpClient";
+import { getActivityIcon } from "@/lib/status-utils";
+import type { DashboardStats, ErrorWithActions, RecentActivity } from "@/types";
+import { ErrorCard, StatusBadge } from "@/components/common";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
 
 export default function Dashboard() {
   const { user, tenant } = useAuth();
@@ -36,6 +26,7 @@ export default function Dashboard() {
     []
   );
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<ErrorWithActions | null>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -44,67 +35,30 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-
-      // Fetch dashboard statistics
-      const [statsResponse, activitiesResponse] = await Promise.all([
-        api.get("/v1/dashboard/stats"),
-        api.get("/v1/dashboard/recent-activities"),
-      ]);
-
-      setStats(statsResponse.data.data);
-      setRecentActivities(activitiesResponse.data.data);
-    } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
+      const { stats, activities } = await httpClient.getDashboardData();
+      setStats(stats);
+      setRecentActivities(activities);
+    } catch (err) {
+      setError({
+        id: `server-${Date.now()}`,
+        type: "server",
+        severity: "high",
+        message: err instanceof Error ? err.message : "Unknown error",
+        timestamp: new Date(),
+        details: err instanceof Error ? err.message : "Unknown error",
+        actions: [],
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const getHealthVariant = (
-    health: string
-  ): "default" | "secondary" | "destructive" | "outline" => {
-    switch (health) {
-      case "healthy":
-        return "default";
-      case "warning":
-        return "secondary";
-      case "critical":
-        return "destructive";
-      default:
-        return "outline";
-    }
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case "user_login":
-        return <Users className="h-4 w-4" />;
-      case "role_assigned":
-        return <Shield className="h-4 w-4" />;
-      case "tenant_created":
-        return <Building2 className="h-4 w-4" />;
-      case "permission_granted":
-        return <CheckCircle className="h-4 w-4" />;
-      default:
-        return <Activity className="h-4 w-4" />;
-    }
-  };
+  if (error) {
+    return <ErrorCard error={error} />;
+  }
 
   if (loading) {
-    return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-32 w-full rounded-lg" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-lg" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Skeleton className="h-96 w-full rounded-lg" />
-          <Skeleton className="h-96 w-full rounded-lg" />
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -186,15 +140,10 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-muted-foreground">
                   System Health
                 </p>
-                <Badge
-                  variant={getHealthVariant(stats.systemHealth)}
+                <StatusBadge
+                  status={stats.systemHealth}
                   className="mt-1"
-                >
-                  {stats.systemHealth
-                    ? stats.systemHealth.charAt(0).toUpperCase() +
-                      stats.systemHealth.slice(1)
-                    : "Unknown"}
-                </Badge>
+                ></StatusBadge>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
                 <Activity className="h-6 w-6 text-orange-600" />
@@ -206,45 +155,42 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Activities */}
-        <PermissionGuard permission="AUDIT_MGMT:read">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Recent Activities</CardTitle>
-                <Button variant="ghost" size="sm">
-                  View All
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Array.isArray(recentActivities) &&
-                  recentActivities.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start space-x-3"
-                    >
-                      <div className="bg-muted p-2 rounded-full">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm">{activity.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          by {activity.user} •{" "}
-                          {new Date(activity.timestamp).toLocaleString()}
-                        </p>
-                      </div>
+        {/* <PermissionGuard permission="AUDIT_MGMT:read"> */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Recent Activities</CardTitle>
+              <Button variant="ghost" size="sm">
+                View All
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.isArray(recentActivities) &&
+                recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-start space-x-3">
+                    <div className="bg-muted p-2 rounded-full">
+                      {getActivityIcon(activity.type)}
                     </div>
-                  ))}
-                {!Array.isArray(recentActivities) && (
-                  <p className="text-sm text-muted-foreground">
-                    No recent activities available
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </PermissionGuard>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">{activity.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        by {activity.user} •{" "}
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              {!Array.isArray(recentActivities) && (
+                <p className="text-sm text-muted-foreground">
+                  No recent activities available
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        {/* </PermissionGuard> */}
 
         {/* Quick Actions */}
         <Card>
@@ -313,56 +259,56 @@ export default function Dashboard() {
       </div>
 
       {/* Pending Approvals */}
-      {stats.pendingApprovals > 0 && (
-        <PermissionGuard permission="APPROVAL_MGMT:read">
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <div>
-                <span className="font-medium">Pending Approvals: </span>
-                You have {stats.pendingApprovals} items waiting for approval.
-              </div>
-              <Button variant="outline" size="sm">
-                Review
-              </Button>
-            </AlertDescription>
-          </Alert>
-        </PermissionGuard>
-      )}
+      {/* {stats.pendingApprovals > 0 && (
+        // <PermissionGuard permission="APPROVAL_MGMT:read">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <div>
+              <span className="font-medium">Pending Approvals: </span>
+              You have {stats.pendingApprovals} items waiting for approval.
+            </div>
+            <Button variant="outline" size="sm">
+              Review
+            </Button>
+          </AlertDescription>
+        </Alert>
+        // </PermissionGuard>
+      )} */}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PermissionGuard permission="ANALYTICS_MGMT:read">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Growth</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-2" />
-                  <p>Chart visualization would go here</p>
-                </div>
+        {/* <PermissionGuard permission="ANALYTICS_MGMT:read"> */}
+        {/* <Card>
+          <CardHeader>
+            <CardTitle>User Growth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <TrendingUp className="h-12 w-12 mx-auto mb-2" />
+                <p>Chart visualization would go here</p>
               </div>
-            </CardContent>
-          </Card>
-        </PermissionGuard>
+            </div>
+          </CardContent>
+        </Card> */}
+        {/* </PermissionGuard> */}
 
-        <PermissionGuard permission="ANALYTICS_MGMT:read">
-          <Card>
-            <CardHeader>
-              <CardTitle>Permission Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <PieChart className="h-12 w-12 mx-auto mb-2" />
-                  <p>Chart visualization would go here</p>
-                </div>
+        {/* <PermissionGuard permission="ANALYTICS_MGMT:read"> */}
+        {/* <Card>
+          <CardHeader>
+            <CardTitle>Permission Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <PieChart className="h-12 w-12 mx-auto mb-2" />
+                <p>Chart visualization would go here</p>
               </div>
-            </CardContent>
-          </Card>
-        </PermissionGuard>
+            </div>
+          </CardContent>
+        </Card> */}
+        {/* </PermissionGuard> */}
       </div>
     </div>
   );

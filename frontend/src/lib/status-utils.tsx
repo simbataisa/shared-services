@@ -13,6 +13,10 @@ import {
   Info,
   CheckCircle2,
   Archive,
+  Users,
+  Shield,
+  Building2,
+  Activity,
 } from "lucide-react";
 import { type VariantProps } from "class-variance-authority";
 import { badgeVariants } from "@/components/ui/badge";
@@ -29,7 +33,9 @@ export type StatusType =
   | "info"
   | "draft"
   | "published"
-  | "archived";
+  | "archived"
+  | "healthy"
+  | "critical";
 
 // Legacy status types for backward compatibility
 export type LegacyStatusType = "ACTIVE" | "INACTIVE" | "SUSPENDED";
@@ -157,6 +163,27 @@ export const STATUS_CONFIG = {
     icon: Archive,
     legacyColorClasses: "text-gray-600 bg-gray-50 border-gray-200",
   },
+  healthy: {
+    variant: "default" as BadgeVariant,
+    className:
+      "bg-green-100 text-green-800 hover:bg-green-100 border-green-200",
+    iconColor: "text-green-600",
+    bgColor: "bg-green-100",
+    textColor: "text-green-800",
+    label: "Healthy",
+    icon: CheckCircle,
+    legacyColorClasses: "text-green-600 bg-green-50 border-green-200",
+  },
+  critical: {
+    variant: "destructive" as BadgeVariant,
+    className: "bg-red-100 text-red-800 hover:bg-red-100 border-red-200",
+    iconColor: "text-red-600",
+    bgColor: "bg-red-100",
+    textColor: "text-red-800",
+    label: "Critical",
+    icon: AlertCircle,
+    legacyColorClasses: "text-red-600 bg-red-50 border-red-200",
+  },
 } as const;
 
 /**
@@ -195,6 +222,30 @@ export const ENTITY_STATUS_MAPPINGS = {
     DEPRECATED: "archived",
   },
 } as const;
+
+// =============================================================================
+// ACTIVITY UTILITIES
+// =============================================================================
+
+/**
+ * Get activity icon component based on activity type
+ * @param type - The activity type string (user_login, role_assigned, tenant_created, etc.)
+ * @returns JSX element with appropriate icon
+ */
+export function getActivityIcon(type: string) {
+  switch (type) {
+    case "user_login":
+      return <Users className="h-4 w-4" />;
+    case "role_assigned":
+      return <Shield className="h-4 w-4" />;
+    case "tenant_created":
+      return <Building2 className="h-4 w-4" />;
+    case "permission_granted":
+      return <CheckCircle className="h-4 w-4" />;
+    default:
+      return <Activity className="h-4 w-4" />;
+  }
+}
 
 // =============================================================================
 // ICON UTILITIES
@@ -400,6 +451,10 @@ function normalizeStatus(status: string): StatusType {
       return "warning";
     case "INFO":
       return "info";
+    case "HEALTHY":
+      return "healthy";
+    case "CRITICAL":
+      return "critical";
     default:
       // Try lowercase
       const lowerStatus = status.toLowerCase() as StatusType;

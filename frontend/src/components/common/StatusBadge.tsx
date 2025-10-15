@@ -27,9 +27,7 @@ export function StatusBadge({
   showIcon = true,
   customLabel,
 }: StatusBadgeProps) {
-  console.log(status);
   const config = getStatusConfig(status);
-
   return (
     <Badge
       variant={config.variant}

@@ -30,7 +30,8 @@ export type {
   Module,
   Product,
   DashboardStats,
-  Activity
+  Activity,
+  RecentActivity
 } from './entities';
 
 export type {

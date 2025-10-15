@@ -14,6 +14,7 @@ import type {
   Product,
   DashboardStats,
   Activity,
+  RecentActivity,
   CreateUserRequest,
   UpdateUserRequest,
   CreateRoleRequest,
@@ -458,6 +459,21 @@ class HttpClient {
       "/v1/dashboard/recent-activities"
     );
     return response.data.data;
+  }
+
+  async getDashboardData(): Promise<{
+    stats: DashboardStats;
+    activities: RecentActivity[];
+  }> {
+    const [statsResponse, activitiesResponse] = await Promise.all([
+      api.get("/v1/dashboard/stats"),
+      api.get("/v1/dashboard/recent-activities"),
+    ]);
+    
+    return {
+      stats: statsResponse.data.data,
+      activities: activitiesResponse.data.data,
+    };
   }
 
   // Auth API methods
