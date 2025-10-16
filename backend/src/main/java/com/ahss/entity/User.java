@@ -32,7 +32,7 @@ public class User {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "user_status", nullable = false, columnDefinition = "user_status")
     private UserStatus userStatus = UserStatus.ACTIVE;
 

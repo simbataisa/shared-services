@@ -10,6 +10,7 @@ import {
   Key,
   Building,
   BarChart3,
+  CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { useNavigationPermissions } from "@/hooks/usePermissions";
@@ -101,6 +102,12 @@ export default function Layout({ children }: LayoutProps) {
       label: "Tenants",
       icon: Building,
       canAccess: navPermissions.canAccessTenants,
+    },
+    {
+      to: "/payments",
+      label: "Payments",
+      icon: CreditCard,
+      canAccess: navPermissions.canAccessPayments,
     },
   ];
 

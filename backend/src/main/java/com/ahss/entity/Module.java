@@ -23,7 +23,7 @@ public class Module {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "module_status", nullable = false, columnDefinition = "module_status")
     private ModuleStatus moduleStatus = ModuleStatus.DRAFT;
 

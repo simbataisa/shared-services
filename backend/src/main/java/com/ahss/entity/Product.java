@@ -23,7 +23,7 @@ public class Product {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "product_status", nullable = false, columnDefinition = "product_status")
     private ProductStatus productStatus = ProductStatus.DRAFT;
 

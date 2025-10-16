@@ -20,9 +20,8 @@ public class Role {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role_status", nullable = false)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "role_status", nullable = false, columnDefinition = "role_status")
     private RoleStatus roleStatus = RoleStatus.DRAFT;
 
     @Column(name = "created_at", nullable = false, updatable = false)

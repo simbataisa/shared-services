@@ -75,6 +75,17 @@ export const usePermissions = () => {
   const canViewAuditLogs = hasPermission("CORE_AUDIT:read");
   const canAdminAuditLogs = hasPermission("CORE_AUDIT:admin");
 
+  // Payment management permissions
+  const canViewPayments = hasPermission("PAYMENT_MGMT:read");
+  const canCreatePayments = hasPermission("PAYMENT_MGMT:create");
+  const canUpdatePayments = hasPermission("PAYMENT_MGMT:update");
+  const canDeletePayments = hasPermission("PAYMENT_MGMT:delete");
+  const canAdminPayments = hasPermission("PAYMENT_MGMT:admin");
+  const canProcessPayments = hasPermission("PAYMENT_MGMT:process");
+  const canRefundPayments = hasPermission("PAYMENT_MGMT:refund");
+  const canManagePayments =
+    canCreatePayments || canUpdatePayments || canDeletePayments || canAdminPayments;
+
   // Admin checks
   const isAdmin = hasRole("admin");
   const isSuperAdmin = hasRole("super_admin");
@@ -156,6 +167,16 @@ export const usePermissions = () => {
     canViewAuditLogs,
     canAdminAuditLogs,
 
+    // Payment permissions
+    canViewPayments,
+    canCreatePayments,
+    canUpdatePayments,
+    canDeletePayments,
+    canAdminPayments,
+    canProcessPayments,
+    canRefundPayments,
+    canManagePayments,
+
     // Admin checks
     isAdmin,
     isSuperAdmin,
@@ -233,6 +254,7 @@ export const useNavigationPermissions = () => {
     canViewProducts,
     canViewModules,
     canViewAuditLogs,
+    canViewPayments,
     isSystemAdmin,
   } = usePermissions();
 
@@ -244,6 +266,7 @@ export const useNavigationPermissions = () => {
     canAccessProducts: canViewProducts,
     canAccessModules: canViewModules,
     canAccessAuditLogs: canViewAuditLogs,
+    canAccessPayments: canViewPayments,
     canAccessSystemSettings: isSystemAdmin,
   };
 };
