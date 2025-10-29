@@ -2,11 +2,11 @@
 
 ## Document Information
 
-- **Version**: 1.3
-- **Last Updated**: 2025-01-29
+- **Version**: 1.4
+- **Last Updated**: 2025-10-29
 - **Target Implementation**: Q1 2025
 - **Document Type**: Product Requirements Document for AI Coder
-- **Implementation Status**: Payment System UUID Migration Completed
+- **Implementation Status**: Payment Seed Data with Retry Scenario Completed
 
 ---
 
@@ -70,9 +70,9 @@ Implement a comprehensive payment management system within the existing AHSS Sha
 
 ### Current Implementation Phase
 
-**Status**: Payment System UUID Migration Completed ✅  
-**Date Completed**: January 29, 2025  
-**Phase**: Enhanced Payment System with UUID Implementation
+**Status**: Payment Seed Data with Retry Scenario Completed ✅  
+**Date Completed**: October 29, 2025  
+**Phase**: Enhanced Payment System with Seed Data and Migration Fixes
 
 ### Completed Work
 
@@ -108,12 +108,23 @@ Implement a comprehensive payment management system within the existing AHSS Sha
 - ✅ **Database Migration Testing**: Verified successful migration with foreign key preservation
 - ✅ **End-to-End Verification**: Confirmed application startup, test execution, and type safety
 
-#### 5. Payment Method Type Alignment
+#### 6. Payment Seed Data with Retry Scenario Implementation
+- ✅ **Database Migration V25**: Added `V25__seed_completed_payment_with_failed_retry.sql`
+- ✅ **Completed Payment Request**: Created seed data for `COMPLETED` payment request (PR-2025-000009)
+- ✅ **Failed Credit Card Transaction**: Added failed Stripe credit card transaction (TXN-2025-000009)
+- ✅ **Successful Bank Transfer**: Added successful bank transfer transaction (TXN-2025-000010)
+- ✅ **Comprehensive Audit Trail**: Created 8 audit log entries tracking complete payment lifecycle
+- ✅ **Retry Logic Demonstration**: Implemented realistic payment retry scenario over 12-day period
+- ✅ **JSON Syntax Fix**: Resolved Flyway migration error with proper `jsonb_build_object()` usage
+- ✅ **Application Deployment**: Verified successful application startup with all migrations
+- ✅ **Database Integrity**: Confirmed proper foreign key relationships and data consistency
+
+#### 7. Payment Method Type Alignment
 - ✅ **PAYMENT_METHOD_TYPE_MAPPINGS**: Synchronized frontend mappings with backend enum
 - ✅ **Enum Consistency**: Added `PAYPAL`, `STRIPE`, `MANUAL` and removed `CASH`, `CHECK`
 - ✅ **Component Integration**: Updated all components using payment method types
 
-#### 5. Data Structure Changes
+#### 8. Data Structure Changes
 
 ##### PaymentRequest Fields
 | Field | Frontend (Old) | Frontend (New) | Backend | Status |
@@ -244,6 +255,60 @@ The payment system UUID migration has been implemented with the following compon
    - Application startup confirmed with proper UUID handling
    - Backend tests passed with UUID implementation
    - Frontend TypeScript compilation successful with UUID string types
+
+#### Payment Seed Data with Retry Scenario Architecture
+
+The payment seed data implementation demonstrates a complete payment retry scenario with the following components:
+
+1. **Database Migration V25 (`V25__seed_completed_payment_with_failed_retry.sql`)**
+   - Created comprehensive seed data for a completed payment request with retry scenario
+   - Implemented realistic payment lifecycle spanning 12 days
+   - Demonstrated proper foreign key relationships and data integrity
+
+2. **Payment Request Seed Data**
+   - **Request Code**: `PR-2025-000009`
+   - **Title**: "Cloud Infrastructure Migration"
+   - **Amount**: $4,500.00 USD
+   - **Status**: `COMPLETED`
+   - **Payer**: John Smith (john.smith@techcorp.com)
+   - **Payment Token**: Secure token for payment link access
+   - **Allowed Methods**: Credit Card, Bank Transfer
+
+3. **Payment Transaction Seed Data**
+   - **Failed Transaction**: `TXN-2025-000009`
+     - Payment Method: Credit Card via Stripe
+     - Status: `FAILED`
+     - Error: "Your card was declined. Please try a different payment method."
+     - Amount: $4,500.00
+     - Retry Count: 1
+   - **Successful Transaction**: `TXN-2025-000010`
+     - Payment Method: Bank Transfer
+     - Status: `SUCCESS`
+     - Amount: $4,500.00
+     - Processing Time: 2-3 business days
+     - Confirmation Code: BT2025010
+
+4. **Comprehensive Audit Trail (8 Entries)**
+   - Payment request creation and activation
+   - Failed credit card transaction attempt
+   - Payment retry initiation
+   - Successful bank transfer processing
+   - Payment request completion
+   - Complete lifecycle tracking with timestamps, IP addresses, and user agents
+
+5. **Technical Implementation Details**
+   - **JSON Handling**: Used `jsonb_build_object()` for proper JSON construction
+   - **UUID Generation**: Utilized `gen_random_uuid()` for primary keys
+   - **Foreign Key Integrity**: Maintained proper relationships across all tables
+   - **Timestamp Logic**: Implemented realistic time progression using `CURRENT_TIMESTAMP - INTERVAL`
+   - **Migration Fix**: Resolved Flyway JSON syntax error for successful deployment
+
+6. **Deployment Verification**
+   - ✅ Flyway migration executed successfully without errors
+   - ✅ Spring Boot application started successfully on port 8080
+   - ✅ Database integrity verified with proper foreign key relationships
+   - ✅ Application accessible at http://localhost:8080
+   - ✅ All payment tables populated with realistic seed data
 
 ---
 
