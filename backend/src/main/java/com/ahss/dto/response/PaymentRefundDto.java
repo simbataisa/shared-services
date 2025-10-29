@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public class PaymentRefundDto {
 
-    private Long id;
+    private UUID id;
     private String refundCode;
     private UUID paymentTransactionId;
     private BigDecimal refundAmount;
@@ -32,11 +32,11 @@ public class PaymentRefundDto {
     public PaymentRefundDto() {}
 
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

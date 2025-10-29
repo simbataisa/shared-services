@@ -57,7 +57,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
     }
 
     @Override
-    public PaymentAuditLogDto logRefundAction(Long paymentRefundId, String action, String oldStatus,
+    public PaymentAuditLogDto logRefundAction(UUID paymentRefundId, String action, String oldStatus,
                                              String newStatus, String description, Map<String, Object> changeDetails,
                                              Long userId, String userAgent, String ipAddress) {
         PaymentAuditLog auditLog = PaymentAuditLog.createRefundAudit(
@@ -74,7 +74,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PaymentAuditLogDto> getAuditLogById(Long id) {
+    public Optional<PaymentAuditLogDto> getAuditLogById(UUID id) {
         return auditLogRepository.findById(id)
                 .map(this::convertToDto);
     }
@@ -102,7 +102,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentAuditLogDto> getAuditLogsByRefund(Long paymentRefundId, Pageable pageable) {
+    public Page<PaymentAuditLogDto> getAuditLogsByRefund(UUID paymentRefundId, Pageable pageable) {
         List<PaymentAuditLog> auditLogs = auditLogRepository.findByPaymentRefundIdOrderByCreatedAtDesc(paymentRefundId);
         return convertListToPage(auditLogs, pageable);
     }
@@ -195,7 +195,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Long countByRefund(Long paymentRefundId) {
+    public Long countByRefund(UUID paymentRefundId) {
         return auditLogRepository.countByPaymentRefundId(paymentRefundId);
     }
 

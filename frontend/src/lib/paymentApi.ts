@@ -169,7 +169,7 @@ export const paymentRefundApi = {
   },
 
   // Cancel refund
-  cancel: async (id: number) => {
+  cancel: async (id: string) => {
     const response = await api.patch<ApiResponse<void>>(`/v1/payments/refunds/${id}/cancel`);
     return response.data;
   }
@@ -184,7 +184,7 @@ export const paymentAuditLogApi = {
   },
 
   // Get audit log by ID
-  getById: async (id: number) => {
+  getById: async (id: string) => {
     const response = await api.get<ApiResponse<PaymentAuditLog>>(`/v1/payments/audit-logs/${id}`);
     return response.data;
   },
@@ -202,7 +202,7 @@ export const paymentAuditLogApi = {
   },
 
   // Get audit logs by refund
-  getByRefund: async (refundId: number, page = 0, size = 10) => {
+  getByRefund: async (refundId: string, page = 0, size = 10) => {
     const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/refund/${refundId}?page=${page}&size=${size}`);
     return response.data;
   },

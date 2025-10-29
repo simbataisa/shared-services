@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog, Long> {
+public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog, UUID> {
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentRequestId = :paymentRequestId ORDER BY pal.createdAt DESC")
     List<PaymentAuditLog> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") UUID paymentRequestId);
@@ -25,7 +25,7 @@ public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog
     List<PaymentAuditLog> findByPaymentTransactionIdOrderByCreatedAtDesc(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentRefundId = :paymentRefundId ORDER BY pal.createdAt DESC")
-    List<PaymentAuditLog> findByPaymentRefundIdOrderByCreatedAtDesc(@Param("paymentRefundId") Long paymentRefundId);
+    List<PaymentAuditLog> findByPaymentRefundIdOrderByCreatedAtDesc(@Param("paymentRefundId") UUID paymentRefundId);
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.action = :action ORDER BY pal.createdAt DESC")
     List<PaymentAuditLog> findByActionOrderByCreatedAtDesc(@Param("action") String action);
@@ -98,7 +98,7 @@ public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog
     long countByPaymentTransactionId(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT COUNT(pal) FROM PaymentAuditLog pal WHERE pal.paymentRefundId = :paymentRefundId")
-    long countByPaymentRefundId(@Param("paymentRefundId") Long paymentRefundId);
+    long countByPaymentRefundId(@Param("paymentRefundId") UUID paymentRefundId);
 
     @Query("SELECT COUNT(pal) FROM PaymentAuditLog pal WHERE pal.action = :action")
     long countByAction(@Param("action") String action);

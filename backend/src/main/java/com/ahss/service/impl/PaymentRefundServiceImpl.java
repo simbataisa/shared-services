@@ -44,7 +44,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PaymentRefundDto> getRefundById(Long id) {
+    public Optional<PaymentRefundDto> getRefundById(UUID id) {
         return paymentRefundRepository.findById(id)
                 .map(this::convertToDto);
     }
@@ -177,7 +177,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     }
 
     @Override
-    public PaymentRefundDto updateRefundStatus(Long id, PaymentTransactionStatus status, String reason) {
+    public PaymentRefundDto updateRefundStatus(UUID id, PaymentTransactionStatus status, String reason) {
         PaymentRefund refund = paymentRefundRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + id));
 
@@ -188,7 +188,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     }
 
     @Override
-    public PaymentRefundDto markAsProcessed(Long id, String externalRefundId, Map<String, Object> gatewayResponse) {
+    public PaymentRefundDto markAsProcessed(UUID id, String externalRefundId, Map<String, Object> gatewayResponse) {
         PaymentRefund refund = paymentRefundRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + id));
 
@@ -202,7 +202,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     }
 
     @Override
-    public PaymentRefundDto markAsFailed(Long id, String errorCode, String errorMessage) {
+    public PaymentRefundDto markAsFailed(UUID id, String errorCode, String errorMessage) {
         PaymentRefund refund = paymentRefundRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + id));
 
@@ -215,7 +215,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     }
 
     @Override
-    public PaymentRefundDto retryRefund(Long id) {
+    public PaymentRefundDto retryRefund(UUID id) {
         PaymentRefund refund = paymentRefundRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + id));
 
@@ -228,7 +228,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     }
 
     @Override
-    public void cancelRefund(Long id, String reason) {
+    public void cancelRefund(UUID id, String reason) {
         PaymentRefund refund = paymentRefundRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + id));
 
@@ -316,7 +316,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     }
 
     @Override
-    public void syncRefundStatusWithGateway(Long id) {
+    public void syncRefundStatusWithGateway(UUID id) {
         // Implementation would sync with payment gateway
     }
 

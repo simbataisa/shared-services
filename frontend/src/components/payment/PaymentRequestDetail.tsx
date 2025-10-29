@@ -227,7 +227,7 @@ const PaymentRequestDetail: React.FC = () => {
         title={paymentRequest.title}
         description={`Request Code: ${paymentRequest.requestCode}`}
         breadcrumbs={[
-          { label: "Payment Requests", href: "/payments/requests" },
+          { label: "Payment Requests", href: "/payments" },
           { label: paymentRequest.title },
         ]}
       />

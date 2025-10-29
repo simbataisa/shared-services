@@ -13,9 +13,10 @@ import java.util.UUID;
 public class PaymentAuditLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(generator = "uuid2")
+    @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "payment_audit_log_id")
-    private Long id;
+    private UUID id;
 
     @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "payment_request_id", nullable = false)
@@ -26,7 +27,8 @@ public class PaymentAuditLog {
     private UUID paymentTransactionId;
 
     @Column(name = "payment_refund_id")
-    private Long paymentRefundId;
+    @JdbcTypeCode(SqlTypes.UUID)
+    private UUID paymentRefundId;
 
     @Column(nullable = false, length = 50)
     private String action;
@@ -116,7 +118,7 @@ public class PaymentAuditLog {
         return audit;
     }
 
-    public static PaymentAuditLog createRefundAudit(UUID paymentRequestId, Long paymentRefundId, 
+    public static PaymentAuditLog createRefundAudit(UUID paymentRequestId, UUID paymentRefundId, 
                                                    String action, String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, description);
         audit.setPaymentRefundId(paymentRefundId);
@@ -125,11 +127,11 @@ public class PaymentAuditLog {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -149,11 +151,11 @@ public class PaymentAuditLog {
         this.paymentTransactionId = paymentTransactionId;
     }
 
-    public Long getPaymentRefundId() {
+    public UUID getPaymentRefundId() {
         return paymentRefundId;
     }
 
-    public void setPaymentRefundId(Long paymentRefundId) {
+    public void setPaymentRefundId(UUID paymentRefundId) {
         this.paymentRefundId = paymentRefundId;
     }
 

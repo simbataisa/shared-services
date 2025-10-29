@@ -6,10 +6,10 @@ import java.util.UUID;
 
 public class PaymentAuditLogDto {
 
-    private Long id;
+    private UUID id;
     private UUID paymentRequestId;
     private UUID paymentTransactionId;
-    private Long paymentRefundId;
+    private UUID paymentRefundId;
     private String action;
     private String oldStatus;
     private String newStatus;
@@ -25,11 +25,11 @@ public class PaymentAuditLogDto {
     public PaymentAuditLogDto() {}
 
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -49,11 +49,11 @@ public class PaymentAuditLogDto {
         this.paymentTransactionId = paymentTransactionId;
     }
 
-    public Long getPaymentRefundId() {
+    public UUID getPaymentRefundId() {
         return paymentRefundId;
     }
 
-    public void setPaymentRefundId(Long paymentRefundId) {
+    public void setPaymentRefundId(UUID paymentRefundId) {
         this.paymentRefundId = paymentRefundId;
     }
 

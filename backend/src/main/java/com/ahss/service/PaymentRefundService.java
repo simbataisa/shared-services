@@ -17,7 +17,7 @@ public interface PaymentRefundService {
 
     PaymentRefundDto createRefund(CreateRefundDto createDto);
 
-    Optional<PaymentRefundDto> getRefundById(Long id);
+    Optional<PaymentRefundDto> getRefundById(UUID id);
 
     Optional<PaymentRefundDto> getRefundByCode(String refundCode);
 
@@ -53,15 +53,15 @@ public interface PaymentRefundService {
 
     List<PaymentRefundDto> getRefundsByCreatedBy(Long userId);
 
-    PaymentRefundDto updateRefundStatus(Long id, PaymentTransactionStatus status, String reason);
+    PaymentRefundDto updateRefundStatus(UUID id, PaymentTransactionStatus status, String reason);
 
-    PaymentRefundDto markAsProcessed(Long id, String externalRefundId, Map<String, Object> gatewayResponse);
+    PaymentRefundDto markAsProcessed(UUID id, String externalRefundId, Map<String, Object> gatewayResponse);
 
-    PaymentRefundDto markAsFailed(Long id, String errorCode, String errorMessage);
+    PaymentRefundDto markAsFailed(UUID id, String errorCode, String errorMessage);
 
-    PaymentRefundDto retryRefund(Long id);
+    PaymentRefundDto retryRefund(UUID id);
 
-    void cancelRefund(Long id, String reason);
+    void cancelRefund(UUID id, String reason);
 
     boolean existsByRefundCode(String refundCode);
 
@@ -85,5 +85,5 @@ public interface PaymentRefundService {
 
     void processStaleRefunds();
 
-    void syncRefundStatusWithGateway(Long id);
+    void syncRefundStatusWithGateway(UUID id);
 }

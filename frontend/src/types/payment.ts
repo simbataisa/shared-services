@@ -69,7 +69,7 @@ export interface PaymentTransaction {
 }
 
 export interface PaymentRefund {
-  id: number;
+  id: string;
   refundCode: string;
   paymentTransactionId: string;
   paymentTransaction?: PaymentTransaction;
@@ -91,10 +91,10 @@ export interface PaymentRefund {
 }
 
 export interface PaymentAuditLog {
-  id: number;
+  id: string;
   paymentRequestId?: string;
   paymentTransactionId?: string;
-  paymentRefundId?: number;
+  paymentRefundId?: string;
   action: string;
   oldValues?: Record<string, any>;
   newValues?: Record<string, any>;

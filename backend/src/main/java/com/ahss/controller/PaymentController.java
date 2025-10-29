@@ -264,7 +264,7 @@ public class PaymentController {
     }
 
     @GetMapping("/refunds/{id}")
-    public ResponseEntity<ApiResponse<PaymentRefundDto>> getRefundById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PaymentRefundDto>> getRefundById(@PathVariable UUID id) {
         Optional<PaymentRefundDto> refund = paymentRefundService.getRefundById(id);
         if (refund.isPresent()) {
             return ResponseEntity.ok(ApiResponse.ok(refund.get(), "Payment refund retrieved successfully", "/api/v1/payments/refunds/" + id));
@@ -318,7 +318,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/refunds/{id}/cancel")
-    public ResponseEntity<ApiResponse<Void>> cancelRefund(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> cancelRefund(@PathVariable UUID id) {
         try {
             paymentRefundService.cancelRefund(id, "Cancelled by user request");
             return ResponseEntity.ok(ApiResponse.ok(null, "Payment refund cancelled successfully", "/api/v1/payments/refunds/" + id + "/cancel"));
@@ -340,7 +340,7 @@ public class PaymentController {
     }
 
     @GetMapping("/audit-logs/{id}")
-    public ResponseEntity<ApiResponse<PaymentAuditLogDto>> getAuditLogById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PaymentAuditLogDto>> getAuditLogById(@PathVariable UUID id) {
         Optional<PaymentAuditLogDto> auditLog = auditLogService.getAuditLogById(id);
         if (auditLog.isPresent()) {
             return ResponseEntity.ok(ApiResponse.ok(auditLog.get(), "Payment audit log retrieved successfully", "/api/v1/payments/audit-logs/" + id));
@@ -372,7 +372,7 @@ public class PaymentController {
 
     @GetMapping("/audit-logs/refund/{refundId}")
     public ResponseEntity<ApiResponse<Page<PaymentAuditLogDto>>> getAuditLogsByRefund(
-            @PathVariable Long refundId,
+            @PathVariable UUID refundId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);

@@ -20,11 +20,11 @@ public interface PaymentAuditLogService {
                                            String newStatus, String description, Map<String, Object> changeDetails,
                                            Long userId, String userAgent, String ipAddress);
 
-    PaymentAuditLogDto logRefundAction(Long paymentRefundId, String action, String oldStatus, 
+    PaymentAuditLogDto logRefundAction(UUID paymentRefundId, String action, String oldStatus, 
                                       String newStatus, String description, Map<String, Object> changeDetails,
                                       Long userId, String userAgent, String ipAddress);
 
-    Optional<PaymentAuditLogDto> getAuditLogById(Long id);
+    Optional<PaymentAuditLogDto> getAuditLogById(UUID id);
 
     Page<PaymentAuditLogDto> getAllAuditLogs(Pageable pageable);
 
@@ -32,7 +32,7 @@ public interface PaymentAuditLogService {
 
     Page<PaymentAuditLogDto> getAuditLogsByTransaction(UUID paymentTransactionId, Pageable pageable);
 
-    Page<PaymentAuditLogDto> getAuditLogsByRefund(Long paymentRefundId, Pageable pageable);
+    Page<PaymentAuditLogDto> getAuditLogsByRefund(UUID paymentRefundId, Pageable pageable);
 
     Page<PaymentAuditLogDto> getAuditLogsByAction(String action, Pageable pageable);
 
@@ -58,7 +58,7 @@ public interface PaymentAuditLogService {
 
     Long countByTransaction(UUID paymentTransactionId);
 
-    Long countByRefund(Long paymentRefundId);
+    Long countByRefund(UUID paymentRefundId);
 
     List<String> getDistinctActions();
 
