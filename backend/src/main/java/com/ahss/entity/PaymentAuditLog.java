@@ -6,6 +6,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment_audit_log")
@@ -16,8 +17,9 @@ public class PaymentAuditLog {
     @Column(name = "payment_audit_log_id")
     private Long id;
 
+    @JdbcTypeCode(SqlTypes.OTHER)
     @Column(name = "payment_request_id", nullable = false)
-    private Long paymentRequestId;
+    private UUID paymentRequestId;
 
     @Column(name = "payment_transaction_id")
     private Long paymentTransactionId;
@@ -81,13 +83,13 @@ public class PaymentAuditLog {
     // Constructors
     public PaymentAuditLog() {}
 
-    public PaymentAuditLog(Long paymentRequestId, String action, String description) {
+    public PaymentAuditLog(UUID paymentRequestId, String action, String description) {
         this.paymentRequestId = paymentRequestId;
         this.action = action;
         this.description = description;
     }
 
-    public PaymentAuditLog(Long paymentRequestId, String action, String oldStatus, 
+    public PaymentAuditLog(UUID paymentRequestId, String action, String oldStatus, 
                           String newStatus, String description) {
         this.paymentRequestId = paymentRequestId;
         this.action = action;
@@ -97,7 +99,7 @@ public class PaymentAuditLog {
     }
 
     // Static factory methods for common audit actions
-    public static PaymentAuditLog createPaymentRequestAudit(Long paymentRequestId, String action, 
+    public static PaymentAuditLog createPaymentRequestAudit(UUID paymentRequestId, String action, 
                                                            String oldStatus, String newStatus, 
                                                            String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, oldStatus, newStatus, description);
@@ -105,7 +107,7 @@ public class PaymentAuditLog {
         return audit;
     }
 
-    public static PaymentAuditLog createTransactionAudit(Long paymentRequestId, Long paymentTransactionId, 
+    public static PaymentAuditLog createTransactionAudit(UUID paymentRequestId, Long paymentTransactionId, 
                                                         String action, String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, description);
         audit.setPaymentTransactionId(paymentTransactionId);
@@ -113,7 +115,7 @@ public class PaymentAuditLog {
         return audit;
     }
 
-    public static PaymentAuditLog createRefundAudit(Long paymentRequestId, Long paymentRefundId, 
+    public static PaymentAuditLog createRefundAudit(UUID paymentRequestId, Long paymentRefundId, 
                                                    String action, String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, description);
         audit.setPaymentRefundId(paymentRefundId);
@@ -130,11 +132,11 @@ public class PaymentAuditLog {
         this.id = id;
     }
 
-    public Long getPaymentRequestId() {
+    public UUID getPaymentRequestId() {
         return paymentRequestId;
     }
 
-    public void setPaymentRequestId(Long paymentRequestId) {
+    public void setPaymentRequestId(UUID paymentRequestId) {
         this.paymentRequestId = paymentRequestId;
     }
 

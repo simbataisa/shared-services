@@ -10,6 +10,7 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment_transaction")
@@ -26,8 +27,9 @@ public class PaymentTransaction {
     @Column(name = "external_transaction_id")
     private String externalTransactionId;
 
+    @JdbcTypeCode(SqlTypes.OTHER)
     @Column(name = "payment_request_id", nullable = false)
-    private Long paymentRequestId;
+    private UUID paymentRequestId;
 
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "transaction_type", nullable = false, columnDefinition = "payment_transaction_type")
@@ -108,7 +110,7 @@ public class PaymentTransaction {
     // Constructors
     public PaymentTransaction() {}
 
-    public PaymentTransaction(Long paymentRequestId, PaymentTransactionType transactionType, 
+    public PaymentTransaction(UUID paymentRequestId, PaymentTransactionType transactionType, 
                             BigDecimal amount, PaymentMethodType paymentMethod) {
         this.paymentRequestId = paymentRequestId;
         this.transactionType = transactionType;
@@ -141,11 +143,11 @@ public class PaymentTransaction {
         this.externalTransactionId = externalTransactionId;
     }
 
-    public Long getPaymentRequestId() {
+    public UUID getPaymentRequestId() {
         return paymentRequestId;
     }
 
-    public void setPaymentRequestId(Long paymentRequestId) {
+    public void setPaymentRequestId(UUID paymentRequestId) {
         this.paymentRequestId = paymentRequestId;
     }
 

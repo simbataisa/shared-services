@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, RefreshCw, DollarSign, CreditCard } from "lucide-react";
+import { Eye, RefreshCw, DollarSign, CreditCard, Plus } from "lucide-react";
 import { SearchAndFilter } from "@/components/common/SearchAndFilter";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -147,6 +148,16 @@ const PaymentTransactionList: React.FC = () => {
                 width: "200px"
               }
             ]}
+            actions={
+              <PermissionGuard permission="PAYMENT_MGMT:create">
+                <Button asChild>
+                  <Link to="/payments/requests/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Payment Request
+                  </Link>
+                </Button>
+              </PermissionGuard>
+            }
           />
         </CardContent>
       </Card>
@@ -188,14 +199,14 @@ const PaymentTransactionList: React.FC = () => {
                   </div>
 
                   <div className="flex space-x-2">
-                    <PermissionGuard permission="payment:transaction:read">
+                    <PermissionGuard permission="PAYMENT_MGMT:read">
                       <Button variant="outline" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
                     </PermissionGuard>
                     
                     {transaction.status === "FAILED" && (
-                      <PermissionGuard permission="payment:transaction:retry">
+                      <PermissionGuard permission="PAYMENT_MGMT:update">
                         <Button 
                           variant="outline" 
                           size="sm"

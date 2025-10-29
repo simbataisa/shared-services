@@ -155,7 +155,7 @@ CREATE TYPE payment_transaction_status AS ENUM (
 -- Payment Request Table
 -- Stores payment request information
 CREATE TABLE payment_request (
-    payment_request_id BIGSERIAL PRIMARY KEY,
+    payment_request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     -- Business Identifiers
     request_code VARCHAR(50) UNIQUE NOT NULL,  -- PR-2025-001234
@@ -214,7 +214,7 @@ CREATE TABLE payment_transaction (
     external_transaction_id VARCHAR(255),          -- Gateway transaction ID
 
     -- Transaction Details
-    payment_request_id BIGINT NOT NULL,
+    payment_request_id UUID NOT NULL,
     transaction_type payment_transaction_type NOT NULL,
     transaction_status payment_transaction_status NOT NULL DEFAULT 'PENDING',
 
@@ -292,7 +292,7 @@ CREATE TABLE payment_audit_log (
     payment_audit_log_id BIGSERIAL PRIMARY KEY,
 
     -- Reference
-    payment_request_id BIGINT,
+    payment_request_id UUID,
     payment_transaction_id BIGINT,
     payment_refund_id BIGINT,
 
@@ -500,12 +500,15 @@ import com.ahss.enums.PaymentRequestStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import io.hypersistence.utils.hibernate.type.array.EnumArrayType;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment_request")
@@ -513,9 +516,10 @@ import java.util.Map;
 public class PaymentRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.OTHER)
     @Column(name = "payment_request_id")
-    private Long id;
+    private UUID id;
 
     @Column(name = "request_code", unique = true, nullable = false, length = 50)
     private String requestCode;
@@ -620,11 +624,14 @@ import com.ahss.enums.PaymentTransactionType;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment_transaction")
@@ -642,8 +649,9 @@ public class PaymentTransaction {
     @Column(name = "external_transaction_id")
     private String externalTransactionId;
 
+    @JdbcTypeCode(SqlTypes.OTHER)
     @Column(name = "payment_request_id", nullable = false)
-    private Long paymentRequestId;
+    private UUID paymentRequestId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false, columnDefinition = "payment_transaction_type")
@@ -3401,7 +3409,7 @@ export enum PaymentTransactionStatus {
 }
 
 export interface PaymentRequest {
-  id: number;
+  id: string;
   requestCode: string;
   paymentToken: string;
   paymentLink: string;
@@ -3429,7 +3437,7 @@ export interface PaymentTransaction {
   id: number;
   transactionCode: string;
   externalTransactionId?: string;
-  paymentRequestId: number;
+  paymentRequestId: string;
   transactionType: PaymentTransactionType;
   transactionStatus: PaymentTransactionStatus;
   amount: number;
@@ -3465,7 +3473,7 @@ export interface PaymentRefund {
 
 export interface PaymentAuditLog {
   id: number;
-  paymentRequestId?: number;
+  paymentRequestId?: string;
   paymentTransactionId?: number;
   paymentRefundId?: number;
   action: string;

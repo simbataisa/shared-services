@@ -6,7 +6,7 @@ export type PaymentTransactionType = "PAYMENT" | "REFUND" | "CHARGEBACK" | "ADJU
 export type PaymentMethodType = "CREDIT_CARD" | "DEBIT_CARD" | "BANK_TRANSFER" | "DIGITAL_WALLET" | "CASH" | "CHECK";
 
 export interface PaymentRequest {
-  id: number;
+  id: string;
   requestCode: string;
   tenantId: number;
   tenantName?: string;
@@ -34,7 +34,7 @@ export interface PaymentRequest {
 export interface PaymentTransaction {
   id: number;
   transactionCode: string;
-  paymentRequestId: number;
+  paymentRequestId: string;
   paymentRequest?: PaymentRequest;
   amount: number;
   currency: string;
@@ -81,7 +81,7 @@ export interface PaymentRefund {
 
 export interface PaymentAuditLog {
   id: number;
-  paymentRequestId?: number;
+  paymentRequestId?: string;
   paymentTransactionId?: number;
   paymentRefundId?: number;
   action: string;
@@ -108,7 +108,7 @@ export interface CreatePaymentRequestDto {
 }
 
 export interface ProcessPaymentDto {
-  paymentRequestId: number;
+  paymentRequestId: string;
   paymentMethod: PaymentMethodType;
   gatewayName?: string;
   metadata?: Record<string, any>;

@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -60,7 +61,7 @@ public class PaymentController {
     }
 
     @GetMapping("/requests/{id}")
-    public ResponseEntity<ApiResponse<PaymentRequestDto>> getPaymentRequestById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PaymentRequestDto>> getPaymentRequestById(@PathVariable UUID id) {
         Optional<PaymentRequestDto> request = paymentRequestService.getPaymentRequestById(id);
         if (request.isPresent()) {
             return ResponseEntity.ok(ApiResponse.ok(request.get(), "Payment request retrieved successfully", "/api/v1/payments/requests/" + id));
@@ -115,7 +116,7 @@ public class PaymentController {
 
     @PutMapping("/requests/{id}")
     public ResponseEntity<ApiResponse<PaymentRequestDto>> updatePaymentRequest(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @Valid @RequestBody UpdatePaymentRequestDto requestDto) {
         try {
             PaymentRequestDto updatedRequest = paymentRequestService.updatePaymentRequest(id, requestDto);
@@ -132,7 +133,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/requests/{id}/cancel")
-    public ResponseEntity<ApiResponse<Void>> cancelPaymentRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> cancelPaymentRequest(@PathVariable UUID id) {
         try {
             paymentRequestService.cancelPaymentRequest(id, "Cancelled by user request");
             return ResponseEntity.ok(ApiResponse.ok(null, "Payment request cancelled successfully", "/api/v1/payments/requests/" + id + "/cancel"));
@@ -143,7 +144,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/requests/{id}/approve")
-    public ResponseEntity<ApiResponse<PaymentRequestDto>> approvePaymentRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PaymentRequestDto>> approvePaymentRequest(@PathVariable UUID id) {
         try {
             PaymentRequestDto updatedRequest = paymentRequestService.updatePaymentRequest(id, null);
             // Update status to APPROVED
@@ -156,7 +157,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/requests/{id}/reject")
-    public ResponseEntity<ApiResponse<PaymentRequestDto>> rejectPaymentRequest(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PaymentRequestDto>> rejectPaymentRequest(@PathVariable UUID id) {
         try {
             PaymentRequestDto updatedRequest = paymentRequestService.updatePaymentRequest(id, null);
             // Update status to REJECTED
@@ -203,7 +204,7 @@ public class PaymentController {
 
     @GetMapping("/transactions/request/{requestId}")
     public ResponseEntity<ApiResponse<Page<PaymentTransactionDto>>> getTransactionsByRequest(
-            @PathVariable Long requestId,
+            @PathVariable UUID requestId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -355,7 +356,7 @@ public class PaymentController {
 
     @GetMapping("/audit-logs/request/{requestId}")
     public ResponseEntity<ApiResponse<Page<PaymentAuditLogDto>>> getAuditLogsByPaymentRequest(
-            @PathVariable Long requestId,
+            @PathVariable UUID requestId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);

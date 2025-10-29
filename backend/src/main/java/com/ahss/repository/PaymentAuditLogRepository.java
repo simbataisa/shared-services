@@ -10,15 +10,16 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog, Long> {
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentRequestId = :paymentRequestId ORDER BY pal.createdAt DESC")
-    List<PaymentAuditLog> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") Long paymentRequestId);
+    List<PaymentAuditLog> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") UUID paymentRequestId);
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentRequestId = :paymentRequestId ORDER BY pal.createdAt DESC")
-    Page<PaymentAuditLog> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") Long paymentRequestId, Pageable pageable);
+    Page<PaymentAuditLog> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") UUID paymentRequestId, Pageable pageable);
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentTransactionId = :paymentTransactionId ORDER BY pal.createdAt DESC")
     List<PaymentAuditLog> findByPaymentTransactionIdOrderByCreatedAtDesc(@Param("paymentTransactionId") Long paymentTransactionId);
@@ -86,12 +87,12 @@ public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog
            "OR pal.oldStatus LIKE CONCAT('%', :searchTerm, '%') " +
            "OR pal.newStatus LIKE CONCAT('%', :searchTerm, '%')) " +
            "ORDER BY pal.createdAt DESC")
-    Page<PaymentAuditLog> searchAuditLogsByPaymentRequest(@Param("paymentRequestId") Long paymentRequestId,
+    Page<PaymentAuditLog> searchAuditLogsByPaymentRequest(@Param("paymentRequestId") UUID paymentRequestId,
                                                          @Param("searchTerm") String searchTerm, 
                                                          Pageable pageable);
 
     @Query("SELECT COUNT(pal) FROM PaymentAuditLog pal WHERE pal.paymentRequestId = :paymentRequestId")
-    long countByPaymentRequestId(@Param("paymentRequestId") Long paymentRequestId);
+    long countByPaymentRequestId(@Param("paymentRequestId") UUID paymentRequestId);
 
     @Query("SELECT COUNT(pal) FROM PaymentAuditLog pal WHERE pal.paymentTransactionId = :paymentTransactionId")
     long countByPaymentTransactionId(@Param("paymentTransactionId") Long paymentTransactionId);
@@ -127,5 +128,5 @@ public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog
     List<String> findDistinctActions();
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentRequestId IN :paymentRequestIds ORDER BY pal.createdAt DESC")
-    List<PaymentAuditLog> findByPaymentRequestIdsOrderByCreatedAtDesc(@Param("paymentRequestIds") List<Long> paymentRequestIds);
+    List<PaymentAuditLog> findByPaymentRequestIdsOrderByCreatedAtDesc(@Param("paymentRequestIds") List<UUID> paymentRequestIds);
 }

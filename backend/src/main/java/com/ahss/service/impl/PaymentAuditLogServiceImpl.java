@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,7 +27,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
     private PaymentAuditLogRepository auditLogRepository;
 
     @Override
-    public PaymentAuditLogDto logPaymentRequestAction(Long paymentRequestId, String action, String oldStatus,
+    public PaymentAuditLogDto logPaymentRequestAction(UUID paymentRequestId, String action, String oldStatus,
                                                      String newStatus, String description, Map<String, Object> changeDetails,
                                                      Long userId, String userAgent, String ipAddress) {
         PaymentAuditLog auditLog = PaymentAuditLog.createPaymentRequestAudit(
@@ -87,7 +88,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentAuditLogDto> getAuditLogsByPaymentRequest(Long paymentRequestId, Pageable pageable) {
+    public Page<PaymentAuditLogDto> getAuditLogsByPaymentRequest(UUID paymentRequestId, Pageable pageable) {
         return auditLogRepository.findByPaymentRequestIdOrderByCreatedAtDesc(paymentRequestId, pageable)
                 .map(this::convertToDto);
     }
@@ -182,7 +183,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Long countByPaymentRequest(Long paymentRequestId) {
+    public Long countByPaymentRequest(UUID paymentRequestId) {
         return auditLogRepository.countByPaymentRequestId(paymentRequestId);
     }
 

@@ -32,6 +32,7 @@ import ModuleCreate from "./components/module/ModuleCreate";
 import ModuleDetail from "./components/module/ModuleDetail";
 import ModuleEdit from "./components/module/ModuleEdit";
 import PaymentRequestList from "./components/payment/PaymentRequestList";
+import PaymentRequestCreate from "./components/payment/PaymentRequestCreate";
 import PaymentTransactionList from "./components/payment/PaymentTransactionList";
 import PaymentRefundList from "./components/payment/PaymentRefundList";
 import PaymentAuditLogList from "./components/payment/PaymentAuditLogList";
@@ -304,6 +305,15 @@ function App() {
             element={
               <ProtectedRoute permission="PAYMENT_MGMT:read">
                 <PaymentRequestList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/requests/new"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:create">
+                <PaymentRequestCreate />
               </ProtectedRoute>
             }
           />

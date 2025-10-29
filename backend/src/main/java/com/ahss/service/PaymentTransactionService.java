@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface PaymentTransactionService {
 
@@ -26,7 +27,7 @@ public interface PaymentTransactionService {
 
     Page<PaymentTransactionDto> getAllTransactions(Pageable pageable);
 
-    Page<PaymentTransactionDto> getTransactionsByPaymentRequest(Long paymentRequestId, Pageable pageable);
+    Page<PaymentTransactionDto> getTransactionsByPaymentRequest(UUID paymentRequestId, Pageable pageable);
 
     Page<PaymentTransactionDto> getTransactionsByStatus(PaymentTransactionStatus status, Pageable pageable);
 
@@ -50,7 +51,7 @@ public interface PaymentTransactionService {
 
     List<PaymentTransactionDto> getStaleTransactions(LocalDateTime cutoffTime);
 
-    List<PaymentTransactionDto> getSuccessfulTransactionsByRequest(Long paymentRequestId);
+    List<PaymentTransactionDto> getSuccessfulTransactionsByRequest(UUID paymentRequestId);
 
     PaymentTransactionDto updateTransactionStatus(Long id, PaymentTransactionStatus status, String reason);
 

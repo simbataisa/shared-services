@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,7 +75,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentTransactionDto> getTransactionsByPaymentRequest(Long paymentRequestId, Pageable pageable) {
+    public Page<PaymentTransactionDto> getTransactionsByPaymentRequest(UUID paymentRequestId, Pageable pageable) {
         List<PaymentTransaction> transactions = paymentTransactionRepository.findByPaymentRequestId(paymentRequestId);
         return convertListToPage(transactions, pageable);
     }
@@ -158,7 +159,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Override
     @Transactional(readOnly = true)
-    public List<PaymentTransactionDto> getSuccessfulTransactionsByRequest(Long paymentRequestId) {
+    public List<PaymentTransactionDto> getSuccessfulTransactionsByRequest(UUID paymentRequestId) {
         List<PaymentTransaction> transactions = paymentTransactionRepository.findByPaymentRequestId(paymentRequestId);
         return transactions.stream()
                 .filter(t -> t.getTransactionStatus() == PaymentTransactionStatus.SUCCESS)

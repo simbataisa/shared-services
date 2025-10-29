@@ -2,11 +2,12 @@ package com.ahss.dto.response;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 public class PaymentAuditLogDto {
 
     private Long id;
-    private Long paymentRequestId;
+    private UUID paymentRequestId;
     private Long paymentTransactionId;
     private Long paymentRefundId;
     private String action;
@@ -32,11 +33,11 @@ public class PaymentAuditLogDto {
         this.id = id;
     }
 
-    public Long getPaymentRequestId() {
+    public UUID getPaymentRequestId() {
         return paymentRequestId;
     }
 
-    public void setPaymentRequestId(Long paymentRequestId) {
+    public void setPaymentRequestId(UUID paymentRequestId) {
         this.paymentRequestId = paymentRequestId;
     }
 

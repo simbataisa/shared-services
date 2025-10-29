@@ -7,13 +7,14 @@ import com.ahss.enums.PaymentTransactionType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 public class PaymentTransactionDto {
 
     private Long id;
     private String transactionCode;
     private String externalTransactionId;
-    private Long paymentRequestId;
+    private UUID paymentRequestId;
     private PaymentTransactionType transactionType;
     private PaymentTransactionStatus transactionStatus;
     private BigDecimal amount;
@@ -59,11 +60,11 @@ public class PaymentTransactionDto {
         this.externalTransactionId = externalTransactionId;
     }
 
-    public Long getPaymentRequestId() {
+    public UUID getPaymentRequestId() {
         return paymentRequestId;
     }
 
-    public void setPaymentRequestId(Long paymentRequestId) {
+    public void setPaymentRequestId(UUID paymentRequestId) {
         this.paymentRequestId = paymentRequestId;
     }
 

@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, Long> {
@@ -26,10 +27,10 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     Optional<PaymentTransaction> findByExternalTransactionId(@Param("externalTransactionId") String externalTransactionId);
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.paymentRequestId = :paymentRequestId")
-    List<PaymentTransaction> findByPaymentRequestId(@Param("paymentRequestId") Long paymentRequestId);
+    List<PaymentTransaction> findByPaymentRequestId(@Param("paymentRequestId") UUID paymentRequestId);
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.paymentRequestId = :paymentRequestId ORDER BY pt.createdAt DESC")
-    List<PaymentTransaction> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") Long paymentRequestId);
+    List<PaymentTransaction> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") UUID paymentRequestId);
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.transactionStatus = :status")
     List<PaymentTransaction> findByTransactionStatus(@Param("status") PaymentTransactionStatus status);
@@ -77,7 +78,7 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
                                                   @Param("cutoffTime") LocalDateTime cutoffTime);
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.paymentRequestId = :paymentRequestId AND pt.transactionType = :type AND pt.transactionStatus = :status")
-    List<PaymentTransaction> findByPaymentRequestIdAndTypeAndStatus(@Param("paymentRequestId") Long paymentRequestId,
+    List<PaymentTransaction> findByPaymentRequestIdAndTypeAndStatus(@Param("paymentRequestId") UUID paymentRequestId,
                                                                    @Param("type") PaymentTransactionType type,
                                                                    @Param("status") PaymentTransactionStatus status);
 
@@ -115,7 +116,7 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
     Optional<PaymentTransaction> findWithPaymentRequest(@Param("id") Long id);
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.paymentRequestId = :paymentRequestId AND pt.transactionType = 'PAYMENT' AND pt.transactionStatus = 'SUCCESS'")
-    List<PaymentTransaction> findSuccessfulPaymentsByRequestId(@Param("paymentRequestId") Long paymentRequestId);
+    List<PaymentTransaction> findSuccessfulPaymentsByRequestId(@Param("paymentRequestId") UUID paymentRequestId);
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.transactionStatus IN :statuses ORDER BY pt.createdAt DESC")
     List<PaymentTransaction> findRecentByStatuses(@Param("statuses") List<PaymentTransactionStatus> statuses, Pageable pageable);

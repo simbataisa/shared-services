@@ -7,10 +7,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class PaymentRequestDto {
 
-    private Long id;
+    private UUID id;
     private String requestCode;
     private String paymentToken;
     private String title;
@@ -35,11 +36,11 @@ public class PaymentRequestDto {
     public PaymentRequestDto() {}
 
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

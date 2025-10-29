@@ -8,10 +8,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface PaymentAuditLogService {
 
-    PaymentAuditLogDto logPaymentRequestAction(Long paymentRequestId, String action, String oldStatus, 
+    PaymentAuditLogDto logPaymentRequestAction(UUID paymentRequestId, String action, String oldStatus, 
                                               String newStatus, String description, Map<String, Object> changeDetails,
                                               Long userId, String userAgent, String ipAddress);
 
@@ -27,7 +28,7 @@ public interface PaymentAuditLogService {
 
     Page<PaymentAuditLogDto> getAllAuditLogs(Pageable pageable);
 
-    Page<PaymentAuditLogDto> getAuditLogsByPaymentRequest(Long paymentRequestId, Pageable pageable);
+    Page<PaymentAuditLogDto> getAuditLogsByPaymentRequest(UUID paymentRequestId, Pageable pageable);
 
     Page<PaymentAuditLogDto> getAuditLogsByTransaction(Long paymentTransactionId, Pageable pageable);
 
@@ -53,7 +54,7 @@ public interface PaymentAuditLogService {
 
     Long countByUser(Long userId);
 
-    Long countByPaymentRequest(Long paymentRequestId);
+    Long countByPaymentRequest(UUID paymentRequestId);
 
     Long countByTransaction(Long paymentTransactionId);
 

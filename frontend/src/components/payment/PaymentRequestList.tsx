@@ -73,7 +73,7 @@ export default function PaymentRequestList() {
 
   const handleApproveRequest = async (id: string) => {
     try {
-      await paymentApi.requests.approve(parseInt(id));
+      await paymentApi.requests.approve(id);
       fetchPaymentRequests(); // Refresh the list
     } catch (error) {
       console.error("Error approving request:", error);
@@ -82,7 +82,7 @@ export default function PaymentRequestList() {
 
   const handleRejectRequest = async (id: string) => {
     try {
-      await paymentApi.requests.reject(parseInt(id));
+      await paymentApi.requests.reject(id);
       fetchPaymentRequests(); // Refresh the list
     } catch (error) {
       console.error("Error rejecting request:", error);
@@ -91,7 +91,7 @@ export default function PaymentRequestList() {
 
   const handleCancelRequest = async (id: string) => {
     try {
-      await paymentApi.requests.cancel(parseInt(id));
+      await paymentApi.requests.cancel(id);
       fetchPaymentRequests(); // Refresh the list
     } catch (error) {
       console.error("Error cancelling request:", error);
@@ -175,14 +175,6 @@ export default function PaymentRequestList() {
             Manage and track payment requests ({totalElements} total)
           </p>
         </div>
-        <PermissionGuard resource="payment_request" action="create">
-          <Button asChild>
-            <Link to="/payments/requests/new">
-              <Plus className="mr-2 h-4 w-4" />
-              New Request
-            </Link>
-          </Button>
-        </PermissionGuard>
       </div>
 
       <SearchAndFilter
@@ -199,6 +191,16 @@ export default function PaymentRequestList() {
             width: "200px"
           }
         ]}
+        actions={
+          <PermissionGuard permission="PAYMENT_MGMT:create">
+            <Button asChild>
+              <Link to="/payments/requests/new">
+                <Plus className="mr-2 h-4 w-4" />
+                New Request
+              </Link>
+            </Button>
+          </PermissionGuard>
+        }
       />
 
       <Card>
@@ -277,13 +279,13 @@ export default function PaymentRequestList() {
                         
                         {request.status === "PENDING" && (
                           <>
-                            <PermissionGuard resource="payment_request" action="approve">
+                            <PermissionGuard permission="PAYMENT_MGMT:verify">
                               <DropdownMenuItem onClick={() => handleApproveRequest(request.id.toString())}>
                                 <Check className="mr-2 h-4 w-4" />
                                 Approve
                               </DropdownMenuItem>
                             </PermissionGuard>
-                            <PermissionGuard resource="payment_request" action="reject">
+                            <PermissionGuard permission="PAYMENT_MGMT:verify">
                               <DropdownMenuItem onClick={() => handleRejectRequest(request.id.toString())}>
                                 <X className="mr-2 h-4 w-4" />
                                 Reject
@@ -293,7 +295,7 @@ export default function PaymentRequestList() {
                         )}
                         
                         {(request.status === "PENDING" || request.status === "APPROVED") && (
-                          <PermissionGuard resource="payment_request" action="cancel">
+                          <PermissionGuard permission="PAYMENT_MGMT:void">
                             <DropdownMenuItem onClick={() => handleCancelRequest(request.id.toString())}>
                               <Ban className="mr-2 h-4 w-4" />
                               Cancel
@@ -301,7 +303,7 @@ export default function PaymentRequestList() {
                           </PermissionGuard>
                         )}
                         
-                        <PermissionGuard resource="payment_request" action="update">
+                        <PermissionGuard permission="PAYMENT_MGMT:update">
                           <DropdownMenuItem asChild>
                             <Link to={`/payments/requests/${request.id}/edit`}>
                               <Edit className="mr-2 h-4 w-4" />
@@ -330,7 +332,7 @@ export default function PaymentRequestList() {
               </p>
               {(!searchTerm && statusFilter === "all") && (
                 <div className="mt-6">
-                  <PermissionGuard resource="payment_request" action="create">
+                  <PermissionGuard permission="PAYMENT_MGMT:create">
                     <Button asChild>
                       <Link to="/payments/requests/new">
                         <Plus className="mr-2 h-4 w-4" />

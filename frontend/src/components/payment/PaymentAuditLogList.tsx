@@ -171,7 +171,7 @@ const PaymentAuditLogList: React.FC = () => {
                   </div>
 
                   <div className="flex space-x-2">
-                    <PermissionGuard permission="payment:audit:read">
+                    <PermissionGuard permission="AUDIT_MGMT:read">
                       <Button variant="outline" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>

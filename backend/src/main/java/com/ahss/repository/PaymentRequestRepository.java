@@ -13,9 +13,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, Long> {
+public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, UUID> {
 
     @Query("SELECT pr FROM PaymentRequest pr WHERE pr.requestCode = :requestCode")
     Optional<PaymentRequest> findByRequestCode(@Param("requestCode") String requestCode);
@@ -101,7 +102,7 @@ public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, 
                                                       @Param("currency") String currency);
 
     @Query("SELECT pr FROM PaymentRequest pr LEFT JOIN FETCH pr.transactions WHERE pr.id = :id")
-    Optional<PaymentRequest> findWithTransactions(@Param("id") Long id);
+    Optional<PaymentRequest> findWithTransactions(@Param("id") UUID id);
 
     @Query("SELECT pr FROM PaymentRequest pr WHERE pr.status IN :statuses ORDER BY pr.createdAt DESC")
     List<PaymentRequest> findRecentByStatuses(@Param("statuses") List<PaymentRequestStatus> statuses, Pageable pageable);

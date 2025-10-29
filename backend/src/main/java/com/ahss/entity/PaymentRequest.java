@@ -18,9 +18,9 @@ import java.util.UUID;
 public class PaymentRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(generator = "UUID")
     @Column(name = "payment_request_id")
-    private Long id;
+    private UUID id;
 
     @Column(name = "request_code", unique = true, nullable = false, length = 50)
     private String requestCode;
@@ -130,11 +130,11 @@ public class PaymentRequest {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

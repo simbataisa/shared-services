@@ -12,20 +12,21 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface PaymentRequestService {
 
     PaymentRequestDto createPaymentRequest(CreatePaymentRequestDto createDto);
 
-    Optional<PaymentRequestDto> getPaymentRequestById(Long id);
+    Optional<PaymentRequestDto> getPaymentRequestById(UUID id);
 
     Optional<PaymentRequestDto> getPaymentRequestByCode(String requestCode);
 
     Optional<PaymentRequestDto> getPaymentRequestByToken(String paymentToken);
 
-    PaymentRequestDto updatePaymentRequest(Long id, UpdatePaymentRequestDto updateDto);
+    PaymentRequestDto updatePaymentRequest(UUID id, UpdatePaymentRequestDto updateDto);
 
-    void deletePaymentRequest(Long id);
+    void deletePaymentRequest(UUID id);
 
     Page<PaymentRequestDto> getAllPaymentRequests(Pageable pageable);
 
@@ -47,11 +48,11 @@ public interface PaymentRequestService {
 
     List<PaymentRequestDto> getRecentPaymentRequestsByStatus(PaymentRequestStatus status, int limit);
 
-    PaymentRequestDto cancelPaymentRequest(Long id, String reason);
+    PaymentRequestDto cancelPaymentRequest(UUID id, String reason);
 
-    PaymentRequestDto expirePaymentRequest(Long id);
+    PaymentRequestDto expirePaymentRequest(UUID id);
 
-    PaymentRequestDto markAsPaid(Long id, LocalDateTime paidAt);
+    PaymentRequestDto markAsPaid(UUID id, LocalDateTime paidAt);
 
     boolean existsByRequestCode(String requestCode);
 

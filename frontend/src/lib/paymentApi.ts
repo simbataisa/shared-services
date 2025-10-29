@@ -25,7 +25,7 @@ export const paymentRequestApi = {
   },
 
   // Get payment request by ID
-  getById: async (id: number) => {
+  getById: async (id: string) => {
     const response = await api.get<ApiResponse<PaymentRequest>>(`/v1/payments/requests/${id}`);
     return response.data;
   },
@@ -55,25 +55,25 @@ export const paymentRequestApi = {
   },
 
   // Update payment request
-  update: async (id: number, data: CreatePaymentRequestDto) => {
+  update: async (id: string, data: CreatePaymentRequestDto) => {
     const response = await api.put<ApiResponse<PaymentRequest>>(`/v1/payments/requests/${id}`, data);
     return response.data;
   },
 
   // Cancel payment request
-  cancel: async (id: number) => {
+  cancel: async (id: string) => {
     const response = await api.patch<ApiResponse<void>>(`/v1/payments/requests/${id}/cancel`);
     return response.data;
   },
 
   // Approve payment request
-  approve: async (id: number) => {
+  approve: async (id: string) => {
     const response = await api.patch<ApiResponse<void>>(`/v1/payments/requests/${id}/approve`);
     return response.data;
   },
 
   // Reject payment request
-  reject: async (id: number) => {
+  reject: async (id: string) => {
     const response = await api.patch<ApiResponse<void>>(`/v1/payments/requests/${id}/reject`);
     return response.data;
   }
@@ -100,7 +100,7 @@ export const paymentTransactionApi = {
   },
 
   // Get transactions by request
-  getByRequest: async (requestId: number, page = 0, size = 10) => {
+  getByRequest: async (requestId: string, page = 0, size = 10) => {
     const response = await api.get<ApiResponse<{ content: PaymentTransaction[]; totalElements: number; totalPages: number }>>(`/v1/payments/transactions/request/${requestId}?page=${page}&size=${size}`);
     return response.data;
   },
@@ -190,7 +190,7 @@ export const paymentAuditLogApi = {
   },
 
   // Get audit logs by payment request
-  getByPaymentRequest: async (requestId: number, page = 0, size = 10) => {
+  getByPaymentRequest: async (requestId: string, page = 0, size = 10) => {
     const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/request/${requestId}?page=${page}&size=${size}`);
     return response.data;
   },

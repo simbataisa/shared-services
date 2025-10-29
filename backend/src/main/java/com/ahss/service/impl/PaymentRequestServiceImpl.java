@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,7 +58,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PaymentRequestDto> getPaymentRequestById(Long id) {
+    public Optional<PaymentRequestDto> getPaymentRequestById(UUID id) {
         return paymentRequestRepository.findById(id)
                 .map(this::convertToDto);
     }
@@ -77,7 +78,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
     }
 
     @Override
-    public PaymentRequestDto updatePaymentRequest(Long id, UpdatePaymentRequestDto updateDto) {
+    public PaymentRequestDto updatePaymentRequest(UUID id, UpdatePaymentRequestDto updateDto) {
         PaymentRequest existingRequest = paymentRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + id));
 
@@ -102,7 +103,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
     }
 
     @Override
-    public void deletePaymentRequest(Long id) {
+    public void deletePaymentRequest(UUID id) {
         PaymentRequest paymentRequest = paymentRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + id));
 
@@ -199,7 +200,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
     }
 
     @Override
-    public PaymentRequestDto cancelPaymentRequest(Long id, String reason) {
+    public PaymentRequestDto cancelPaymentRequest(UUID id, String reason) {
         PaymentRequest paymentRequest = paymentRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + id));
 
@@ -224,7 +225,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
     }
 
     @Override
-    public PaymentRequestDto expirePaymentRequest(Long id) {
+    public PaymentRequestDto expirePaymentRequest(UUID id) {
         PaymentRequest paymentRequest = paymentRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + id));
 
@@ -249,7 +250,7 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
     }
 
     @Override
-    public PaymentRequestDto markAsPaid(Long id, LocalDateTime paidAt) {
+    public PaymentRequestDto markAsPaid(UUID id, LocalDateTime paidAt) {
         PaymentRequest paymentRequest = paymentRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + id));
 
