@@ -17,6 +17,12 @@ import {
   Shield,
   Building2,
   Activity,
+  FileText,
+  Loader,
+  Ban,
+  RotateCcw,
+  DollarSign,
+  Trash2,
 } from "lucide-react";
 import { type VariantProps } from "class-variance-authority";
 import { badgeVariants } from "@/components/ui/badge";
@@ -261,7 +267,7 @@ export function getStatusIcon(status: string) {
   const normalizedStatus = normalizeStatus(status);
   const config = STATUS_CONFIG[normalizedStatus] || STATUS_CONFIG.inactive;
   const IconComponent = config.icon;
-
+  console.log("getStatusIcon", config);
   return <IconComponent className={`h-4 w-4 ${config.iconColor}`} />;
 }
 
@@ -494,6 +500,71 @@ export const getPaymentRequestStatusColor = (status: PaymentRequestStatus): stri
       return "bg-red-100 text-red-800 hover:bg-red-100 border-red-200";
     default:
       return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+  }
+};
+
+/**
+ * Get payment request status icon component based on status
+ * @param status - The PaymentRequestStatus type
+ * @returns JSX element with appropriate icon and styling
+ */
+export const getPaymentRequestStatusIcon = (status: PaymentRequestStatus) => {
+  const getIconColor = (status: PaymentRequestStatus): string => {
+    switch (status) {
+      case "DRAFT":
+        return "text-gray-600";
+      case "PENDING":
+        return "text-yellow-600";
+      case "PROCESSING":
+        return "text-blue-600";
+      case "COMPLETED":
+        return "text-green-600";
+      case "FAILED":
+        return "text-red-600";
+      case "CANCELLED":
+        return "text-gray-600";
+      case "VOIDED":
+        return "text-purple-600";
+      case "REFUNDED":
+        return "text-orange-600";
+      case "PARTIAL_REFUND":
+        return "text-orange-600";
+      case "APPROVED":
+        return "text-green-600";
+      case "REJECTED":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  const iconColor = getIconColor(status);
+
+  switch (status) {
+    case "DRAFT":
+      return <FileText className={`h-4 w-4 ${iconColor}`} />;
+    case "PENDING":
+      return <Clock className={`h-4 w-4 ${iconColor}`} />;
+    case "PROCESSING":
+      return <Loader className={`h-4 w-4 ${iconColor}`} />;
+    case "COMPLETED":
+      return <CheckCircle className={`h-4 w-4 ${iconColor}`} />;
+    case "FAILED":
+      return <XCircle className={`h-4 w-4 ${iconColor}`} />;
+    case "CANCELLED":
+      return <Ban className={`h-4 w-4 ${iconColor}`} />;
+    case "VOIDED":
+      return <Trash2 className={`h-4 w-4 ${iconColor}`} />;
+    case "REFUNDED":
+      return <RotateCcw className={`h-4 w-4 ${iconColor}`} />;
+    case "PARTIAL_REFUND":
+      return <RotateCcw className={`h-4 w-4 ${iconColor}`} />;
+    case "APPROVED":
+      return <CheckCircle2 className={`h-4 w-4 ${iconColor}`} />;
+    case "REJECTED":
+      return <XCircle className={`h-4 w-4 ${iconColor}`} />;
+    default:
+      return <AlertCircle className={`h-4 w-4 ${iconColor}`} />;
   }
 };
 

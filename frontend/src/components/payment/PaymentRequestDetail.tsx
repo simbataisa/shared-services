@@ -1,22 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  ArrowLeft, 
   CheckCircle, 
   XCircle, 
   Ban, 
   RefreshCw,
   DollarSign,
-  FileText,
   History,
   AlertTriangle,
   Activity,
@@ -26,6 +22,8 @@ import { paymentApi } from '@/lib/paymentApi';
 import { DetailHeaderCard, StatisticsCard } from '@/components/common';
 import { PaymentRequestDetailsCard } from './PaymentRequestDetailsCard';
 import { PaymentTransactionTable } from './PaymentTransactionTable';
+import PaymentRequestStatsCard from './PaymentRequestStatsCard';
+import PaymentRequestStatusCard from './PaymentRequestStatusCard';
 import type { 
   PaymentRequest, 
   PaymentTransaction, 
@@ -35,9 +33,6 @@ import type {
 } from '@/types/payment';
 import { 
   PAYMENT_REQUEST_STATUS_MAPPINGS,
-  PAYMENT_TRANSACTION_STATUS_MAPPINGS,
-  PAYMENT_TRANSACTION_TYPE_MAPPINGS,
-  PAYMENT_METHOD_TYPE_MAPPINGS 
 } from '@/types/payment';
 
 const PaymentRequestDetail: React.FC = () => {
@@ -114,7 +109,7 @@ const PaymentRequestDetail: React.FC = () => {
     }
   };
 
-  const handleAction = async (action: 'approve' | 'reject' | 'cancel', requestId: string) => {
+  const handleAction = async (action: 'approve' | 'reject' | 'cancel' | 'void' | 'refund' | 'partial_refund', requestId: string) => {
     try {
       setActionLoading(action);
       
@@ -128,6 +123,22 @@ const PaymentRequestDetail: React.FC = () => {
           break;
         case 'cancel':
           response = await paymentApi.requests.cancel(requestId);
+          break;
+        case 'void':
+          // TODO: Implement void endpoint when available
+          console.log('Void action not yet implemented in backend');
+          setActionLoading(null);
+          return;
+        case 'refund':
+          // TODO: Implement full refund logic
+          console.log('Full refund action not yet implemented');
+          setActionLoading(null);
+          return;
+        case 'partial_refund':
+          // TODO: Implement partial refund logic
+          console.log('Partial refund action not yet implemented');
+          setActionLoading(null);
+          return;
           break;
       }
 
@@ -145,22 +156,6 @@ const PaymentRequestDetail: React.FC = () => {
       setSuccess(null);
     } finally {
       setActionLoading(null);
-    }
-  };
-
-  const getStatusColor = (status: PaymentRequestStatus) => {
-    switch (status) {
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'FAILED':
-      case 'REJECTED':
-        return 'bg-red-100 text-red-800';
-      case 'CANCELLED':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return 'bg-blue-100 text-blue-800';
     }
   };
 
@@ -235,11 +230,6 @@ const PaymentRequestDetail: React.FC = () => {
           { label: "Payment Requests", href: "/payments/requests" },
           { label: paymentRequest.title },
         ]}
-        actions={
-          <Badge className={getStatusColor(paymentRequest.status)}>
-            {PAYMENT_REQUEST_STATUS_MAPPINGS[paymentRequest.status]}
-          </Badge>
-        }
       />
 
       {/* Main Content */}
@@ -343,93 +333,20 @@ const PaymentRequestDetail: React.FC = () => {
 
          {/* Right Column - Sidebar */}
          <div className="space-y-6">
-           {/* Statistics Card */}
-           <StatisticsCard
-             title="Payment Statistics"
-             statistics={[
-               {
-                 label: "Amount",
-                 value: formatCurrency(paymentRequest.amount, paymentRequest.currency),
-                 icon: <DollarSign className="h-4 w-4" />,
-                 className: "text-green-600"
-               },
-               {
-                 label: "Transactions",
-                 value: transactions.length.toString(),
-                 icon: <Receipt className="h-4 w-4" />,
-                 className: "text-blue-600"
-               },
-               {
-                 label: "Refunds",
-                 value: refunds.length.toString(),
-                 icon: <RefreshCw className="h-4 w-4" />,
-                 className: "text-orange-600"
-               },
-               {
-                 label: "Status",
-                 value: paymentRequest.status,
-                 icon: <Activity className="h-4 w-4" />,
-                 className: paymentRequest.status === 'COMPLETED' ? "text-green-600" : 
-                           paymentRequest.status === 'PENDING' ? "text-yellow-600" : "text-red-600"
-               }
-             ]}
+          {/* Status Card */}
+           <PaymentRequestStatusCard
+             paymentRequest={paymentRequest}
+             actionLoading={actionLoading}
+             onAction={handleAction}
            />
 
-           {/* Actions Card */}
-           <Card>
-             <CardHeader>
-               <CardTitle>Actions</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <div className="space-y-2">
-                 {paymentRequest.status === 'PENDING' && (
-                   <>
-                     <Button
-                       onClick={() => handleAction('approve', paymentRequest.id)}
-                       disabled={actionLoading === 'approve'}
-                       className="w-full bg-green-600 hover:bg-green-700"
-                     >
-                       {actionLoading === 'approve' ? (
-                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                       ) : (
-                         <CheckCircle className="h-4 w-4 mr-2" />
-                       )}
-                       Approve
-                     </Button>
-                     <Button
-                       variant="destructive"
-                       onClick={() => handleAction('reject', paymentRequest.id)}
-                       disabled={actionLoading === 'reject'}
-                       className="w-full"
-                     >
-                       {actionLoading === 'reject' ? (
-                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                       ) : (
-                         <XCircle className="h-4 w-4 mr-2" />
-                       )}
-                       Reject
-                     </Button>
-                   </>
-                 )}
-                 
-                 {['PENDING', 'APPROVED'].includes(paymentRequest.status) && (
-                   <Button
-                     variant="outline"
-                     onClick={() => handleAction('cancel', paymentRequest.id)}
-                     disabled={actionLoading === 'cancel'}
-                     className="w-full"
-                   >
-                     {actionLoading === 'cancel' ? (
-                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                     ) : (
-                       <Ban className="h-4 w-4 mr-2" />
-                     )}
-                     Cancel
-                   </Button>
-                 )}
-               </div>
-             </CardContent>
-           </Card>
+           {/* Statistics Card */}
+           <PaymentRequestStatsCard
+             paymentRequest={paymentRequest}
+             transactions={transactions}
+             refunds={refunds}
+           />
+
 
            {/* Audit Information Card */}
            <Card>
