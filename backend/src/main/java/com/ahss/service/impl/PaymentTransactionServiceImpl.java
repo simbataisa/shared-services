@@ -47,7 +47,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PaymentTransactionDto> getTransactionById(Long id) {
+    public Optional<PaymentTransactionDto> getTransactionById(UUID id) {
         return paymentTransactionRepository.findById(id)
                 .map(this::convertToDto);
     }
@@ -168,7 +168,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     }
 
     @Override
-    public PaymentTransactionDto updateTransactionStatus(Long id, PaymentTransactionStatus status, String reason) {
+    public PaymentTransactionDto updateTransactionStatus(UUID id, PaymentTransactionStatus status, String reason) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
@@ -180,7 +180,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     }
 
     @Override
-    public PaymentTransactionDto markAsProcessed(Long id, String externalTransactionId, Map<String, Object> gatewayResponse) {
+    public PaymentTransactionDto markAsProcessed(UUID id, String externalTransactionId, Map<String, Object> gatewayResponse) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
@@ -193,7 +193,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     }
 
     @Override
-    public PaymentTransactionDto markAsFailed(Long id, String errorCode, String errorMessage) {
+    public PaymentTransactionDto markAsFailed(UUID id, String errorCode, String errorMessage) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
@@ -207,7 +207,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     }
 
     @Override
-    public PaymentTransactionDto retryTransaction(Long id) {
+    public PaymentTransactionDto retryTransaction(UUID id) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
@@ -221,7 +221,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     }
 
     @Override
-    public void cancelTransaction(Long id, String reason) {
+    public void cancelTransaction(UUID id, String reason) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
@@ -288,7 +288,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     }
 
     @Override
-    public void syncTransactionStatusWithGateway(Long id) {
+    public void syncTransactionStatusWithGateway(UUID id) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 

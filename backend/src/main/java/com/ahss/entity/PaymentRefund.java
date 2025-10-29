@@ -8,6 +8,7 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 @Entity
 @Table(name = "payment_refund")
@@ -22,7 +23,8 @@ public class PaymentRefund {
     private String refundCode;
 
     @Column(name = "payment_transaction_id", nullable = false)
-    private Long paymentTransactionId;
+    @JdbcTypeCode(SqlTypes.OTHER)
+    private UUID paymentTransactionId;
 
     @Column(name = "refund_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal refundAmount;
@@ -97,7 +99,7 @@ public class PaymentRefund {
     // Constructors
     public PaymentRefund() {}
 
-    public PaymentRefund(Long paymentTransactionId, BigDecimal refundAmount, String reason) {
+    public PaymentRefund(UUID paymentTransactionId, BigDecimal refundAmount, String reason) {
         this.paymentTransactionId = paymentTransactionId;
         this.refundAmount = refundAmount;
         this.reason = reason;
@@ -120,11 +122,11 @@ public class PaymentRefund {
         this.refundCode = refundCode;
     }
 
-    public Long getPaymentTransactionId() {
+    public UUID getPaymentTransactionId() {
         return paymentTransactionId;
     }
 
-    public void setPaymentTransactionId(Long paymentTransactionId) {
+    public void setPaymentTransactionId(UUID paymentTransactionId) {
         this.paymentTransactionId = paymentTransactionId;
     }
 

@@ -22,7 +22,7 @@ public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog
     Page<PaymentAuditLog> findByPaymentRequestIdOrderByCreatedAtDesc(@Param("paymentRequestId") UUID paymentRequestId, Pageable pageable);
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentTransactionId = :paymentTransactionId ORDER BY pal.createdAt DESC")
-    List<PaymentAuditLog> findByPaymentTransactionIdOrderByCreatedAtDesc(@Param("paymentTransactionId") Long paymentTransactionId);
+    List<PaymentAuditLog> findByPaymentTransactionIdOrderByCreatedAtDesc(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT pal FROM PaymentAuditLog pal WHERE pal.paymentRefundId = :paymentRefundId ORDER BY pal.createdAt DESC")
     List<PaymentAuditLog> findByPaymentRefundIdOrderByCreatedAtDesc(@Param("paymentRefundId") Long paymentRefundId);
@@ -95,7 +95,7 @@ public interface PaymentAuditLogRepository extends JpaRepository<PaymentAuditLog
     long countByPaymentRequestId(@Param("paymentRequestId") UUID paymentRequestId);
 
     @Query("SELECT COUNT(pal) FROM PaymentAuditLog pal WHERE pal.paymentTransactionId = :paymentTransactionId")
-    long countByPaymentTransactionId(@Param("paymentTransactionId") Long paymentTransactionId);
+    long countByPaymentTransactionId(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT COUNT(pal) FROM PaymentAuditLog pal WHERE pal.paymentRefundId = :paymentRefundId")
     long countByPaymentRefundId(@Param("paymentRefundId") Long paymentRefundId);

@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface PaymentRefundService {
 
@@ -24,7 +25,7 @@ public interface PaymentRefundService {
 
     Page<PaymentRefundDto> getAllRefunds(Pageable pageable);
 
-    Page<PaymentRefundDto> getRefundsByTransaction(Long paymentTransactionId, Pageable pageable);
+    Page<PaymentRefundDto> getRefundsByTransaction(UUID paymentTransactionId, Pageable pageable);
 
     Page<PaymentRefundDto> getRefundsByStatus(PaymentTransactionStatus status, Pageable pageable);
 
@@ -46,7 +47,7 @@ public interface PaymentRefundService {
 
     List<PaymentRefundDto> getStaleRefunds(LocalDateTime cutoffTime);
 
-    List<PaymentRefundDto> getSuccessfulRefundsByTransaction(Long paymentTransactionId);
+    List<PaymentRefundDto> getSuccessfulRefundsByTransaction(UUID paymentTransactionId);
 
     List<PaymentRefundDto> getRecentRefundsByStatuses(List<PaymentTransactionStatus> statuses, int limit);
 
@@ -66,17 +67,17 @@ public interface PaymentRefundService {
 
     boolean existsByExternalRefundId(String externalRefundId);
 
-    boolean canRefund(Long paymentTransactionId, BigDecimal refundAmount);
+    boolean canRefund(UUID paymentTransactionId, BigDecimal refundAmount);
 
-    BigDecimal getAvailableRefundAmount(Long paymentTransactionId);
+    BigDecimal getAvailableRefundAmount(UUID paymentTransactionId);
 
     Long countByStatus(PaymentTransactionStatus status);
 
-    Long countByTransaction(Long paymentTransactionId);
+    Long countByTransaction(UUID paymentTransactionId);
 
     BigDecimal sumRefundAmountByStatusAndCurrency(PaymentTransactionStatus status, String currency);
 
-    BigDecimal sumRefundAmountByTransactionAndStatus(Long transactionId, PaymentTransactionStatus status);
+    BigDecimal sumRefundAmountByTransactionAndStatus(UUID transactionId, PaymentTransactionStatus status);
 
     Map<String, Long> getRefundCountByStatus();
 

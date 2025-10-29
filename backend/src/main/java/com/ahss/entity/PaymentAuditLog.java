@@ -22,7 +22,8 @@ public class PaymentAuditLog {
     private UUID paymentRequestId;
 
     @Column(name = "payment_transaction_id")
-    private Long paymentTransactionId;
+    @JdbcTypeCode(SqlTypes.OTHER)
+    private UUID paymentTransactionId;
 
     @Column(name = "payment_refund_id")
     private Long paymentRefundId;
@@ -107,7 +108,7 @@ public class PaymentAuditLog {
         return audit;
     }
 
-    public static PaymentAuditLog createTransactionAudit(UUID paymentRequestId, Long paymentTransactionId, 
+    public static PaymentAuditLog createTransactionAudit(UUID paymentRequestId, UUID paymentTransactionId, 
                                                         String action, String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, description);
         audit.setPaymentTransactionId(paymentTransactionId);
@@ -140,11 +141,11 @@ public class PaymentAuditLog {
         this.paymentRequestId = paymentRequestId;
     }
 
-    public Long getPaymentTransactionId() {
+    public UUID getPaymentTransactionId() {
         return paymentTransactionId;
     }
 
-    public void setPaymentTransactionId(Long paymentTransactionId) {
+    public void setPaymentTransactionId(UUID paymentTransactionId) {
         this.paymentTransactionId = paymentTransactionId;
     }
 

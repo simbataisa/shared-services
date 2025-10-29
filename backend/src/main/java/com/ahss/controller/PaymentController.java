@@ -181,7 +181,7 @@ public class PaymentController {
     }
 
     @GetMapping("/transactions/{id}")
-    public ResponseEntity<ApiResponse<PaymentTransactionDto>> getTransactionById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PaymentTransactionDto>> getTransactionById(@PathVariable UUID id) {
         Optional<PaymentTransactionDto> transaction = paymentTransactionService.getTransactionById(id);
         if (transaction.isPresent()) {
             return ResponseEntity.ok(ApiResponse.ok(transaction.get(), "Payment transaction retrieved successfully", "/api/v1/payments/transactions/" + id));
@@ -235,7 +235,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/transactions/{id}/retry")
-    public ResponseEntity<ApiResponse<Void>> retryTransaction(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> retryTransaction(@PathVariable UUID id) {
         try {
             paymentTransactionService.retryTransaction(id);
             return ResponseEntity.ok(ApiResponse.ok(null, "Payment transaction retry initiated successfully", "/api/v1/payments/transactions/" + id + "/retry"));
@@ -246,7 +246,7 @@ public class PaymentController {
     }
 
     @PatchMapping("/transactions/{id}/cancel")
-    public ResponseEntity<ApiResponse<Void>> cancelTransaction(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> cancelTransaction(@PathVariable UUID id) {
         try {
             paymentTransactionService.cancelTransaction(id, "Cancelled by user request");
             return ResponseEntity.ok(ApiResponse.ok(null, "Payment transaction cancelled successfully", "/api/v1/payments/transactions/" + id + "/cancel"));
@@ -291,7 +291,7 @@ public class PaymentController {
 
     @GetMapping("/refunds/transaction/{transactionId}")
     public ResponseEntity<ApiResponse<Page<PaymentRefundDto>>> getRefundsByTransaction(
-            @PathVariable Long transactionId,
+            @PathVariable UUID transactionId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -366,7 +366,7 @@ public class PaymentController {
 
     @GetMapping("/audit-logs/transaction/{transactionId}")
     public ResponseEntity<ApiResponse<Page<PaymentAuditLogDto>>> getAuditLogsByTransaction(
-            @PathVariable Long transactionId,
+            @PathVariable UUID transactionId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);

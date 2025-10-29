@@ -32,7 +32,7 @@ export interface PaymentRequest {
 }
 
 export interface PaymentTransaction {
-  id: number;
+  id: string;
   transactionCode: string;
   paymentRequestId: string;
   paymentRequest?: PaymentRequest;
@@ -60,7 +60,7 @@ export interface PaymentTransaction {
 export interface PaymentRefund {
   id: number;
   refundCode: string;
-  paymentTransactionId: number;
+  paymentTransactionId: string;
   paymentTransaction?: PaymentTransaction;
   refundAmount: number;
   currency: string;
@@ -82,7 +82,7 @@ export interface PaymentRefund {
 export interface PaymentAuditLog {
   id: number;
   paymentRequestId?: string;
-  paymentTransactionId?: number;
+  paymentTransactionId?: string;
   paymentRefundId?: number;
   action: string;
   oldValues?: Record<string, any>;
@@ -115,7 +115,7 @@ export interface ProcessPaymentDto {
 }
 
 export interface CreateRefundDto {
-  paymentTransactionId: number;
+  paymentTransactionId: string;
   refundAmount: number;
   reason: string;
   metadata?: Record<string, any>;

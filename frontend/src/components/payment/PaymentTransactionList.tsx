@@ -65,7 +65,7 @@ const PaymentTransactionList: React.FC = () => {
 
   const handleRetryTransaction = async (transactionId: string) => {
     try {
-      await paymentApi.transactions.retry(parseInt(transactionId));
+      await paymentApi.transactions.retry(transactionId);
       fetchTransactions(); // Refresh the list
     } catch (error) {
       console.error("Error retrying transaction:", error);
@@ -210,7 +210,7 @@ const PaymentTransactionList: React.FC = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleRetryTransaction(transaction.id.toString())}
+                          onClick={() => handleRetryTransaction(transaction.id)}
                         >
                           <RefreshCw className="h-4 w-4" />
                         </Button>

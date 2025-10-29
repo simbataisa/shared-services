@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public class PaymentTransactionDto {
 
-    private Long id;
+    private UUID id;
     private String transactionCode;
     private String externalTransactionId;
     private UUID paymentRequestId;
@@ -36,11 +36,11 @@ public class PaymentTransactionDto {
     public PaymentTransactionDto() {}
 
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

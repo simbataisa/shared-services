@@ -19,7 +19,7 @@ public interface PaymentTransactionService {
 
     PaymentTransactionDto processPayment(ProcessPaymentDto processDto);
 
-    Optional<PaymentTransactionDto> getTransactionById(Long id);
+    Optional<PaymentTransactionDto> getTransactionById(UUID id);
 
     Optional<PaymentTransactionDto> getTransactionByCode(String transactionCode);
 
@@ -53,15 +53,15 @@ public interface PaymentTransactionService {
 
     List<PaymentTransactionDto> getSuccessfulTransactionsByRequest(UUID paymentRequestId);
 
-    PaymentTransactionDto updateTransactionStatus(Long id, PaymentTransactionStatus status, String reason);
+    PaymentTransactionDto updateTransactionStatus(UUID id, PaymentTransactionStatus status, String reason);
 
-    PaymentTransactionDto markAsProcessed(Long id, String externalTransactionId, Map<String, Object> gatewayResponse);
+    PaymentTransactionDto markAsProcessed(UUID id, String externalTransactionId, Map<String, Object> gatewayResponse);
 
-    PaymentTransactionDto markAsFailed(Long id, String errorCode, String errorMessage);
+    PaymentTransactionDto markAsFailed(UUID id, String errorCode, String errorMessage);
 
-    PaymentTransactionDto retryTransaction(Long id);
+    PaymentTransactionDto retryTransaction(UUID id);
 
-    void cancelTransaction(Long id, String reason);
+    void cancelTransaction(UUID id, String reason);
 
     boolean existsByTransactionCode(String transactionCode);
 
@@ -81,5 +81,5 @@ public interface PaymentTransactionService {
 
     void processStaleTransactions();
 
-    void syncTransactionStatusWithGateway(Long id);
+    void syncTransactionStatusWithGateway(UUID id);
 }

@@ -10,7 +10,25 @@ The payment system was originally designed with `BIGINT` primary keys for paymen
 
 ## Changes Made
 
-### 1. Database Schema Updates
+### 1. Payment Transaction ID UUID Migration (V20)
+
+A significant migration was implemented to convert the `payment_transaction` table's primary key from `BIGINT` to `UUID`. This migration (V20) involved:
+
+#### Migration Process
+1. **Constraint Removal**: Dropped existing foreign key and primary key constraints
+2. **Temporary Mapping**: Created a temporary table to map old `BIGINT` IDs to new `UUID` values
+3. **Column Addition**: Added temporary `UUID` columns to affected tables
+4. **Data Migration**: Populated new `UUID` columns with generated values while maintaining referential integrity
+5. **Column Replacement**: Dropped old `BIGINT` columns and renamed temporary `UUID` columns
+6. **Constraint Recreation**: Re-added primary key and foreign key constraints using `UUID` types
+7. **Index Recreation**: Created new indexes for optimal performance
+
+#### Affected Tables
+- `payment_transaction`: Primary key changed from `id` (BIGINT) to `payment_transaction_id` (UUID)
+- `payment_refund`: Foreign key `payment_transaction_id` changed from BIGINT to UUID
+- `payment_audit_log`: Foreign key `payment_transaction_id` changed from BIGINT to UUID
+
+### 2. Database Schema Updates
 
 The database schema was updated to use UUID types for payment-related tables:
 
@@ -27,7 +45,7 @@ CREATE TABLE payment_request (
 #### payment_transaction Table
 ```sql
 CREATE TABLE payment_transaction (
-    id BIGSERIAL PRIMARY KEY,
+    payment_transaction_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     transaction_code VARCHAR(255) NOT NULL UNIQUE,
     payment_request_id UUID NOT NULL,
     -- ... other fields
@@ -38,14 +56,16 @@ CREATE TABLE payment_transaction (
 #### payment_audit_log Table
 ```sql
 CREATE TABLE payment_audit_log (
-    id BIGSERIAL PRIMARY KEY,
+    payment_audit_log_id BIGSERIAL PRIMARY KEY,
     payment_request_id UUID,
+    payment_transaction_id UUID,
     -- ... other fields
-    FOREIGN KEY (payment_request_id) REFERENCES payment_request(id)
+    FOREIGN KEY (payment_request_id) REFERENCES payment_request(id),
+    FOREIGN KEY (payment_transaction_id) REFERENCES payment_transaction(payment_transaction_id)
 );
 ```
 
-### 2. JPA Entity Updates
+### 3. JPA Entity Updates
 
 #### PaymentRequest.java
 ```java
@@ -76,9 +96,10 @@ import java.util.UUID;
 @Table(name = "payment_transaction")
 public class PaymentTransaction {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.OTHER)
+    @Column(name = "payment_transaction_id")
+    private UUID id;
     
     @JdbcTypeCode(SqlTypes.OTHER)
     @Column(name = "payment_request_id")
@@ -99,18 +120,22 @@ import java.util.UUID;
 public class PaymentAuditLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "payment_audit_log_id")
     private Long id;
     
     @JdbcTypeCode(SqlTypes.OTHER)
     @Column(name = "payment_request_id")
     private UUID paymentRequestId;
     
+    @JdbcTypeCode(SqlTypes.OTHER)
+    @Column(name = "payment_transaction_id")
+    private UUID paymentTransactionId;
+    
     // ... other fields
 }
 ```
 
-### 3. Hibernate Configuration Updates
+### 4. Hibernate Configuration Updates
 
 #### application.yml
 ```yaml
@@ -125,7 +150,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 ```
 
-### 4. Dependency Updates
+### 5. Dependency Updates
 
 Updated Hibernate Types Library to support UUID handling:
 
@@ -175,12 +200,19 @@ For UUID primary keys, we use `GenerationType.UUID`:
    - **Solution**: Use `GenerationType.UUID` for UUID primary keys
    - **Solution**: Ensure database supports `gen_random_uuid()` function
 
+4. **Entity Column Mapping Mismatch**: Application fails to start after UUID migration with JPA mapping errors
+   - **Root Cause**: Entity `@Column` annotations still reference old column names after database migration
+   - **Example**: `PaymentTransaction` entity mapping `id` field to `"id"` column when database uses `payment_transaction_id`
+   - **Solution**: Update `@Column(name = "...")` annotations to match actual database column names
+   - **Solution**: Verify all entity mappings align with migrated database schema
+
 ### Verification Steps
 
 1. Check entity annotations are correct
 2. Verify Hibernate configuration in application.yml
 3. Ensure database schema matches entity definitions
-4. Test application startup with schema validation enabled
+4. Verify entity column mappings align with actual database column names after migrations
+5. Test application startup with schema validation enabled
 
 ## Best Practices
 
@@ -201,12 +233,19 @@ export interface PaymentRequest {
 }
 
 export interface PaymentTransaction {
+  id: string;  // Changed from number - now UUID primary key
   paymentRequestId: string;  // Changed from number
+  // ... other fields
+}
+
+export interface PaymentRefund {
+  paymentTransactionId: string;  // Changed from number
   // ... other fields
 }
 
 export interface PaymentAuditLog {
   paymentRequestId?: string;  // Changed from number
+  paymentTransactionId?: string;  // Added - new UUID foreign key
   // ... other fields
 }
 ```
@@ -218,6 +257,22 @@ When migrating existing data:
 2. Update foreign key references consistently
 3. Test thoroughly in staging environment
 4. Consider gradual rollout for production systems
+
+### V20 Migration Specifics
+
+The V20 migration (`V20__alter_payment_transaction_id_to_uuid.sql`) is a complex migration that:
+
+1. **Preserves Data Integrity**: Uses a temporary mapping table to maintain relationships during the migration
+2. **Handles Multiple Tables**: Updates `payment_transaction`, `payment_refund`, and `payment_audit_log` tables simultaneously
+3. **Maintains Performance**: Recreates indexes after column changes to ensure optimal query performance
+4. **Zero Data Loss**: Ensures all existing relationships are preserved through the UUID conversion
+
+#### Post-Migration Steps
+After running the V20 migration:
+1. **Update Entity Classes**: Ensure all `@Column` annotations match the new database schema
+2. **Verify Foreign Keys**: Confirm all UUID foreign key relationships are working correctly
+3. **Test Application Startup**: Run the application with `ddl-auto: validate` to catch any mapping issues
+4. **Performance Testing**: Verify that UUID-based queries perform as expected
 
 ## Conclusion
 

@@ -41,7 +41,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
     }
 
     @Override
-    public PaymentAuditLogDto logTransactionAction(Long paymentTransactionId, String action, String oldStatus,
+    public PaymentAuditLogDto logTransactionAction(UUID paymentTransactionId, String action, String oldStatus,
                                                   String newStatus, String description, Map<String, Object> changeDetails,
                                                   Long userId, String userAgent, String ipAddress) {
         PaymentAuditLog auditLog = PaymentAuditLog.createTransactionAudit(
@@ -95,7 +95,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentAuditLogDto> getAuditLogsByTransaction(Long paymentTransactionId, Pageable pageable) {
+    public Page<PaymentAuditLogDto> getAuditLogsByTransaction(UUID paymentTransactionId, Pageable pageable) {
         List<PaymentAuditLog> auditLogs = auditLogRepository.findByPaymentTransactionIdOrderByCreatedAtDesc(paymentTransactionId);
         return convertListToPage(auditLogs, pageable);
     }
@@ -189,7 +189,7 @@ public class PaymentAuditLogServiceImpl implements PaymentAuditLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public Long countByTransaction(Long paymentTransactionId) {
+    public Long countByTransaction(UUID paymentTransactionId) {
         return auditLogRepository.countByPaymentTransactionId(paymentTransactionId);
     }
 

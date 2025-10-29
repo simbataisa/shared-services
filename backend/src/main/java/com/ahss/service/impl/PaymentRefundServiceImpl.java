@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -71,7 +72,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentRefundDto> getRefundsByTransaction(Long paymentTransactionId, Pageable pageable) {
+    public Page<PaymentRefundDto> getRefundsByTransaction(UUID paymentTransactionId, Pageable pageable) {
         List<PaymentRefund> refunds = paymentRefundRepository.findByPaymentTransactionId(paymentTransactionId);
         return convertListToPage(refunds, pageable);
     }
@@ -150,7 +151,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PaymentRefundDto> getSuccessfulRefundsByTransaction(Long paymentTransactionId) {
+    public List<PaymentRefundDto> getSuccessfulRefundsByTransaction(UUID paymentTransactionId) {
         List<PaymentRefund> refunds = paymentRefundRepository.findSuccessfulRefundsByTransactionId(paymentTransactionId);
         return refunds.stream()
                 .map(this::convertToDto)
@@ -251,14 +252,14 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean canRefund(Long paymentTransactionId, BigDecimal refundAmount) {
+    public boolean canRefund(UUID paymentTransactionId, BigDecimal refundAmount) {
         BigDecimal availableAmount = getAvailableRefundAmount(paymentTransactionId);
         return availableAmount.compareTo(refundAmount) >= 0;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal getAvailableRefundAmount(Long paymentTransactionId) {
+    public BigDecimal getAvailableRefundAmount(UUID paymentTransactionId) {
         BigDecimal totalRefunded = paymentRefundRepository.sumRefundAmountByTransactionIdAndStatus(
                 paymentTransactionId, PaymentTransactionStatus.SUCCESS);
         return totalRefunded != null ? totalRefunded : BigDecimal.ZERO;
@@ -272,7 +273,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     @Transactional(readOnly = true)
-    public Long countByTransaction(Long paymentTransactionId) {
+    public Long countByTransaction(UUID paymentTransactionId) {
         return paymentRefundRepository.countByPaymentTransactionId(paymentTransactionId);
     }
 
@@ -284,7 +285,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal sumRefundAmountByTransactionAndStatus(Long transactionId, PaymentTransactionStatus status) {
+    public BigDecimal sumRefundAmountByTransactionAndStatus(UUID transactionId, PaymentTransactionStatus status) {
         return paymentRefundRepository.sumRefundAmountByTransactionIdAndStatus(transactionId, status);
     }
 

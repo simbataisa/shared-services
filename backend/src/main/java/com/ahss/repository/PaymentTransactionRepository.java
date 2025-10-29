@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, Long> {
+public interface PaymentTransactionRepository extends JpaRepository<PaymentTransaction, UUID> {
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.transactionCode = :transactionCode")
     Optional<PaymentTransaction> findByTransactionCode(@Param("transactionCode") String transactionCode);
@@ -113,7 +113,7 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
                                                   @Param("currency") String currency);
 
     @Query("SELECT pt FROM PaymentTransaction pt LEFT JOIN FETCH pt.paymentRequest WHERE pt.id = :id")
-    Optional<PaymentTransaction> findWithPaymentRequest(@Param("id") Long id);
+    Optional<PaymentTransaction> findWithPaymentRequest(@Param("id") UUID id);
 
     @Query("SELECT pt FROM PaymentTransaction pt WHERE pt.paymentRequestId = :paymentRequestId AND pt.transactionType = 'PAYMENT' AND pt.transactionStatus = 'SUCCESS'")
     List<PaymentTransaction> findSuccessfulPaymentsByRequestId(@Param("paymentRequestId") UUID paymentRequestId);

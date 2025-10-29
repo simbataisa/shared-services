@@ -4,11 +4,12 @@ import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 
 public class CreateRefundDto {
 
     @NotNull(message = "Payment transaction ID is required")
-    private Long paymentTransactionId;
+    private UUID paymentTransactionId;
 
     @NotNull(message = "Refund amount is required")
     @DecimalMin(value = "0.01", message = "Refund amount must be greater than 0")
@@ -31,7 +32,7 @@ public class CreateRefundDto {
     // Constructors
     public CreateRefundDto() {}
 
-    public CreateRefundDto(Long paymentTransactionId, BigDecimal refundAmount, 
+    public CreateRefundDto(UUID paymentTransactionId, BigDecimal refundAmount, 
                           String currency, String reason) {
         this.paymentTransactionId = paymentTransactionId;
         this.refundAmount = refundAmount;
@@ -40,11 +41,11 @@ public class CreateRefundDto {
     }
 
     // Getters and Setters
-    public Long getPaymentTransactionId() {
+    public UUID getPaymentTransactionId() {
         return paymentTransactionId;
     }
 
-    public void setPaymentTransactionId(Long paymentTransactionId) {
+    public void setPaymentTransactionId(UUID paymentTransactionId) {
         this.paymentTransactionId = paymentTransactionId;
     }
 

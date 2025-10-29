@@ -88,7 +88,7 @@ export const paymentTransactionApi = {
   },
 
   // Get transaction by ID
-  getById: async (id: number) => {
+  getById: async (id: string) => {
     const response = await api.get<ApiResponse<PaymentTransaction>>(`/v1/payments/transactions/${id}`);
     return response.data;
   },
@@ -118,13 +118,13 @@ export const paymentTransactionApi = {
   },
 
   // Retry transaction
-  retry: async (id: number) => {
+  retry: async (id: string) => {
     const response = await api.patch<ApiResponse<void>>(`/v1/payments/transactions/${id}/retry`);
     return response.data;
   },
 
   // Cancel transaction
-  cancel: async (id: number) => {
+  cancel: async (id: string) => {
     const response = await api.patch<ApiResponse<void>>(`/v1/payments/transactions/${id}/cancel`);
     return response.data;
   }
@@ -151,7 +151,7 @@ export const paymentRefundApi = {
   },
 
   // Get refunds by transaction
-  getByTransaction: async (transactionId: number, page = 0, size = 10) => {
+  getByTransaction: async (transactionId: string, page = 0, size = 10) => {
     const response = await api.get<ApiResponse<{ content: PaymentRefund[]; totalElements: number; totalPages: number }>>(`/v1/payments/refunds/transaction/${transactionId}?page=${page}&size=${size}`);
     return response.data;
   },
@@ -196,7 +196,7 @@ export const paymentAuditLogApi = {
   },
 
   // Get audit logs by transaction
-  getByTransaction: async (transactionId: number, page = 0, size = 10) => {
+  getByTransaction: async (transactionId: string, page = 0, size = 10) => {
     const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/transaction/${transactionId}?page=${page}&size=${size}`);
     return response.data;
   },

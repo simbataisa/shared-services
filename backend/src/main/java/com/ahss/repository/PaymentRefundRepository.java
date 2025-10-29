@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface PaymentRefundRepository extends JpaRepository<PaymentRefund, Long> {
@@ -24,10 +25,10 @@ public interface PaymentRefundRepository extends JpaRepository<PaymentRefund, Lo
     Optional<PaymentRefund> findByExternalRefundId(@Param("externalRefundId") String externalRefundId);
 
     @Query("SELECT pr FROM PaymentRefund pr WHERE pr.paymentTransactionId = :paymentTransactionId")
-    List<PaymentRefund> findByPaymentTransactionId(@Param("paymentTransactionId") Long paymentTransactionId);
+    List<PaymentRefund> findByPaymentTransactionId(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT pr FROM PaymentRefund pr WHERE pr.paymentTransactionId = :paymentTransactionId ORDER BY pr.createdAt DESC")
-    List<PaymentRefund> findByPaymentTransactionIdOrderByCreatedAtDesc(@Param("paymentTransactionId") Long paymentTransactionId);
+    List<PaymentRefund> findByPaymentTransactionIdOrderByCreatedAtDesc(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT pr FROM PaymentRefund pr WHERE pr.refundStatus = :status")
     List<PaymentRefund> findByRefundStatus(@Param("status") PaymentTransactionStatus status);
@@ -84,14 +85,14 @@ public interface PaymentRefundRepository extends JpaRepository<PaymentRefund, Lo
     long countByRefundStatus(@Param("status") PaymentTransactionStatus status);
 
     @Query("SELECT COUNT(pr) FROM PaymentRefund pr WHERE pr.paymentTransactionId = :paymentTransactionId")
-    long countByPaymentTransactionId(@Param("paymentTransactionId") Long paymentTransactionId);
+    long countByPaymentTransactionId(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT SUM(pr.refundAmount) FROM PaymentRefund pr WHERE pr.refundStatus = :status AND pr.currency = :currency")
     BigDecimal sumRefundAmountByStatusAndCurrency(@Param("status") PaymentTransactionStatus status, 
                                                  @Param("currency") String currency);
 
     @Query("SELECT SUM(pr.refundAmount) FROM PaymentRefund pr WHERE pr.paymentTransactionId = :paymentTransactionId AND pr.refundStatus = :status")
-    BigDecimal sumRefundAmountByTransactionIdAndStatus(@Param("paymentTransactionId") Long paymentTransactionId,
+    BigDecimal sumRefundAmountByTransactionIdAndStatus(@Param("paymentTransactionId") UUID paymentTransactionId,
                                                       @Param("status") PaymentTransactionStatus status);
 
     @Query("SELECT pr FROM PaymentRefund pr LEFT JOIN FETCH pr.paymentTransaction WHERE pr.id = :id")
@@ -101,7 +102,7 @@ public interface PaymentRefundRepository extends JpaRepository<PaymentRefund, Lo
     Optional<PaymentRefund> findWithPaymentTransactionAndRequest(@Param("id") Long id);
 
     @Query("SELECT pr FROM PaymentRefund pr WHERE pr.refundStatus = 'SUCCESS' AND pr.paymentTransactionId = :paymentTransactionId")
-    List<PaymentRefund> findSuccessfulRefundsByTransactionId(@Param("paymentTransactionId") Long paymentTransactionId);
+    List<PaymentRefund> findSuccessfulRefundsByTransactionId(@Param("paymentTransactionId") UUID paymentTransactionId);
 
     @Query("SELECT pr FROM PaymentRefund pr WHERE pr.refundStatus IN :statuses ORDER BY pr.createdAt DESC")
     List<PaymentRefund> findRecentByStatuses(@Param("statuses") List<PaymentTransactionStatus> statuses, Pageable pageable);

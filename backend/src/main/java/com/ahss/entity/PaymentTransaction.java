@@ -17,9 +17,10 @@ import java.util.UUID;
 public class PaymentTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @JdbcTypeCode(SqlTypes.OTHER)
     @Column(name = "payment_transaction_id")
-    private Long id;
+    private UUID id;
 
     @Column(name = "transaction_code", unique = true, nullable = false, length = 50)
     private String transactionCode;
@@ -119,11 +120,11 @@ public class PaymentTransaction {
     }
 
     // Getters and Setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 

@@ -5,12 +5,13 @@ import com.ahss.enums.PaymentTransactionStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
 
 public class PaymentRefundDto {
 
     private Long id;
     private String refundCode;
-    private Long paymentTransactionId;
+    private UUID paymentTransactionId;
     private BigDecimal refundAmount;
     private String currency;
     private String reason;
@@ -47,11 +48,11 @@ public class PaymentRefundDto {
         this.refundCode = refundCode;
     }
 
-    public Long getPaymentTransactionId() {
+    public UUID getPaymentTransactionId() {
         return paymentTransactionId;
     }
 
-    public void setPaymentTransactionId(Long paymentTransactionId) {
+    public void setPaymentTransactionId(UUID paymentTransactionId) {
         this.paymentTransactionId = paymentTransactionId;
     }
 

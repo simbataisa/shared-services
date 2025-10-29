@@ -8,7 +8,7 @@ public class PaymentAuditLogDto {
 
     private Long id;
     private UUID paymentRequestId;
-    private Long paymentTransactionId;
+    private UUID paymentTransactionId;
     private Long paymentRefundId;
     private String action;
     private String oldStatus;
@@ -41,11 +41,11 @@ public class PaymentAuditLogDto {
         this.paymentRequestId = paymentRequestId;
     }
 
-    public Long getPaymentTransactionId() {
+    public UUID getPaymentTransactionId() {
         return paymentTransactionId;
     }
 
-    public void setPaymentTransactionId(Long paymentTransactionId) {
+    public void setPaymentTransactionId(UUID paymentTransactionId) {
         this.paymentTransactionId = paymentTransactionId;
     }
 

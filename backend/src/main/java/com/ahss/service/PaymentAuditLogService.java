@@ -16,7 +16,7 @@ public interface PaymentAuditLogService {
                                               String newStatus, String description, Map<String, Object> changeDetails,
                                               Long userId, String userAgent, String ipAddress);
 
-    PaymentAuditLogDto logTransactionAction(Long paymentTransactionId, String action, String oldStatus, 
+    PaymentAuditLogDto logTransactionAction(UUID paymentTransactionId, String action, String oldStatus, 
                                            String newStatus, String description, Map<String, Object> changeDetails,
                                            Long userId, String userAgent, String ipAddress);
 
@@ -30,7 +30,7 @@ public interface PaymentAuditLogService {
 
     Page<PaymentAuditLogDto> getAuditLogsByPaymentRequest(UUID paymentRequestId, Pageable pageable);
 
-    Page<PaymentAuditLogDto> getAuditLogsByTransaction(Long paymentTransactionId, Pageable pageable);
+    Page<PaymentAuditLogDto> getAuditLogsByTransaction(UUID paymentTransactionId, Pageable pageable);
 
     Page<PaymentAuditLogDto> getAuditLogsByRefund(Long paymentRefundId, Pageable pageable);
 
@@ -56,7 +56,7 @@ public interface PaymentAuditLogService {
 
     Long countByPaymentRequest(UUID paymentRequestId);
 
-    Long countByTransaction(Long paymentTransactionId);
+    Long countByTransaction(UUID paymentTransactionId);
 
     Long countByRefund(Long paymentRefundId);
 
