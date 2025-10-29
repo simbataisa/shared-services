@@ -22,8 +22,7 @@ const PaymentRefundList: React.FC = () => {
   const statusOptions = [
     { value: "", label: "All Statuses" },
     { value: "PENDING", label: "Pending" },
-    { value: "PROCESSING", label: "Processing" },
-    { value: "COMPLETED", label: "Completed" },
+    { value: "SUCCESS", label: "Success" },
     { value: "FAILED", label: "Failed" },
     { value: "CANCELLED", label: "Cancelled" }
   ];

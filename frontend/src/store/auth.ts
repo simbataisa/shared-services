@@ -41,13 +41,13 @@ export const useAuth = create<AuthState>((set, get) => {
         firstName: payload.firstName,
         lastName: payload.lastName,
         username: payload.username,
-        roles: (payload.roles || []).map((roleName) => ({
-          id: roleName.toLowerCase().replace(/\s+/g, "_"),
+        roles: (payload.roles || []).map((roleName, index) => ({
+          id: index + 1, // Use numeric ID instead of string
           name: roleName,
           permissions: [],
         })),
-        permissions: (payload.permissions || []).map((permName) => ({
-          id: permName.toLowerCase().replace(/\s+/g, "_"),
+        permissions: (payload.permissions || []).map((permName, index) => ({
+          id: index + 1, // Use numeric ID instead of string
           name: permName,
           resource: permName.split(":")[0] || "",
           action: permName.split(":")[1] || "",
@@ -103,13 +103,13 @@ export const useAuth = create<AuthState>((set, get) => {
             firstName: payload.firstName,
             lastName: payload.lastName,
             username: payload.username,
-            roles: payload.roles.map((roleName) => ({
-              id: roleName.toLowerCase().replace(/\s+/g, "_"),
+            roles: payload.roles.map((roleName, index) => ({
+              id: index + 1,
               name: roleName,
               permissions: [],
             })),
-            permissions: payload.permissions.map((permName) => ({
-              id: permName.toLowerCase().replace(/\s+/g, "_"),
+            permissions: payload.permissions.map((permName, index) => ({
+              id: index + 1,
               name: permName,
               resource: permName.split(":")[0] || "",
               action: permName.split(":")[1] || "",

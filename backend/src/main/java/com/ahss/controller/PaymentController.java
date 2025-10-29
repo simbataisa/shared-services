@@ -431,13 +431,11 @@ public class PaymentController {
         try {
             Map<String, Object> stats = Map.of(
                 "totalTransactions", paymentTransactionService.countByStatus(PaymentTransactionStatus.PENDING) +
-                                   paymentTransactionService.countByStatus(PaymentTransactionStatus.PROCESSING) +
-                                   paymentTransactionService.countByStatus(PaymentTransactionStatus.COMPLETED) +
+                                   paymentTransactionService.countByStatus(PaymentTransactionStatus.SUCCESS) +
                                    paymentTransactionService.countByStatus(PaymentTransactionStatus.FAILED) +
                                    paymentTransactionService.countByStatus(PaymentTransactionStatus.CANCELLED),
                 "pendingTransactions", paymentTransactionService.countByStatus(PaymentTransactionStatus.PENDING),
-                "processingTransactions", paymentTransactionService.countByStatus(PaymentTransactionStatus.PROCESSING),
-                "completedTransactions", paymentTransactionService.countByStatus(PaymentTransactionStatus.COMPLETED),
+                "successfulTransactions", paymentTransactionService.countByStatus(PaymentTransactionStatus.SUCCESS),
                 "failedTransactions", paymentTransactionService.countByStatus(PaymentTransactionStatus.FAILED),
                 "cancelledTransactions", paymentTransactionService.countByStatus(PaymentTransactionStatus.CANCELLED)
             );
@@ -453,13 +451,11 @@ public class PaymentController {
         try {
             Map<String, Object> stats = Map.of(
                 "totalRefunds", paymentRefundService.countByStatus(PaymentTransactionStatus.PENDING) +
-                              paymentRefundService.countByStatus(PaymentTransactionStatus.PROCESSING) +
-                              paymentRefundService.countByStatus(PaymentTransactionStatus.COMPLETED) +
+                              paymentRefundService.countByStatus(PaymentTransactionStatus.SUCCESS) +
                               paymentRefundService.countByStatus(PaymentTransactionStatus.FAILED) +
                               paymentRefundService.countByStatus(PaymentTransactionStatus.CANCELLED),
                 "pendingRefunds", paymentRefundService.countByStatus(PaymentTransactionStatus.PENDING),
-                "processingRefunds", paymentRefundService.countByStatus(PaymentTransactionStatus.PROCESSING),
-                "completedRefunds", paymentRefundService.countByStatus(PaymentTransactionStatus.COMPLETED),
+                "successfulRefunds", paymentRefundService.countByStatus(PaymentTransactionStatus.SUCCESS),
                 "failedRefunds", paymentRefundService.countByStatus(PaymentTransactionStatus.FAILED),
                 "cancelledRefunds", paymentRefundService.countByStatus(PaymentTransactionStatus.CANCELLED)
             );

@@ -24,8 +24,7 @@ const PaymentTransactionList: React.FC = () => {
   const statusOptions = [
     { value: "", label: "All Statuses" },
     { value: "PENDING", label: "Pending" },
-    { value: "PROCESSING", label: "Processing" },
-    { value: "COMPLETED", label: "Completed" },
+    { value: "SUCCESS", label: "Success" },
     { value: "FAILED", label: "Failed" },
     { value: "CANCELLED", label: "Cancelled" }
   ];
@@ -74,10 +73,9 @@ const PaymentTransactionList: React.FC = () => {
 
   const getStatusColor = (status: PaymentTransactionStatus): string => {
     switch (status) {
-      case "COMPLETED": return "success";
+      case "SUCCESS": return "success";
       case "FAILED": return "destructive";
       case "CANCELLED": return "secondary";
-      case "PROCESSING": return "default";
       default: return "secondary";
     }
   };
@@ -191,7 +189,7 @@ const PaymentTransactionList: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
                     <StatusBadge 
-                      status={transaction.status}
+                      status={transaction.transactionStatus}
                     />
                     <p className="text-sm text-muted-foreground mt-1">
                       {new Date(transaction.createdAt).toLocaleDateString()}
@@ -205,7 +203,7 @@ const PaymentTransactionList: React.FC = () => {
                       </Button>
                     </PermissionGuard>
                     
-                    {transaction.status === "FAILED" && (
+                    {transaction.transactionStatus === "FAILED" && (
                       <PermissionGuard permission="PAYMENT_MGMT:update">
                         <Button 
                           variant="outline" 

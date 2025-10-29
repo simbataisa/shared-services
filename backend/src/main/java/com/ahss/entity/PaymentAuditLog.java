@@ -17,12 +17,12 @@ public class PaymentAuditLog {
     @Column(name = "payment_audit_log_id")
     private Long id;
 
-    @JdbcTypeCode(SqlTypes.OTHER)
+    @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "payment_request_id", nullable = false)
     private UUID paymentRequestId;
 
     @Column(name = "payment_transaction_id")
-    @JdbcTypeCode(SqlTypes.OTHER)
+    @JdbcTypeCode(SqlTypes.UUID)
     private UUID paymentTransactionId;
 
     @Column(name = "payment_refund_id")

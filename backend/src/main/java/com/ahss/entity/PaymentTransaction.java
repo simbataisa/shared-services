@@ -17,8 +17,8 @@ import java.util.UUID;
 public class PaymentTransaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @JdbcTypeCode(SqlTypes.OTHER)
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "payment_transaction_id")
     private UUID id;
 
@@ -28,7 +28,7 @@ public class PaymentTransaction {
     @Column(name = "external_transaction_id")
     private String externalTransactionId;
 
-    @JdbcTypeCode(SqlTypes.OTHER)
+    @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "payment_request_id", nullable = false)
     private UUID paymentRequestId;
 
@@ -73,6 +73,12 @@ public class PaymentTransaction {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> metadata;
+
+    @Column(name = "retry_count", nullable = false)
+    private Integer retryCount = 0;
+
+    @Column(name = "max_retries", nullable = false)
+    private Integer maxRetries = 3;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -248,6 +254,22 @@ public class PaymentTransaction {
         this.metadata = metadata;
     }
 
+    public Integer getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(Integer retryCount) {
+        this.retryCount = retryCount;
+    }
+
+    public Integer getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(Integer maxRetries) {
+        this.maxRetries = maxRetries;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -294,7 +316,11 @@ public class PaymentTransaction {
     }
 
     public boolean canBeRetried() {
-        return transactionStatus.canBeRetried();
+        return transactionStatus.canBeRetried() && retryCount < maxRetries;
+    }
+
+    public void incrementRetryCount() {
+        this.retryCount++;
     }
 
     public void markAsProcessed() {

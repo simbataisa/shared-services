@@ -18,7 +18,8 @@ import java.util.UUID;
 public class PaymentRequest {
 
     @Id
-    @GeneratedValue(generator = "UUID")
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @JdbcTypeCode(SqlTypes.UUID)
     @Column(name = "payment_request_id")
     private UUID id;
 

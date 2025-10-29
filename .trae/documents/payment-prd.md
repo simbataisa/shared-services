@@ -2,25 +2,29 @@
 
 ## Document Information
 
-- **Version**: 1.0
-- **Last Updated**: 2025-10-15
+- **Version**: 1.2
+- **Last Updated**: 2025-01-29
 - **Target Implementation**: Q1 2025
 - **Document Type**: Product Requirements Document for AI Coder
+- **Implementation Status**: Payment Transaction Retry System Completed
 
 ---
 
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Technical Context](#technical-context)
-3. [Database Schema Design](#database-schema-design)
-4. [Backend API Specifications](#backend-api-specifications)
-5. [Frontend Requirements](#frontend-requirements)
-6. [Payment Workflows](#payment-workflows)
-7. [Security & Compliance](#security--compliance)
-8. [Integration Requirements](#integration-requirements)
-9. [Testing Requirements](#testing-requirements)
-10. [Success Criteria](#success-criteria)
+2. [Implementation Status](#implementation-status)
+3. [Technical Context](#technical-context)
+4. [Database Schema Design](#database-schema-design)
+5. [Backend API Specifications](#backend-api-specifications)
+6. [Frontend Requirements](#frontend-requirements)
+7. [Frontend-Backend Synchronization](#frontend-backend-synchronization)
+8. [Payment Workflows](#payment-workflows)
+9. [Security & Compliance](#security--compliance)
+10. [Integration Requirements](#integration-requirements)
+11. [Testing Requirements](#testing-requirements)
+12. [Troubleshooting](#troubleshooting)
+13. [Success Criteria](#success-criteria)
 
 ---
 
@@ -59,6 +63,114 @@ Implement a comprehensive payment management system within the existing AHSS Sha
 - Payment analytics and reporting dashboard (Phase 2)
 - Multi-currency support (Phase 2)
 - Payment dispute management (Phase 2)
+
+---
+
+## Implementation Status
+
+### Current Implementation Phase
+
+**Status**: Payment Transaction Retry System Completed ✅  
+**Date Completed**: January 29, 2025  
+**Phase**: Enhanced Payment Transaction Management
+
+### Completed Work
+
+#### 1. PaymentRequest Interface Synchronization
+- ✅ **Frontend PaymentRequest Interface Updated**: Aligned with backend `PaymentRequestDto.java`
+- ✅ **Field Mapping Corrections**: Updated field names and types to match backend structure
+- ✅ **Component Updates**: Modified `PaymentRequestList.tsx` and `PaymentRequestCreate.tsx`
+- ✅ **Type Safety**: Ensured TypeScript compatibility across all payment components
+
+#### 2. PaymentTransaction Interface Synchronization
+- ✅ **Frontend PaymentTransaction Interface Updated**: Aligned with backend `PaymentTransactionDto.java`
+- ✅ **Field Renaming**: Updated `status` to `transactionStatus` across all components
+- ✅ **New Fields Added**: Added `externalTransactionId` and `paymentMethodDetails`
+- ✅ **Component Updates**: Modified `PaymentTransactionList.tsx` and `PaymentTransactionTable.tsx`
+
+#### 3. Payment Transaction Retry System Implementation
+- ✅ **Database Migration**: Added `V22__add_retry_fields_to_payment_transaction.sql`
+- ✅ **Backend Entity**: Enhanced `PaymentTransaction.java` with retry fields and logic
+- ✅ **Backend DTO**: Updated `PaymentTransactionDto.java` with retry fields
+- ✅ **Service Layer**: Enhanced retry logic in `PaymentTransactionServiceImpl.java`
+- ✅ **Frontend Interface**: Added retry fields to TypeScript interface
+- ✅ **Full Stack Testing**: Verified compilation and functionality across all layers
+
+#### 4. Payment Method Type Alignment
+- ✅ **PAYMENT_METHOD_TYPE_MAPPINGS**: Synchronized frontend mappings with backend enum
+- ✅ **Enum Consistency**: Added `PAYPAL`, `STRIPE`, `MANUAL` and removed `CASH`, `CHECK`
+- ✅ **Component Integration**: Updated all components using payment method types
+
+#### 5. Data Structure Changes
+
+##### PaymentRequest Fields
+| Field | Frontend (Old) | Frontend (New) | Backend | Status |
+|-------|---------------|----------------|---------|---------|
+| Description | `description` | `title` | `title` | ✅ Aligned |
+| Requestor Name | `requestorName` | `payerName` | `payerName` | ✅ Aligned |
+| Requestor Email | `requestorEmail` | `payerEmail` | `payerEmail` | ✅ Aligned |
+| Payment Method | `paymentMethod` | `preSelectedPaymentMethod` | `preSelectedPaymentMethod` | ✅ Aligned |
+| Due Date | `dueDate` | `expiresAt` | `expiresAt` | ✅ Aligned |
+| - | - | `allowedPaymentMethods` | `allowedPaymentMethods` | ✅ Added |
+| - | - | `payerPhone` | `payerPhone` | ✅ Added |
+| - | - | `paymentToken` | `paymentToken` | ✅ Added |
+
+##### PaymentTransaction Fields
+| Field | Frontend (Old) | Frontend (New) | Backend | Status |
+|-------|---------------|----------------|---------|---------|
+| Status | `status` | `transactionStatus` | `transactionStatus` | ✅ Aligned |
+| External ID | - | `externalTransactionId` | `externalTransactionId` | ✅ Added |
+| Payment Details | - | `paymentMethodDetails` | `paymentMethodDetails` | ✅ Added |
+| Retry Count | `retryCount` (frontend-only) | `retryCount` | `retryCount` | ✅ Aligned |
+| Max Retries | `maxRetries` (frontend-only) | `maxRetries` | `maxRetries` | ✅ Aligned |
+
+### Next Implementation Phases
+
+#### Phase 2: Payment Gateway Integration
+- 📋 **Pending**: Stripe payment gateway integration
+- 📋 **Pending**: PayPal payment gateway integration
+- 📋 **Pending**: Payment processing workflow implementation
+- 📋 **Pending**: Webhook handling for payment status updates
+
+#### Phase 3: Advanced Payment Features
+- 📋 **Pending**: Payment link generation and sharing
+- 📋 **Pending**: Payment verification workflow
+- 📋 **Pending**: Void and refund processing
+- 📋 **Pending**: Payment cancellation workflow
+
+#### Phase 4: Frontend Integration & UI
+- 📋 **Pending**: Payment form components with validation
+- 📋 **Pending**: Payment status display and tracking
+- 📋 **Pending**: Payment history and transaction details
+- 📋 **Pending**: Payment retry functionality UI
+
+### Recent Implementation Details
+
+#### Retry System Architecture
+
+The payment transaction retry system has been implemented with the following components:
+
+1. **Database Schema Enhancement**
+   - Added `retry_count` column (INTEGER, default 0)
+   - Added `max_retries` column (INTEGER, default 3)
+   - Added constraints to ensure `retry_count <= max_retries`
+   - Added indexes for performance optimization
+
+2. **Backend Entity Logic**
+   - Enhanced `PaymentTransaction.java` with retry fields
+   - Added `canBeRetried()` method for retry validation
+   - Added `incrementRetryCount()` method for retry tracking
+   - Updated retry logic in service layer
+
+3. **Frontend Interface Alignment**
+   - Moved retry fields from frontend-specific to main interface
+   - Updated all payment transaction components
+   - Ensured type safety across TypeScript interfaces
+
+4. **Service Layer Enhancements**
+   - Updated `convertToDto()` method to include retry fields
+   - Enhanced `retryTransaction()` method with proper validation
+   - Added retry limit checking and error handling
 
 ---
 
@@ -445,6 +557,47 @@ ON CONFLICT DO NOTHING;
 
 COMMENT ON COLUMN permission.resource_type IS 'Resource type for permission (e.g., PAYMENT_MGMT)';
 COMMENT ON COLUMN permission.action IS 'Action allowed by permission (e.g., read, create, verify, void, refund)';
+```
+
+### Migration File: `V22__add_payment_transaction_retry_fields.sql`
+
+```sql
+-- =====================================================
+-- Payment Transaction Retry Fields
+-- Version: V22
+-- Description: Add retry functionality to payment transactions
+-- =====================================================
+
+-- Add retry count field to track number of retry attempts
+ALTER TABLE payment_transaction 
+ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0;
+
+-- Add max retries field to define retry limit per transaction
+ALTER TABLE payment_transaction 
+ADD COLUMN max_retries INTEGER NOT NULL DEFAULT 3;
+
+-- Add constraint to ensure retry_count doesn't exceed max_retries
+ALTER TABLE payment_transaction 
+ADD CONSTRAINT chk_retry_count_within_limit 
+CHECK (retry_count <= max_retries);
+
+-- Add constraint to ensure retry_count is non-negative
+ALTER TABLE payment_transaction 
+ADD CONSTRAINT chk_retry_count_non_negative 
+CHECK (retry_count >= 0);
+
+-- Add constraint to ensure max_retries is positive
+ALTER TABLE payment_transaction 
+ADD CONSTRAINT chk_max_retries_positive 
+CHECK (max_retries > 0);
+
+-- Add index for efficient retry queries
+CREATE INDEX idx_payment_transaction_retry_status 
+ON payment_transaction (status, retry_count, max_retries);
+
+-- Add comments for documentation
+COMMENT ON COLUMN payment_transaction.retry_count IS 'Number of retry attempts made for this transaction';
+COMMENT ON COLUMN payment_transaction.max_retries IS 'Maximum number of retry attempts allowed for this transaction';
 ```
 
 ---
@@ -1208,6 +1361,70 @@ public interface PaymentRequestService {
 6. **Token Generation**: Use secure random UUID for payment tokens
 7. **Code Generation**: Generate sequential codes with year prefix (PR-2025-XXXXXX)
 
+#### Updated DTO Field Mappings
+
+**PaymentRequestDto.java** (Synchronized with Frontend)
+```java
+public class PaymentRequestDto {
+    private Long id;
+    private String code;
+    private String title;                    // ✅ Aligned with frontend
+    private BigDecimal amount;
+    private String currency;
+    private String payerName;                // ✅ Aligned with frontend
+    private String payerEmail;               // ✅ Aligned with frontend
+    private String payerPhone;               // ✅ New field added
+    private PaymentMethodType[] allowedPaymentMethods;  // ✅ New field added
+    private PaymentMethodType preSelectedPaymentMethod; // ✅ Aligned with frontend
+    private LocalDateTime expiresAt;         // ✅ Aligned with frontend (ISO string in JSON)
+    private String paymentToken;             // ✅ Aligned with frontend
+    private PaymentRequestStatus status;
+    private LocalDateTime createdAt;         // ✅ Serialized as ISO string
+    private LocalDateTime updatedAt;         // ✅ Serialized as ISO string
+    // ... other fields
+}
+```
+
+**CreatePaymentRequestDto.java** (Synchronized with Frontend)
+```java
+public class CreatePaymentRequestDto {
+    @NotBlank(message = "Title is required")
+    private String title;                    // ✅ Changed from description
+    
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
+    private BigDecimal amount;
+    
+    @NotBlank(message = "Currency is required")
+    private String currency = "USD";
+    
+    private String payerName;                // ✅ Changed from requestorName
+    
+    @Email(message = "Invalid email format")
+    private String payerEmail;               // ✅ Changed from requestorEmail
+    
+    private String payerPhone;               // ✅ New field added
+    
+    @NotEmpty(message = "At least one payment method must be allowed")
+    private PaymentMethodType[] allowedPaymentMethods;  // ✅ New field added
+    
+    private PaymentMethodType preSelectedPaymentMethod; // ✅ Changed from paymentMethod
+    
+    @Future(message = "Expiration date must be in the future")
+    private LocalDateTime expiresAt;         // ✅ Changed from dueDate
+}
+```
+
+**Field Migration Summary**:
+- `description` → `title` (more descriptive naming)
+- `requestorName` → `payerName` (clearer role definition)
+- `requestorEmail` → `payerEmail` (clearer role definition)
+- `paymentMethod` → `preSelectedPaymentMethod` (more explicit)
+- `dueDate` → `expiresAt` (clearer semantics)
+- Added: `payerPhone` (additional contact method)
+- Added: `allowedPaymentMethods[]` (flexible payment options)
+- Added: `paymentToken` (secure access token)
+
 ---
 
 ## Frontend Requirements
@@ -1900,6 +2117,121 @@ const navigationItems = [
   },
 ];
 ```
+
+---
+
+## Frontend-Backend Synchronization
+
+### PaymentRequest Interface Alignment
+
+The frontend and backend PaymentRequest structures have been synchronized to ensure consistent data handling across the application.
+
+#### Updated Field Mappings
+
+| Purpose | Frontend Field | Backend Field | Type | Notes |
+|---------|---------------|---------------|------|-------|
+| Payment Title | `title` | `title` | `string` | Replaces old `description` field |
+| Payer Name | `payerName` | `payerName` | `string` | Replaces old `requestorName` |
+| Payer Email | `payerEmail` | `payerEmail` | `string` | Replaces old `requestorEmail` |
+| Payer Phone | `payerPhone` | `payerPhone` | `string` | New field for contact info |
+| Payment Methods | `allowedPaymentMethods` | `allowedPaymentMethods` | `PaymentMethodType[]` | New array field |
+| Pre-selected Method | `preSelectedPaymentMethod` | `preSelectedPaymentMethod` | `PaymentMethodType` | Replaces old `paymentMethod` |
+| Expiration | `expiresAt` | `expiresAt` | `string` (ISO) | Replaces old `dueDate` |
+| Payment Token | `paymentToken` | `paymentToken` | `string` | New field for secure access |
+
+#### Payment Method Type Enum Synchronization
+
+**Backend Enum**: `PaymentMethodType.java`
+```java
+public enum PaymentMethodType {
+    CREDIT_CARD,
+    DEBIT_CARD,
+    BANK_TRANSFER,
+    PAYPAL,
+    STRIPE,
+    MANUAL
+}
+```
+
+**Frontend Mapping**: `payment.ts`
+```typescript
+export const PAYMENT_METHOD_TYPE_MAPPINGS = {
+  CREDIT_CARD: "Credit Card",
+  DEBIT_CARD: "Debit Card", 
+  BANK_TRANSFER: "Bank Transfer",
+  PAYPAL: "PayPal",
+  STRIPE: "Stripe",
+  MANUAL: "Manual Payment"
+} as const;
+```
+
+#### Component Updates Summary
+
+##### PaymentRequestList.tsx
+- **Search Filter**: Updated to search by `title`, `payerName`, `payerEmail`
+- **Table Headers**: Changed "Requestor" → "Payer", "Due Date" → "Expires At"
+- **Data Display**: Updated field references to new structure
+- **Date Formatting**: Added `.toString()` for `createdAt` field
+
+##### PaymentRequestCreate.tsx
+- **Form Fields**: Updated all form inputs to use new field names
+- **Validation**: Updated validation logic for new required fields
+- **State Management**: Updated `formData` state structure
+- **Submit Logic**: Aligned with new `CreatePaymentRequestDto` structure
+
+#### Type Definitions Updated
+
+##### Frontend Types (`payment.ts`)
+```typescript
+// Updated PaymentRequest interface
+export interface PaymentRequest {
+  id: string;
+  code: string;
+  title: string;                    // was: description
+  amount: number;
+  currency: string;
+  payerName?: string;               // was: requestorName
+  payerEmail?: string;              // was: requestorEmail
+  payerPhone?: string;              // new field
+  allowedPaymentMethods: PaymentMethodType[];  // new field
+  preSelectedPaymentMethod?: PaymentMethodType; // was: paymentMethod
+  expiresAt?: string;               // was: dueDate
+  paymentToken: string;             // new field
+  status: PaymentRequestStatus;
+  createdAt: string;                // changed from Date to string
+  updatedAt: string;
+  // ... other fields remain the same
+}
+
+// Updated CreatePaymentRequestDto
+export interface CreatePaymentRequestDto {
+  title: string;                    // was: description
+  amount: number;
+  currency: string;
+  payerName?: string;               // was: requestorName
+  payerEmail?: string;              // was: requestorEmail
+  payerPhone?: string;              // new field
+  allowedPaymentMethods: PaymentMethodType[];  // new field
+  preSelectedPaymentMethod?: PaymentMethodType; // was: paymentMethod
+  expiresAt?: string;               // was: dueDate
+}
+```
+
+#### Migration Notes
+
+1. **Breaking Changes**: Old field names are no longer supported
+2. **Type Safety**: All components now use consistent TypeScript types
+3. **Validation**: Form validation updated to match new structure
+4. **API Compatibility**: Frontend DTOs now match backend exactly
+5. **Date Handling**: All dates are now handled as ISO strings
+
+#### Testing Verification
+
+- ✅ TypeScript compilation successful with no errors
+- ✅ Development server running without type conflicts
+- ✅ Form validation working with new field structure
+- ✅ Payment method display correctly mapped
+- ✅ Component rendering with updated field references
 
 ---
 
@@ -2681,6 +3013,217 @@ describe("PaymentRequestList", () => {
    - Create payment request
    - Cancel before payment
    - Verify link is inaccessible
+
+---
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. Payment Method Display Issues
+
+**Problem**: Payment methods not displaying correctly or showing undefined values
+
+**Possible Causes**:
+- Frontend-backend enum mismatch
+- Missing payment method mappings
+- Incorrect field references in components
+
+**Solutions**:
+```typescript
+// ✅ Correct: Use PAYMENT_METHOD_TYPE_MAPPINGS
+import { PAYMENT_METHOD_TYPE_MAPPINGS } from '@/types/payment';
+
+const displayMethod = PAYMENT_METHOD_TYPE_MAPPINGS[paymentMethod] || 'Unknown';
+
+// ❌ Incorrect: Direct enum usage
+const displayMethod = paymentMethod; // May show "CREDIT_CARD" instead of "Credit Card"
+```
+
+**Verification Steps**:
+1. Check that `PaymentMethodType` enum matches between frontend and backend
+2. Verify `PAYMENT_METHOD_TYPE_MAPPINGS` includes all enum values
+3. Ensure components use the mapping for display
+
+#### 2. Field Reference Errors
+
+**Problem**: TypeScript errors about missing properties or undefined field access
+
+**Common Errors**:
+```typescript
+// ❌ Old field names (will cause errors)
+request.description     // Use: request.title
+request.requestorName   // Use: request.payerName
+request.requestorEmail  // Use: request.payerEmail
+request.paymentMethod   // Use: request.preSelectedPaymentMethod
+request.dueDate        // Use: request.expiresAt
+```
+
+**Solutions**:
+```typescript
+// ✅ Updated field references
+const title = request.title;
+const payerName = request.payerName;
+const payerEmail = request.payerEmail;
+const paymentMethod = request.preSelectedPaymentMethod;
+const expiresAt = request.expiresAt;
+```
+
+#### 3. Date Handling Issues
+
+**Problem**: Date formatting errors or type mismatches
+
+**Issue**: `createdAt` and `updatedAt` are now strings (ISO format) instead of Date objects
+
+**Solution**:
+```typescript
+// ✅ Correct: Convert to string before formatting
+const formattedDate = formatDate(request.createdAt.toString());
+
+// ✅ Alternative: Handle both string and Date types
+const formattedDate = formatDate(
+  typeof request.createdAt === 'string' 
+    ? request.createdAt 
+    : request.createdAt.toISOString()
+);
+```
+
+#### 4. Form Validation Errors
+
+**Problem**: Form validation failing with new field structure
+
+**Common Issues**:
+- Validation rules referencing old field names
+- Missing validation for new required fields
+- Incorrect field types in validation schema
+
+**Solution**:
+```typescript
+// ✅ Updated validation schema
+const validationSchema = z.object({
+  title: z.string().min(1, "Title is required"),           // was: description
+  payerName: z.string().optional(),                        // was: requestorName
+  payerEmail: z.string().email().optional(),               // was: requestorEmail
+  payerPhone: z.string().optional(),                       // new field
+  allowedPaymentMethods: z.array(z.enum(PaymentMethodType)), // new field
+  preSelectedPaymentMethod: z.enum(PaymentMethodType).optional(), // was: paymentMethod
+  expiresAt: z.string().optional(),                        // was: dueDate
+});
+```
+
+#### 5. API Integration Issues
+
+**Problem**: API calls failing due to DTO structure mismatch
+
+**Symptoms**:
+- 400 Bad Request errors
+- Field validation errors from backend
+- Null or undefined values in API responses
+
+**Debugging Steps**:
+1. Check network tab for actual request/response data
+2. Verify DTO structure matches backend expectations
+3. Ensure all required fields are included in requests
+
+**Example Fix**:
+```typescript
+// ✅ Correct API call structure
+const createPaymentRequest = async (data: CreatePaymentRequestDto) => {
+  const payload = {
+    title: data.title,                    // not description
+    amount: data.amount,
+    currency: data.currency,
+    payerName: data.payerName,            // not requestorName
+    payerEmail: data.payerEmail,          // not requestorEmail
+    payerPhone: data.payerPhone,          // new field
+    allowedPaymentMethods: data.allowedPaymentMethods, // new field
+    preSelectedPaymentMethod: data.preSelectedPaymentMethod, // not paymentMethod
+    expiresAt: data.expiresAt,            // not dueDate
+  };
+  
+  return await api.post('/payment-requests', payload);
+};
+```
+
+#### 6. Component Rendering Issues
+
+**Problem**: Components not rendering or showing blank data
+
+**Common Causes**:
+- Accessing undefined properties
+- Incorrect conditional rendering logic
+- Missing null/undefined checks
+
+**Solution**:
+```typescript
+// ✅ Safe property access with fallbacks
+const PaymentRequestCard = ({ request }: { request: PaymentRequest }) => {
+  return (
+    <div>
+      <h3>{request.title || 'Untitled Payment'}</h3>
+      <p>Payer: {request.payerName || 'Not specified'}</p>
+      <p>Email: {request.payerEmail || 'Not provided'}</p>
+      <p>Method: {
+        request.preSelectedPaymentMethod 
+          ? PAYMENT_METHOD_TYPE_MAPPINGS[request.preSelectedPaymentMethod]
+          : 'Any method allowed'
+      }</p>
+      <p>Expires: {
+        request.expiresAt 
+          ? formatDate(request.expiresAt) 
+          : 'No expiration'
+      }</p>
+    </div>
+  );
+};
+```
+
+### Development Environment Issues
+
+#### TypeScript Compilation Errors
+
+**Problem**: Build failing due to type errors
+
+**Quick Fixes**:
+1. Clear TypeScript cache: `rm -rf node_modules/.cache`
+2. Restart TypeScript server in IDE
+3. Run `npm run type-check` to identify specific errors
+4. Ensure all imports are updated to use new types
+
+#### Development Server Issues
+
+**Problem**: Hot reload not working after interface changes
+
+**Solution**:
+1. Stop development server (`Ctrl+C`)
+2. Clear build cache: `rm -rf dist/ .vite/`
+3. Restart server: `npm run dev`
+
+### Performance Considerations
+
+#### Large Payment Lists
+
+**Issue**: Slow rendering with many payment requests
+
+**Optimization**:
+```typescript
+// ✅ Use React.memo for payment request cards
+const PaymentRequestCard = React.memo(({ request }: { request: PaymentRequest }) => {
+  // Component implementation
+});
+
+// ✅ Implement virtual scrolling for large lists
+import { FixedSizeList as List } from 'react-window';
+```
+
+#### Search Performance
+
+**Issue**: Slow search with large datasets
+
+**Solution**:
+- Implement debounced search
+- Use server-side filtering for large datasets
+- Add pagination to limit results
 
 ---
 

@@ -27,6 +27,8 @@ public class PaymentTransactionDto {
     private String errorCode;
     private String errorMessage;
     private Map<String, Object> metadata;
+    private Integer retryCount;
+    private Integer maxRetries;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String createdBy;
@@ -162,6 +164,22 @@ public class PaymentTransactionDto {
 
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
+    }
+
+    public Integer getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(Integer retryCount) {
+        this.retryCount = retryCount;
+    }
+
+    public Integer getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(Integer maxRetries) {
+        this.maxRetries = maxRetries;
     }
 
     public LocalDateTime getCreatedAt() {

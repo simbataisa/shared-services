@@ -16,10 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { getStatusIcon } from "@/lib/status-utils";
+import { getStatusIcon, getPaymentRequestStatusColor } from "@/lib/status-utils";
 import { paymentApi } from "@/lib/paymentApi";
 import type { PaymentRequest, PaymentRequestStatus } from "@/types/payment";
-import { PAYMENT_REQUEST_STATUS_MAPPINGS, PAYMENT_METHOD_TYPE_MAPPINGS } from "@/types/payment";
+import { PAYMENT_REQUEST_STATUS_MAPPINGS, PAYMENT_METHOD_TYPE_MAPPINGS, PAYMENT_REQUEST_STATUS_OPTIONS } from "@/types/payment";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
 import {
   Table,
@@ -42,7 +42,7 @@ export default function PaymentRequestList() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
@@ -55,7 +55,7 @@ export default function PaymentRequestList() {
       setLoading(true);
       let response;
       
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== "all") {
         response = await paymentApi.requests.getByStatus(statusFilter as PaymentRequestStatus, currentPage - 1, 10);
       } else {
         response = await paymentApi.requests.getAll(currentPage - 1, 10);
@@ -101,33 +101,12 @@ export default function PaymentRequestList() {
   const filteredRequests = paymentRequests.filter((request) =>
     searchTerm === "" ||
     request.requestCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.requestorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.requestorEmail.toLowerCase().includes(searchTerm.toLowerCase())
+    request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.payerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    request.payerEmail.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const statusOptions = [
-    { value: "all", label: "All Statuses" },
-    { value: "PENDING", label: "Pending" },
-    { value: "APPROVED", label: "Approved" },
-    { value: "REJECTED", label: "Rejected" },
-    { value: "CANCELLED", label: "Cancelled" },
-  ];
 
-  const getStatusColor = (status: PaymentRequestStatus) => {
-    switch (status) {
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "APPROVED":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "REJECTED":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "CANCELLED":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
 
   const formatCurrency = (amount: number, currency: string) => {
     return new Intl.NumberFormat('en-US', {
@@ -137,13 +116,7 @@ export default function PaymentRequestList() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (loading) {
@@ -180,13 +153,13 @@ export default function PaymentRequestList() {
       <SearchAndFilter
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        searchPlaceholder="Search by code, description, requestor..."
+        searchPlaceholder="Search by code, title, payer..."
         filters={[
           {
             label: "Status",
             value: statusFilter,
             onChange: setStatusFilter,
-            options: statusOptions,
+            options: [...PAYMENT_REQUEST_STATUS_OPTIONS],
             placeholder: "All Statuses",
             width: "200px"
           }
@@ -215,11 +188,11 @@ export default function PaymentRequestList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Request Code</TableHead>
-                <TableHead>Requestor</TableHead>
+                <TableHead>Payer</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Payment Method</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Due Date</TableHead>
+                <TableHead>Expires At</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -237,9 +210,9 @@ export default function PaymentRequestList() {
                   </TableCell>
                   <TableCell>
                     <div>
-                      <div className="font-medium">{request.requestorName}</div>
+                      <div className="font-medium">{request.payerName}</div>
                       <div className="text-sm text-muted-foreground">
-                        {request.requestorEmail}
+                        {request.payerEmail}
                       </div>
                     </div>
                   </TableCell>
@@ -250,18 +223,18 @@ export default function PaymentRequestList() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
-                      {PAYMENT_METHOD_TYPE_MAPPINGS[request.paymentMethod]}
+                      {PAYMENT_METHOD_TYPE_MAPPINGS[request.preSelectedPaymentMethod]}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={getStatusColor(request.status)}>
+                    <Badge className={getPaymentRequestStatusColor(request.status)}>
                       {PAYMENT_REQUEST_STATUS_MAPPINGS[request.status]}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {request.dueDate ? formatDate(request.dueDate) : "No due date"}
+                    {request.expiresAt ? formatDate(request.expiresAt.toString()) : "No expiry"}
                   </TableCell>
-                  <TableCell>{formatDate(request.createdAt)}</TableCell>
+                  <TableCell>{formatDate(request.createdAt.toString())}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -349,20 +322,20 @@ export default function PaymentRequestList() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-2 py-4">
               <div className="text-sm text-muted-foreground">
-                Showing {currentPage * 10 + 1} to {Math.min((currentPage + 1) * 10, totalElements)} of {totalElements} results
+                Showing {(currentPage - 1) * 10 + 1} to {Math.min(currentPage * 10, totalElements)} of {totalElements} results
               </div>
               <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                  disabled={currentPage === 0}
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
                 >
                   Previous
                 </Button>
                 <div className="flex items-center space-x-1">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = Math.max(0, Math.min(totalPages - 5, currentPage - 2)) + i;
+                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
                     return (
                       <Button
                         key={pageNum}
@@ -370,7 +343,7 @@ export default function PaymentRequestList() {
                         size="sm"
                         onClick={() => setCurrentPage(pageNum)}
                       >
-                        {pageNum + 1}
+                        {pageNum}
                       </Button>
                     );
                   })}
@@ -378,8 +351,8 @@ export default function PaymentRequestList() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                  disabled={currentPage >= totalPages - 1}
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage >= totalPages}
                 >
                   Next
                 </Button>

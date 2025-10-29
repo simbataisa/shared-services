@@ -211,10 +211,15 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
+        if (!transaction.canBeRetried()) {
+            throw new RuntimeException("Transaction cannot be retried. Either it's not in a retryable state or has exceeded maximum retry attempts.");
+        }
+
         String oldStatus = transaction.getTransactionStatus().toString();
         transaction.setTransactionStatus(PaymentTransactionStatus.PENDING);
         transaction.setErrorCode(null);
         transaction.setErrorMessage(null);
+        transaction.incrementRetryCount();
         PaymentTransaction updatedTransaction = paymentTransactionRepository.save(transaction);
 
         return convertToDto(updatedTransaction);
@@ -322,11 +327,14 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         dto.setTransactionType(entity.getTransactionType());
         dto.setTransactionStatus(entity.getTransactionStatus());
         dto.setExternalTransactionId(entity.getExternalTransactionId());
+        dto.setPaymentMethodDetails(entity.getPaymentMethodDetails());
         dto.setGatewayName(entity.getGatewayName());
         dto.setGatewayResponse(entity.getGatewayResponse());
         dto.setProcessedAt(entity.getProcessedAt());
         dto.setErrorCode(entity.getErrorCode());
         dto.setErrorMessage(entity.getErrorMessage());
+        dto.setRetryCount(entity.getRetryCount());
+        dto.setMaxRetries(entity.getMaxRetries());
         dto.setMetadata(entity.getMetadata());
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());

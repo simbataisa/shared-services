@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { type VariantProps } from "class-variance-authority";
 import { badgeVariants } from "@/components/ui/badge";
+import { type PaymentRequestStatus } from "@/types/payment";
 
 // Comprehensive status types used across the application
 export type StatusType =
@@ -461,3 +462,77 @@ function normalizeStatus(status: string): StatusType {
       return STATUS_CONFIG[lowerStatus] ? lowerStatus : "inactive";
   }
 }
+
+/**
+ * Get payment request status color classes for styling
+ * @param status - The PaymentRequestStatus type
+ * @returns String with Tailwind CSS classes for background, text, hover, and border colors
+ */
+export const getPaymentRequestStatusColor = (status: PaymentRequestStatus): string => {
+  switch (status) {
+    case "DRAFT":
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+    case "PENDING":
+      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200";
+    case "PROCESSING":
+      return "bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200";
+    case "COMPLETED":
+      return "bg-green-100 text-green-800 hover:bg-green-100 border-green-200";
+    case "FAILED":
+      return "bg-red-100 text-red-800 hover:bg-red-100 border-red-200";
+    case "CANCELLED":
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+    case "VOIDED":
+      return "bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-200";
+    case "REFUNDED":
+      return "bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-200";
+    case "PARTIAL_REFUND":
+      return "bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-200";
+    case "APPROVED":
+      return "bg-green-100 text-green-800 hover:bg-green-100 border-green-200";
+    case "REJECTED":
+      return "bg-red-100 text-red-800 hover:bg-red-100 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+  }
+};
+
+/**
+ * Get badge properties for payment transaction status
+ * Returns variant and className for consistent transaction status styling
+ */
+export const getTransactionStatusBadgeProps = (status: string) => {
+  switch (status) {
+    case 'SUCCESS':
+    case 'COMPLETED':
+      return {
+        variant: 'default' as const,
+        className: 'bg-green-100 text-green-800 hover:bg-green-200'
+      };
+    case 'PENDING':
+      return {
+        variant: 'secondary' as const,
+        className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+      };
+    case 'PROCESSING':
+      return {
+        variant: 'outline' as const,
+        className: 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+      };
+    case 'FAILED':
+      return {
+        variant: 'destructive' as const,
+        className: 'bg-red-100 text-red-800 hover:bg-red-200'
+      };
+    case 'CANCELLED':
+      return {
+        variant: 'secondary' as const,
+        className: 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+      };
+    default:
+      return {
+        variant: 'secondary' as const,
+        className: 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+      };
+  }
+};

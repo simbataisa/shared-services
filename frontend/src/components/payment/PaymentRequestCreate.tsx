@@ -40,13 +40,15 @@ const PaymentRequestCreate: React.FC = () => {
 
   const [formData, setFormData] = useState<CreatePaymentRequestDto>({
     tenantId: 1, // Default tenant ID - should be set based on current user context
+    title: "",
     amount: 0,
     currency: "USD",
-    description: "",
-    requestorName: "",
-    requestorEmail: "",
-    paymentMethod: "CREDIT_CARD",
-    dueDate: "",
+    payerName: "",
+    payerEmail: "",
+    payerPhone: "",
+    allowedPaymentMethods: ["CREDIT_CARD", "DEBIT_CARD"],
+    preSelectedPaymentMethod: "CREDIT_CARD",
+    expiresAt: undefined,
     metadata: {}
   });
 
@@ -63,26 +65,22 @@ const PaymentRequestCreate: React.FC = () => {
       newErrors.currency = "Currency is required";
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
+    if (!formData.title.trim()) {
+      newErrors.title = "Title is required";
     }
 
-    if (!formData.requestorName.trim()) {
-      newErrors.requestorName = "Requestor name is required";
+    if (!formData.payerName.trim()) {
+      newErrors.payerName = "Payer name is required";
     }
 
-    if (!formData.requestorEmail.trim()) {
-      newErrors.requestorEmail = "Requestor email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.requestorEmail)) {
-      newErrors.requestorEmail = "Please enter a valid email address";
+    if (!formData.payerEmail.trim()) {
+      newErrors.payerEmail = "Payer email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.payerEmail)) {
+      newErrors.payerEmail = "Please enter a valid email address";
     }
 
-    if (!formData.paymentMethod) {
-      newErrors.paymentMethod = "Payment method is required";
-    }
-
-    if (!formData.dueDate) {
-      newErrors.dueDate = "Due date is required";
+    if (!formData.allowedPaymentMethods || formData.allowedPaymentMethods.length === 0) {
+      newErrors.allowedPaymentMethods = "At least one payment method is required";
     }
 
     setErrors(newErrors);
@@ -255,64 +253,75 @@ const PaymentRequestCreate: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Description */}
+                  {/* Title */}
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description *</Label>
+                    <Label htmlFor="title">Title *</Label>
                     <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) => handleInputChange("description", e.target.value)}
-                      className={errors.description ? "border-red-500" : ""}
-                      placeholder="Enter payment request description..."
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => handleInputChange("title", e.target.value)}
+                      className={errors.title ? "border-red-500" : ""}
+                      placeholder="Enter payment request title..."
                       rows={3}
                     />
-                    {errors.description && (
-                      <p className="text-sm text-red-500">{errors.description}</p>
+                    {errors.title && (
+                      <p className="text-sm text-red-500">{errors.title}</p>
                     )}
                   </div>
 
-                  {/* Requestor Information */}
+                  {/* Payer Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="requestorName">Requestor Name *</Label>
+                      <Label htmlFor="payerName">Payer Name *</Label>
                       <Input
-                        id="requestorName"
-                        value={formData.requestorName}
-                        onChange={(e) => handleInputChange("requestorName", e.target.value)}
-                        className={errors.requestorName ? "border-red-500" : ""}
-                        placeholder="Enter requestor name"
+                        id="payerName"
+                        value={formData.payerName}
+                        onChange={(e) => handleInputChange("payerName", e.target.value)}
+                        className={errors.payerName ? "border-red-500" : ""}
+                        placeholder="Enter payer name"
                       />
-                      {errors.requestorName && (
-                        <p className="text-sm text-red-500">{errors.requestorName}</p>
+                      {errors.payerName && (
+                        <p className="text-sm text-red-500">{errors.payerName}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="requestorEmail">Requestor Email *</Label>
+                      <Label htmlFor="payerEmail">Payer Email *</Label>
                       <Input
-                        id="requestorEmail"
+                        id="payerEmail"
                         type="email"
-                        value={formData.requestorEmail}
-                        onChange={(e) => handleInputChange("requestorEmail", e.target.value)}
-                        className={errors.requestorEmail ? "border-red-500" : ""}
-                        placeholder="Enter requestor email"
+                        value={formData.payerEmail}
+                        onChange={(e) => handleInputChange("payerEmail", e.target.value)}
+                        className={errors.payerEmail ? "border-red-500" : ""}
+                        placeholder="Enter payer email"
                       />
-                      {errors.requestorEmail && (
-                        <p className="text-sm text-red-500">{errors.requestorEmail}</p>
+                      {errors.payerEmail && (
+                        <p className="text-sm text-red-500">{errors.payerEmail}</p>
                       )}
                     </div>
                   </div>
 
-                  {/* Payment Method and Due Date */}
+                  {/* Payer Phone (Optional) */}
+                  <div className="space-y-2">
+                    <Label htmlFor="payerPhone">Payer Phone</Label>
+                    <Input
+                      id="payerPhone"
+                      value={formData.payerPhone || ""}
+                      onChange={(e) => handleInputChange("payerPhone", e.target.value)}
+                      placeholder="Enter payer phone (optional)"
+                    />
+                  </div>
+
+                  {/* Payment Methods and Expiry Date */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="paymentMethodType">Payment Method *</Label>
+                      <Label htmlFor="preSelectedPaymentMethod">Pre-selected Payment Method</Label>
                       <Select
-                        value={formData.paymentMethod}
-                        onValueChange={(value) => handleInputChange("paymentMethod", value as PaymentMethodType)}
+                        value={formData.preSelectedPaymentMethod || ""}
+                        onValueChange={(value) => handleInputChange("preSelectedPaymentMethod", value as PaymentMethodType)}
                       >
-                        <SelectTrigger className={errors.paymentMethod ? "border-red-500" : ""}>
-                          <SelectValue placeholder="Select payment method" />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select pre-selected payment method" />
                         </SelectTrigger>
                         <SelectContent>
                           {paymentMethodOptions.map((option) => (
@@ -322,24 +331,17 @@ const PaymentRequestCreate: React.FC = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.paymentMethod && (
-                        <p className="text-sm text-red-500">{errors.paymentMethod}</p>
-                      )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="dueDate">Due Date *</Label>
+                      <Label htmlFor="expiresAt">Expires At</Label>
                       <Input
-                        id="dueDate"
-                        type="date"
-                        value={formData.dueDate}
-                        onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                        className={errors.dueDate ? "border-red-500" : ""}
-                        min={new Date().toISOString().split('T')[0]}
+                        id="expiresAt"
+                        type="datetime-local"
+                        value={formData.expiresAt ? new Date(formData.expiresAt).toISOString().slice(0, 16) : ""}
+                        onChange={(e) => handleInputChange("expiresAt", e.target.value ? new Date(e.target.value) : undefined)}
+                        min={new Date().toISOString().slice(0, 16)}
                       />
-                      {errors.dueDate && (
-                        <p className="text-sm text-red-500">{errors.dueDate}</p>
-                      )}
                     </div>
                   </div>
 

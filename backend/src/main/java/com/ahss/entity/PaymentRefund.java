@@ -23,7 +23,7 @@ public class PaymentRefund {
     private String refundCode;
 
     @Column(name = "payment_transaction_id", nullable = false)
-    @JdbcTypeCode(SqlTypes.OTHER)
+    @JdbcTypeCode(SqlTypes.UUID)
     private UUID paymentTransactionId;
 
     @Column(name = "refund_amount", nullable = false, precision = 15, scale = 2)

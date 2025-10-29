@@ -1,48 +1,57 @@
 // Payment-related types and interfaces
 
-export type PaymentRequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
-export type PaymentTransactionStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELLED";
+export type PaymentRequestStatus = 
+  | "DRAFT" 
+  | "PENDING" 
+  | "PROCESSING" 
+  | "COMPLETED" 
+  | "FAILED" 
+  | "CANCELLED" 
+  | "VOIDED" 
+  | "REFUNDED" 
+  | "PARTIAL_REFUND" 
+  | "APPROVED" 
+  | "REJECTED";
+export type PaymentTransactionStatus = "PENDING" | "PROCESSING" | "SUCCESS" | "COMPLETED" | "FAILED" | "CANCELLED";
 export type PaymentTransactionType = "PAYMENT" | "REFUND" | "CHARGEBACK" | "ADJUSTMENT";
-export type PaymentMethodType = "CREDIT_CARD" | "DEBIT_CARD" | "BANK_TRANSFER" | "DIGITAL_WALLET" | "CASH" | "CHECK";
+export type PaymentMethodType = "CREDIT_CARD" | "DEBIT_CARD" | "BANK_TRANSFER" | "DIGITAL_WALLET" | "PAYPAL" | "STRIPE" | "MANUAL";
 
 export interface PaymentRequest {
   id: string;
   requestCode: string;
-  tenantId: number;
-  tenantName?: string;
+  paymentToken: string;
+  title: string;
   amount: number;
   currency: string;
-  description: string;
-  requestorName: string;
-  requestorEmail: string;
-  paymentMethod: PaymentMethodType;
+  payerName: string;
+  payerEmail: string;
+  payerPhone: string;
+  allowedPaymentMethods: PaymentMethodType[];
+  preSelectedPaymentMethod: PaymentMethodType;
   status: PaymentRequestStatus;
-  dueDate?: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  rejectedBy?: string;
-  rejectedAt?: string;
-  rejectionReason?: string;
-  metadata?: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
-  updatedBy?: string;
-  transactions?: PaymentTransaction[];
+  expiresAt: Date;
+  paidAt: Date;
+  tenantId: number;
+  metadata: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+  updatedBy: string;
 }
 
 export interface PaymentTransaction {
   id: string;
   transactionCode: string;
+  externalTransactionId?: string;
   paymentRequestId: string;
   paymentRequest?: PaymentRequest;
+  transactionType: PaymentTransactionType;
+  transactionStatus: PaymentTransactionStatus;
   amount: number;
   currency: string;
-  transactionType: PaymentTransactionType;
   paymentMethod: PaymentMethodType;
-  status: PaymentTransactionStatus;
+  paymentMethodDetails?: Record<string, any>;
   gatewayName?: string;
-  gatewayTransactionId?: string;
   gatewayResponse?: Record<string, any>;
   processedAt?: string;
   errorCode?: string;
@@ -54,6 +63,8 @@ export interface PaymentTransaction {
   updatedAt: string;
   createdBy?: string;
   updatedBy?: string;
+  // Frontend-specific fields (not in backend DTO)
+  gatewayTransactionId?: string;
   refunds?: PaymentRefund[];
 }
 
@@ -97,13 +108,15 @@ export interface PaymentAuditLog {
 // Request DTOs
 export interface CreatePaymentRequestDto {
   tenantId: number;
+  title: string;
   amount: number;
   currency: string;
-  description: string;
-  requestorName: string;
-  requestorEmail: string;
-  paymentMethod: PaymentMethodType;
-  dueDate?: string;
+  payerName: string;
+  payerEmail: string;
+  payerPhone?: string;
+  allowedPaymentMethods: PaymentMethodType[];
+  preSelectedPaymentMethod?: PaymentMethodType;
+  expiresAt?: Date;
   metadata?: Record<string, any>;
 }
 
@@ -130,14 +143,12 @@ export interface PaymentStats {
   cancelledRequests: number;
   totalTransactions: number;
   pendingTransactions: number;
-  processingTransactions: number;
-  completedTransactions: number;
+  successfulTransactions: number;
   failedTransactions: number;
   cancelledTransactions: number;
   totalRefunds: number;
   pendingRefunds: number;
-  processingRefunds: number;
-  completedRefunds: number;
+  successfulRefunds: number;
   failedRefunds: number;
   cancelledRefunds: number;
 }
@@ -182,13 +193,15 @@ export interface PaymentRefundFilters {
 // Form validation schemas
 export interface PaymentRequestFormData {
   tenantId: string;
+  title: string;
   amount: string;
   currency: string;
-  description: string;
-  requestorName: string;
-  requestorEmail: string;
-  paymentMethod: PaymentMethodType;
-  dueDate?: string;
+  payerName: string;
+  payerEmail: string;
+  payerPhone?: string;
+  allowedPaymentMethods: PaymentMethodType[];
+  preSelectedPaymentMethod?: PaymentMethodType;
+  expiresAt?: string;
 }
 
 export interface ProcessPaymentFormData {
@@ -205,15 +218,23 @@ export interface RefundFormData {
 
 // Status mappings for display
 export const PAYMENT_REQUEST_STATUS_MAPPINGS = {
+  DRAFT: "Draft",
   PENDING: "Pending",
+  PROCESSING: "Processing",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+  CANCELLED: "Cancelled",
+  VOIDED: "Voided",
+  REFUNDED: "Refunded",
+  PARTIAL_REFUND: "Partial Refund",
   APPROVED: "Approved", 
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled"
+  REJECTED: "Rejected"
 } as const;
 
 export const PAYMENT_TRANSACTION_STATUS_MAPPINGS = {
   PENDING: "Pending",
   PROCESSING: "Processing",
+  SUCCESS: "Success",
   COMPLETED: "Completed",
   FAILED: "Failed",
   CANCELLED: "Cancelled"
@@ -224,8 +245,9 @@ export const PAYMENT_METHOD_TYPE_MAPPINGS = {
   DEBIT_CARD: "Debit Card",
   BANK_TRANSFER: "Bank Transfer",
   DIGITAL_WALLET: "Digital Wallet",
-  CASH: "Cash",
-  CHECK: "Check"
+  PAYPAL: "PayPal",
+  STRIPE: "Stripe",
+  MANUAL: "Manual Payment"
 } as const;
 
 export const PAYMENT_TRANSACTION_TYPE_MAPPINGS = {
@@ -234,3 +256,19 @@ export const PAYMENT_TRANSACTION_TYPE_MAPPINGS = {
   CHARGEBACK: "Chargeback",
   ADJUSTMENT: "Adjustment"
 } as const;
+
+// Status filter options for UI components
+export const PAYMENT_REQUEST_STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "DRAFT", label: "Draft" },
+  { value: "PENDING", label: "Pending" },
+  { value: "PROCESSING", label: "Processing" },
+  { value: "COMPLETED", label: "Completed" },
+  { value: "FAILED", label: "Failed" },
+  { value: "CANCELLED", label: "Cancelled" },
+  { value: "VOIDED", label: "Voided" },
+  { value: "REFUNDED", label: "Refunded" },
+  { value: "PARTIAL_REFUND", label: "Partial Refund" },
+  { value: "APPROVED", label: "Approved" },
+  { value: "REJECTED", label: "Rejected" },
+] as const;
