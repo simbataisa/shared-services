@@ -27,6 +27,10 @@ public class PaymentRefund {
     @JdbcTypeCode(SqlTypes.UUID)
     private UUID paymentTransactionId;
 
+    @Column(name = "refund_transaction_id")
+    @JdbcTypeCode(SqlTypes.UUID)
+    private UUID refundTransactionId;
+
     @Column(name = "refund_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal refundAmount;
 
@@ -76,6 +80,10 @@ public class PaymentRefund {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_transaction_id", insertable = false, updatable = false)
     private PaymentTransaction paymentTransaction;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "refund_transaction_id", insertable = false, updatable = false)
+    private PaymentTransaction refundTransaction;
 
     @PrePersist
     protected void onCreate() {
@@ -129,6 +137,14 @@ public class PaymentRefund {
 
     public void setPaymentTransactionId(UUID paymentTransactionId) {
         this.paymentTransactionId = paymentTransactionId;
+    }
+
+    public UUID getRefundTransactionId() {
+        return refundTransactionId;
+    }
+
+    public void setRefundTransactionId(UUID refundTransactionId) {
+        this.refundTransactionId = refundTransactionId;
     }
 
     public BigDecimal getRefundAmount() {
@@ -251,7 +267,15 @@ public class PaymentRefund {
         this.paymentTransaction = paymentTransaction;
     }
 
-    // Business methods
+    public PaymentTransaction getRefundTransaction() {
+        return refundTransaction;
+    }
+
+    public void setRefundTransaction(PaymentTransaction refundTransaction) {
+        this.refundTransaction = refundTransaction;
+    }
+
+    // Business logic methods
     public boolean isSuccessful() {
         return refundStatus.isSuccessful();
     }

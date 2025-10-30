@@ -12,6 +12,7 @@ public class PaymentRefundDto {
     private UUID id;
     private String refundCode;
     private UUID paymentTransactionId;
+    private UUID refundTransactionId;
     private BigDecimal refundAmount;
     private String currency;
     private String reason;
@@ -54,6 +55,14 @@ public class PaymentRefundDto {
 
     public void setPaymentTransactionId(UUID paymentTransactionId) {
         this.paymentTransactionId = paymentTransactionId;
+    }
+
+    public UUID getRefundTransactionId() {
+        return refundTransactionId;
+    }
+
+    public void setRefundTransactionId(UUID refundTransactionId) {
+        this.refundTransactionId = refundTransactionId;
     }
 
     public BigDecimal getRefundAmount() {

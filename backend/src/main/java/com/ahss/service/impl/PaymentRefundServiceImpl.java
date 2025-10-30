@@ -340,6 +340,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         dto.setId(entity.getId());
         dto.setRefundCode(entity.getRefundCode());
         dto.setPaymentTransactionId(entity.getPaymentTransactionId());
+        dto.setRefundTransactionId(entity.getRefundTransactionId());
         dto.setRefundAmount(entity.getRefundAmount());
         dto.setCurrency(entity.getCurrency());
         dto.setReason(entity.getReason());
