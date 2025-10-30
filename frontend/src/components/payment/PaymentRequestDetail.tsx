@@ -21,7 +21,7 @@ import {
 import { paymentApi } from '@/lib/paymentApi';
 import { DetailHeaderCard, StatisticsCard } from '@/components/common';
 import { PaymentRequestDetailsCard } from './PaymentRequestDetailsCard';
-import { PaymentTransactionTable } from './PaymentTransactionTable';
+import { PaymentTransactionTable } from './transaction/PaymentTransactionTable';
 import PaymentRequestStatsCard from './PaymentRequestStatsCard';
 import PaymentRequestStatusCard from './PaymentRequestStatusCard';
 import type { 

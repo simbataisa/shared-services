@@ -1,5 +1,5 @@
-import { type ReactNode } from "react";
-import { NavLink, useNavigate, Link } from "react-router-dom";
+import { type ReactNode, useState } from "react";
+import { NavLink, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   LogOut,
   User,
@@ -11,12 +11,21 @@ import {
   Building,
   BarChart3,
   CreditCard,
+  Receipt,
+  Undo2,
+  FileText,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { useNavigationPermissions } from "@/hooks/usePermissions";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +37,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
   SidebarProvider,
   SidebarTrigger,
@@ -37,21 +49,48 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+interface NavigationSubItem {
+  to: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
 interface NavigationItem {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   canAccess: boolean;
+  subItems?: NavigationSubItem[];
 }
 
 export default function Layout({ children }: LayoutProps) {
   const { user, tenant, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const navPermissions = useNavigationPermissions();
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const toggleMenu = (menuKey: string) => {
+    setOpenMenus(prev => ({
+      ...prev,
+      [menuKey]: !prev[menuKey]
+    }));
+  };
+
+  const isMenuActive = (item: NavigationItem) => {
+    if (item.subItems) {
+      return item.subItems.some(subItem => location.pathname === subItem.to);
+    }
+    return location.pathname === item.to;
+  };
+
+  const isSubMenuActive = (subItem: NavigationSubItem) => {
+    return location.pathname === subItem.to;
   };
 
   const navigationItems: NavigationItem[] = [
@@ -108,6 +147,23 @@ export default function Layout({ children }: LayoutProps) {
       label: "Payments",
       icon: CreditCard,
       canAccess: navPermissions.canAccessPayments,
+      subItems: [
+        {
+          to: "/payments/transactions",
+          label: "Transaction List",
+          icon: Receipt,
+        },
+        {
+          to: "/payments/refunds",
+          label: "Refund List",
+          icon: Undo2,
+        },
+        {
+          to: "/payments/audit-logs",
+          label: "Audit Log",
+          icon: FileText,
+        },
+      ],
     },
   ];
 
@@ -140,27 +196,75 @@ export default function Layout({ children }: LayoutProps) {
                     <PermissionGuard key={item.to} fallback={null}>
                       {item.canAccess && (
                         <SidebarMenuItem>
-                          <SidebarMenuButton
-                            asChild
-                            tooltip={item.label}
-                            size="lg"
-                          >
-                            <NavLink
-                              to={item.to}
-                              className={({ isActive }) =>
-                                `flex items-center gap-2 ${
-                                  isActive
-                                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                    : ""
-                                }`
-                              }
+                          {item.subItems ? (
+                            <Collapsible
+                              open={openMenus[item.to] || isMenuActive(item)}
+                              onOpenChange={() => toggleMenu(item.to)}
                             >
-                              <item.icon className="size-4" />
-                              <span className="group-data-[collapsible=icon]:hidden">
-                                {item.label}
-                              </span>
-                            </NavLink>
-                          </SidebarMenuButton>
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuButton
+                                  asChild
+                                  tooltip={item.label}
+                                  size="lg"
+                                  className={`${
+                                    isMenuActive(item)
+                                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                      : ""
+                                  }`}
+                                >
+                                  <NavLink
+                                    to={item.to}
+                                    className="flex items-center gap-2 w-full"
+                                  >
+                                    <item.icon className="size-4" />
+                                    <span className="group-data-[collapsible=icon]:hidden flex-1 text-left">
+                                      {item.label}
+                                    </span>
+                                    <ChevronRight className="ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden data-[state=open]:rotate-90" />
+                                  </NavLink>
+                                </SidebarMenuButton>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <SidebarMenuSub>
+                                  {item.subItems.map((subItem) => (
+                                    <SidebarMenuSubItem key={subItem.to}>
+                                      <SidebarMenuSubButton
+                                        asChild
+                                        isActive={isSubMenuActive(subItem)}
+                                      >
+                                        <NavLink to={subItem.to}>
+                                          <subItem.icon className="size-4" />
+                                          <span>{subItem.label}</span>
+                                        </NavLink>
+                                      </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </SidebarMenuSub>
+                              </CollapsibleContent>
+                            </Collapsible>
+                          ) : (
+                            <SidebarMenuButton
+                              asChild
+                              tooltip={item.label}
+                              size="lg"
+                            >
+                              <NavLink
+                                to={item.to}
+                                className={({ isActive }) =>
+                                  `flex items-center gap-2 ${
+                                    isActive
+                                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                      : ""
+                                  }`
+                                }
+                              >
+                                <item.icon className="size-4" />
+                                <span className="group-data-[collapsible=icon]:hidden">
+                                  {item.label}
+                                </span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                          )}
                         </SidebarMenuItem>
                       )}
                     </PermissionGuard>

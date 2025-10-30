@@ -34,7 +34,8 @@ import ModuleEdit from "./components/module/ModuleEdit";
 import PaymentRequestList from "./components/payment/PaymentRequestList";
 import PaymentRequestCreate from "./components/payment/PaymentRequestCreate";
 import PaymentRequestDetail from "./components/payment/PaymentRequestDetail";
-import PaymentTransactionList from "./components/payment/PaymentTransactionList";
+import PaymentTransactionList from "./components/payment/transaction/PaymentTransactionList";
+import PaymentTransactionDetail from "./components/payment/transaction/PaymentTransactionDetail";
 import PaymentRefundList from "./components/payment/PaymentRefundList";
 import PaymentAuditLogList from "./components/payment/PaymentAuditLogList";
 import Unauthorized from "./pages/Unauthorized";
@@ -333,6 +334,15 @@ function App() {
             element={
               <ProtectedRoute permission="PAYMENT_MGMT:read">
                 <PaymentTransactionList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/transactions/:id"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentTransactionDetail />
               </ProtectedRoute>
             }
           />

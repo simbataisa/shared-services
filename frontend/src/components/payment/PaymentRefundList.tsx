@@ -14,13 +14,13 @@ const PaymentRefundList: React.FC = () => {
   const [refunds, setRefunds] = useState<PaymentRefund[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 10;
 
   const statusOptions = [
-    { value: "", label: "All Statuses" },
+    { value: "all", label: "All Statuses" },
     { value: "PENDING", label: "Pending" },
     { value: "SUCCESS", label: "Success" },
     { value: "FAILED", label: "Failed" },
@@ -32,7 +32,7 @@ const PaymentRefundList: React.FC = () => {
       setLoading(true);
       let response;
       
-      if (statusFilter) {
+      if (statusFilter && statusFilter !== "all") {
         response = await paymentApi.refunds.getByStatus(statusFilter as PaymentTransactionStatus, currentPage - 1, 10);
       } else {
         response = await paymentApi.refunds.getAll(currentPage - 1, 10);

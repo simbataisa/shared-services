@@ -1,9 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Receipt, RefreshCw } from 'lucide-react';
+import { Receipt, Eye } from 'lucide-react';
 import type { PaymentTransaction } from '@/types/payment';
 import { 
   PAYMENT_TRANSACTION_STATUS_MAPPINGS,
@@ -16,7 +17,6 @@ interface PaymentTransactionTableProps {
   transactions: PaymentTransaction[];
   loading?: boolean;
   showActions?: boolean;
-  onRetryTransaction?: (transactionId: string) => void;
   emptyMessage?: string;
 }
 
@@ -43,7 +43,6 @@ export const PaymentTransactionTable: React.FC<PaymentTransactionTableProps> = (
   transactions,
   loading = false,
   showActions = false,
-  onRetryTransaction,
   emptyMessage = "No transactions found."
 }) => {
   if (loading) {
@@ -141,15 +140,15 @@ export const PaymentTransactionTable: React.FC<PaymentTransactionTableProps> = (
                 </TableCell>
                 {showActions && (
                   <TableCell>
-                    {transaction.transactionStatus === 'FAILED' && onRetryTransaction && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => onRetryTransaction(transaction.id)}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      asChild
+                    >
+                      <Link to={`/payments/transactions/${transaction.id}`}>
+                        <Eye className="h-4 w-4" />
+                      </Link>
+                    </Button>
                   </TableCell>
                 )}
               </TableRow>

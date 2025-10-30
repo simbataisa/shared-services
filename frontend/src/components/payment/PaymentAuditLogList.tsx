@@ -13,13 +13,13 @@ const PaymentAuditLogList: React.FC = () => {
   const [auditLogs, setAuditLogs] = useState<PaymentAuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [actionFilter, setActionFilter] = useState("");
+  const [actionFilter, setActionFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const pageSize = 10;
 
   const actionOptions = [
-    { value: "", label: "All Actions" },
+    { value: "all", label: "All Actions" },
     { value: "CREATE", label: "Create" },
     { value: "UPDATE", label: "Update" },
     { value: "DELETE", label: "Delete" },
@@ -35,7 +35,14 @@ const PaymentAuditLogList: React.FC = () => {
     try {
       setLoading(true);
       const response = await paymentApi.auditLogs.getAll(currentPage - 1, 10);
-      setAuditLogs(response.data.content || []);
+      let filteredLogs = response.data.content || [];
+      
+      // Client-side filtering by action
+      if (actionFilter && actionFilter !== "all") {
+        filteredLogs = filteredLogs.filter(log => log.action === actionFilter);
+      }
+      
+      setAuditLogs(filteredLogs);
       setTotalPages(response.data.totalPages || 1);
     } catch (error) {
       console.error("Error fetching audit logs:", error);
