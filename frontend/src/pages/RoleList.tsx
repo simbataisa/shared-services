@@ -14,7 +14,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Plus, Edit, Trash2, Shield } from "lucide-react";
 import RoleDialog from "@/components/role/RoleDialog";
 import RoleTable from "@/components/role/RoleTable";
-import SearchAndFilter from "@/components/common/SearchAndFilter";
 import httpClient from "@/lib/httpClient";
 import type {
   Role,
@@ -33,10 +32,8 @@ const RoleList: React.FC<RoleListProps> = ({
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchFilters, setSearchFilters] = useState<RoleSearchFilters>({
-    searchTerm: "",
-    status: "all",
-  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -46,8 +43,8 @@ const RoleList: React.FC<RoleListProps> = ({
   const navigate = useNavigate();
 
   // Event handlers
-  const handleSearchChange = (searchTerm: string) => {
-    setSearchFilters((prev: RoleSearchFilters) => ({ ...prev, searchTerm }));
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
   };
 
   const handleCreateRole = async (form: CreateRoleRequest) => {
@@ -138,14 +135,14 @@ const RoleList: React.FC<RoleListProps> = ({
     const matchesSearch =
       role.name
         .toLowerCase()
-        .includes(searchFilters.searchTerm.toLowerCase()) ||
+        .includes(searchTerm.toLowerCase()) ||
       role.description
         ?.toLowerCase()
-        .includes(searchFilters.searchTerm.toLowerCase());
+        .includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      searchFilters.status === "all" ||
-      (role.status || "ACTIVE") === searchFilters.status;
+      statusFilter === "all" ||
+      (role.status || "ACTIVE") === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -193,31 +190,6 @@ const RoleList: React.FC<RoleListProps> = ({
         </Alert>
       )}
 
-      {/* Search and Filters */}
-      <SearchAndFilter
-        searchTerm={searchFilters.searchTerm}
-        onSearchChange={handleSearchChange}
-        searchPlaceholder="Search roles by name or description..."
-        actions={
-          canManageRoles &&
-          showActions && (
-            <>
-              <Button onClick={() => navigate("/roles/new")}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Role
-              </Button>
-              <RoleDialog
-                open={isCreateDialogOpen}
-                onOpenChange={setIsCreateDialogOpen}
-                onSave={handleCreateRole}
-                permissions={permissions}
-                loading={saving}
-              />
-            </>
-          )
-        }
-      />
-
       <Card>
         <CardHeader>
           <CardTitle>Roles</CardTitle>
@@ -237,6 +209,40 @@ const RoleList: React.FC<RoleListProps> = ({
               showActions={showActions}
               canManageRoles={canManageRoles}
               onViewRole={handleViewRole}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder="Search roles by name or description..."
+              filters={[
+                {
+                  label: "Status",
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  options: [
+                    { value: "all", label: "All Status" },
+                    { value: "ACTIVE", label: "Active" },
+                    { value: "INACTIVE", label: "Inactive" },
+                    { value: "DEPRECATED", label: "Deprecated" },
+                  ],
+                },
+              ]}
+              actions={
+                canManageRoles &&
+                showActions && (
+                  <>
+                    <Button onClick={() => navigate("/roles/new")}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Role
+                    </Button>
+                    <RoleDialog
+                      open={isCreateDialogOpen}
+                      onOpenChange={setIsCreateDialogOpen}
+                      onSave={handleCreateRole}
+                      permissions={permissions}
+                      loading={saving}
+                    />
+                  </>
+                )
+              }
             />
           )}
         </CardContent>

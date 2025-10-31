@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import SearchAndFilter from "@/components/common/SearchAndFilter";
 import { UserTable } from "@/components/users/UserTable";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Shield } from "lucide-react";
-import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { Shield, Plus } from "lucide-react";
 import type { User, Role, UserGroup } from "@/types";
+import type { TableFilter } from "@/types/components";
 import httpClient from "@/lib/httpClient";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const UserList: React.FC = () => {
   const navigate = useNavigate();
@@ -18,10 +18,26 @@ const UserList: React.FC = () => {
   const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { canViewUsers, canManageUsers } = usePermissions();
+
+  // Define status filter configuration
+  const statusFilters: TableFilter[] = [
+    {
+      label: "Status",
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: [
+        { value: "all", label: "All Statuses" },
+        { value: "ACTIVE", label: "Active" },
+        { value: "INACTIVE", label: "Inactive" },
+        { value: "SUSPENDED", label: "Suspended" },
+      ],
+      placeholder: "Filter by status",
+      width: "w-48",
+    },
+  ];
 
   useEffect(() => {
     if (canViewUsers) {
@@ -106,19 +122,6 @@ const UserList: React.FC = () => {
     navigate(`/users/${user.id}/edit`);
   };
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" || user.userStatus === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
   if (!canViewUsers) {
     return (
       <div className="container mx-auto py-10">
@@ -149,36 +152,32 @@ const UserList: React.FC = () => {
         </Alert>
       )}
 
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search users by username, email, or name..."
-        filters={[
-          {
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { value: "all", label: "All Status" },
-              { value: "ACTIVE", label: "Active" },
-              { value: "INACTIVE", label: "Inactive" },
-            ],
-            width: "w-40",
-          },
-        ]}
-        actions={[
-          <PermissionGuard key="create-user" permission="USER_MGMT:create">
-            <Button asChild>
-              <Link to="/users/create">Create New User</Link>
-            </Button>
-          </PermissionGuard>,
-        ]}
-        className="mb-6"
-      />
-
       <Card>
+        <CardHeader>
+          <CardTitle>Users</CardTitle>
+          <CardDescription>A list of all users in the system</CardDescription>
+        </CardHeader>
         <CardContent>
-          <UserTable users={filteredUsers} loading={loading} />
+          {loading ? (
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : (
+          <UserTable 
+            users={users} 
+            loading={loading} 
+            filters={statusFilters}
+            actions={
+              canManageUsers && (
+                <Button onClick={() => navigate("/users/new")}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add User
+                </Button>
+              )
+            }
+          />)}
         </CardContent>
       </Card>
     </div>

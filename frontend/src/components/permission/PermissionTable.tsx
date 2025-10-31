@@ -20,29 +20,11 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options"
 import { SearchAndFilter } from "@/components/common/SearchAndFilter"
 import { type Permission } from "@/types/entities"
+import { type BaseTableProps, type TableFilter } from "@/types/components"
 
-interface FilterOption {
-  value: string
-  label: string
-}
-
-interface Filter {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  options: FilterOption[]
-  placeholder?: string
-  width?: string
-}
-
-interface PermissionTableProps {
+interface PermissionTableProps extends Omit<BaseTableProps<Permission>, 'data'> {
   permissions: Permission[]
   onViewPermission?: (permission: Permission) => void
-  searchTerm?: string
-  onSearchChange?: (value: string) => void
-  searchPlaceholder?: string
-  filters?: Filter[]
-  actions?: React.ReactNode
 }
 
 // Helper function to parse permission name
@@ -77,7 +59,7 @@ const getActionBadgeVariant = (action: string): "default" | "secondary" | "destr
 }
 
 export function PermissionTable({ 
-  permissions, 
+  permissions,
   onViewPermission,
   searchTerm = "",
   onSearchChange,
