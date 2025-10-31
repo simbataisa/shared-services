@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
 import { ENTITY_STATUS_MAPPINGS, type Module } from "@/types";
 import ModuleTable from "@/components/module/ModuleTable";
 
@@ -46,8 +46,8 @@ const ModuleList: React.FC = () => {
   const fetchModules = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/v1/modules");
-      setModules(response.data || []);
+      const modules = await httpClient.getModules();
+      setModules(modules || []);
     } catch (err) {
       setError("Failed to fetch modules");
       console.error("Error fetching modules:", err);
@@ -58,8 +58,8 @@ const ModuleList: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get("/products");
-      setProducts(response.data || []);
+      const products = await httpClient.getProducts();
+      setProducts(products || []);
     } catch (err) {
       console.error("Error fetching products:", err);
     }
@@ -69,7 +69,7 @@ const ModuleList: React.FC = () => {
     if (!canUpdateModules) return;
 
     try {
-      await api.put(`/v1/modules/${moduleId}`, { isActive: newStatus });
+      await httpClient.updateModule(moduleId, { isActive: newStatus });
       setModules((prev) =>
         prev.map((module) =>
           module.id === moduleId ? { ...module, isActive: newStatus } : module
@@ -86,7 +86,7 @@ const ModuleList: React.FC = () => {
 
     if (window.confirm("Are you sure you want to delete this module?")) {
       try {
-        await api.delete(`/v1/modules/${moduleId}`);
+        await httpClient.deleteModule(moduleId);
         setModules((prev) => prev.filter((module) => module.id !== moduleId));
       } catch (err) {
         setError("Failed to delete module");

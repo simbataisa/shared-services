@@ -3,5 +3,7 @@ package com.ahss.entity;
 public enum ProductStatus {
     DRAFT,
     ACTIVE,
-    INACTIVE
+    INACTIVE,
+    SUSPENDED,
+    DISCONTINUED
 }

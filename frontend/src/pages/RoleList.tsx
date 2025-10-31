@@ -8,23 +8,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Shield } from "lucide-react";
 import RoleDialog from "@/components/role/RoleDialog";
+import RoleTable from "@/components/role/RoleTable";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-utils";
 import httpClient from "@/lib/httpClient";
 import type {
   Role,
@@ -241,78 +231,13 @@ const RoleList: React.FC<RoleListProps> = ({
               ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Permissions</TableHead>
-                  <TableHead>Created</TableHead>
-                  {showActions && <TableHead>Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRoles.map((role) => (
-                  <TableRow
-                    key={role.id}
-                    className={selectedRoleId === role.id ? "bg-muted/50" : ""}
-                  >
-                    <TableCell className="font-medium">{role.name}</TableCell>
-                    <TableCell>{role.description}</TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        status={normalizeEntityStatus(
-                          "role",
-                          role.status || "ACTIVE"
-                        )}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {role.permissions
-                          ?.slice(0, 3)
-                          .map((permission: Permission) => (
-                            <Badge
-                              key={permission.id}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {permission.name}
-                            </Badge>
-                          ))}
-                        {role.permissions && role.permissions.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{role.permissions.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {role.createdAt
-                        ? new Date(role.createdAt).toLocaleDateString()
-                        : ""}
-                    </TableCell>
-                    {showActions && (
-                      <TableCell>
-                        {canManageRoles && (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewRole(role)}
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <RoleTable
+              roles={filteredRoles}
+              selectedRoleId={selectedRoleId}
+              showActions={showActions}
+              canManageRoles={canManageRoles}
+              onViewRole={handleViewRole}
+            />
           )}
         </CardContent>
       </Card>

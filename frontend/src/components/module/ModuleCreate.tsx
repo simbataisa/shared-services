@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
 import {
   Card,
   CardContent,
@@ -58,8 +58,8 @@ const ModuleCreate: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get("/products");
-      setProducts(response.data || []);
+      const products = await httpClient.getProducts();
+      setProducts(products || []);
     } catch (err) {
       console.error("Error fetching products:", err);
       setErrors({ submit: "Failed to load products. Please try again." });
@@ -108,12 +108,10 @@ const ModuleCreate: React.FC = () => {
       const moduleData = {
         name: formData.name,
         description: formData.description,
-        code: formData.code,
         productId: parseInt(formData.productId),
-        isActive: formData.isActive,
       };
 
-      await api.post("/v1/modules", moduleData);
+      await httpClient.createModule(moduleData);
 
       // Navigate back to modules list
       navigate("/modules");

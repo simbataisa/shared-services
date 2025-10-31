@@ -11,12 +11,12 @@ const getApiUrl = () => {
   }
 
   // Otherwise use environment variable or localhost
-  return import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+  return import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
 };
 
 // Define primary and fallback URLs
 const PRIMARY_API_URL = getApiUrl();
-const FALLBACK_API_URL = "https://api-shared-services.dennisdao.com/api";
+const FALLBACK_API_URL = "https://api-shared-services.dennisdao.com/api/v1";
 
 // Create axios instance with primary URL
 const api = axios.create({

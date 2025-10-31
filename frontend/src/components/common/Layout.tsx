@@ -15,6 +15,11 @@ import {
   Undo2,
   FileText,
   ChevronRight,
+  ChevronDown,
+  UserCheck,
+  Lock,
+  Tag,
+  ScrollText,
 } from "lucide-react";
 import { useAuth } from "@/store/auth";
 import { useNavigationPermissions } from "@/hooks/usePermissions";
@@ -26,6 +31,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -43,6 +54,7 @@ import {
   SidebarRail,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 interface LayoutProps {
@@ -63,17 +75,12 @@ interface NavigationItem {
   subItems?: NavigationSubItem[];
 }
 
-export default function Layout({ children }: LayoutProps) {
-  const { user, tenant, logout } = useAuth();
-  const navigate = useNavigate();
+// Separate component that can use useSidebar hook
+function SidebarNavigation() {
   const location = useLocation();
   const navPermissions = useNavigationPermissions();
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  const { state: sidebarState } = useSidebar();
 
   const toggleMenu = (menuKey: string) => {
     setOpenMenus(prev => ({
@@ -82,15 +89,16 @@ export default function Layout({ children }: LayoutProps) {
     }));
   };
 
-  const isMenuActive = (item: NavigationItem) => {
+  const isMenuActive = (item: NavigationItem): boolean => {
+    if (location.pathname === item.to) return true;
     if (item.subItems) {
-      return item.subItems.some(subItem => location.pathname === subItem.to);
+      return item.subItems.some(subItem => location.pathname.startsWith(subItem.to));
     }
-    return location.pathname === item.to;
+    return false;
   };
 
-  const isSubMenuActive = (subItem: NavigationSubItem) => {
-    return location.pathname === subItem.to;
+  const isSubMenuActive = (subItem: NavigationSubItem): boolean => {
+    return location.pathname.startsWith(subItem.to);
   };
 
   const navigationItems: NavigationItem[] = [
@@ -101,71 +109,229 @@ export default function Layout({ children }: LayoutProps) {
       canAccess: navPermissions.canAccessDashboard,
     },
     {
-      to: "/user-groups",
-      label: "User Groups",
+      to: "/users",
+      label: "User Management",
       icon: Users,
       canAccess: navPermissions.canAccessUsers,
-    },
-    {
-      to: "/users",
-      label: "Users",
-      icon: User,
-      canAccess: navPermissions.canAccessUsers,
-    },
-    {
-      to: "/roles",
-      label: "Roles",
-      icon: Shield,
-      canAccess: navPermissions.canAccessRoles,
-    },
-    {
-      to: "/permissions",
-      label: "Permissions",
-      icon: Key,
-      canAccess: navPermissions.canAccessRoles,
-    },
-    {
-      to: "/products",
-      label: "Products",
-      icon: Package,
-      canAccess: navPermissions.canAccessProducts,
-    },
-    {
-      to: "/modules",
-      label: "Modules",
-      icon: Layers,
-      canAccess: navPermissions.canAccessModules,
+      subItems: [
+        {
+          to: "/users",
+          label: "Users",
+          icon: User,
+        },
+        {
+          to: "/user-groups",
+          label: "User Groups",
+          icon: Users,
+        },
+        {
+          to: "/roles",
+          label: "Roles",
+          icon: Shield,
+        },
+        {
+          to: "/permissions",
+          label: "Permissions",
+          icon: Lock,
+        },
+      ],
     },
     {
       to: "/tenants",
-      label: "Tenants",
+      label: "Tenant Management",
       icon: Building,
       canAccess: navPermissions.canAccessTenants,
     },
     {
+      to: "/products",
+      label: "Product Management",
+      icon: Package,
+      canAccess: navPermissions.canAccessProducts,
+      subItems: [
+        {
+          to: "/products",
+          label: "Products",
+          icon: Package,
+        },
+        {
+          to: "/modules",
+          label: "Modules",
+          icon: Tag,
+        },
+      ],
+    },
+    {
+      to: "/api-keys",
+      label: "API Key Management",
+      icon: Key,
+      canAccess: navPermissions.canAccessRoles,
+    },
+    {
       to: "/payments",
-      label: "Payments",
+      label: "Payment Management",
       icon: CreditCard,
       canAccess: navPermissions.canAccessPayments,
       subItems: [
         {
           to: "/payments/transactions",
-          label: "Transaction List",
+          label: "Transactions",
           icon: Receipt,
         },
         {
           to: "/payments/refunds",
-          label: "Refund List",
+          label: "Refunds",
           icon: Undo2,
         },
         {
           to: "/payments/audit-logs",
           label: "Audit Log",
-          icon: FileText,
+          icon: ScrollText,
         },
       ],
     },
   ];
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+        Navigation
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {navigationItems.map((item) => (
+            <PermissionGuard key={item.to} fallback={null}>
+              {item.canAccess && (
+                <SidebarMenuItem>
+                  {item.subItems ? (
+                    sidebarState === "collapsed" ? (
+                      // Dropdown menu for collapsed sidebar
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <SidebarMenuButton
+                            asChild
+                            tooltip={item.label}
+                            size="lg"
+                            className={`${
+                              isMenuActive(item)
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 w-full cursor-pointer">
+                              <item.icon className="size-4" />
+                              <span className="group-data-[collapsible=icon]:hidden flex-1 text-left">
+                                {item.label}
+                              </span>
+                            </div>
+                          </SidebarMenuButton>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="right" align="start" className="w-48">
+                          {item.subItems.map((subItem) => (
+                            <DropdownMenuItem key={subItem.to} asChild>
+                              <NavLink
+                                to={subItem.to}
+                                className="flex items-center gap-2 w-full"
+                              >
+                                <subItem.icon className="size-4" />
+                                <span>{subItem.label}</span>
+                              </NavLink>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      // Collapsible for expanded sidebar
+                      <Collapsible
+                        open={openMenus[item.to] || isMenuActive(item)}
+                        onOpenChange={() => toggleMenu(item.to)}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            asChild
+                            tooltip={item.label}
+                            size="lg"
+                            className={`${
+                              isMenuActive(item)
+                                ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                : ""
+                            }`}
+                          >
+                            <NavLink
+                              to={item.to}
+                              className="flex items-center gap-2 w-full"
+                            >
+                              <item.icon className="size-4" />
+                              <span className="group-data-[collapsible=icon]:hidden flex-1 text-left">
+                                {item.label}
+                              </span>
+                              {(openMenus[item.to] || isMenuActive(item)) ? (
+                                <ChevronDown className="ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden" />
+                              ) : (
+                                <ChevronRight className="ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden" />
+                              )}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub>
+                            {item.subItems.map((subItem) => (
+                              <SidebarMenuSubItem key={subItem.to}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isSubMenuActive(subItem)}
+                                >
+                                  <NavLink to={subItem.to}>
+                                    <subItem.icon className="size-4" />
+                                    <span>{subItem.label}</span>
+                                  </NavLink>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            ))}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )
+                  ) : (
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.label}
+                      size="lg"
+                    >
+                      <NavLink
+                        to={item.to}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 ${
+                            isActive
+                              ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                              : ""
+                          }`
+                        }
+                      >
+                        <item.icon className="size-4" />
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          {item.label}
+                        </span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  )}
+                </SidebarMenuItem>
+              )}
+            </PermissionGuard>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
+export default function Layout({ children }: LayoutProps) {
+  const { user, tenant, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <SidebarProvider>
@@ -186,92 +352,7 @@ export default function Layout({ children }: LayoutProps) {
           <SidebarRail />
 
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
-                Navigation
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navigationItems.map((item) => (
-                    <PermissionGuard key={item.to} fallback={null}>
-                      {item.canAccess && (
-                        <SidebarMenuItem>
-                          {item.subItems ? (
-                            <Collapsible
-                              open={openMenus[item.to] || isMenuActive(item)}
-                              onOpenChange={() => toggleMenu(item.to)}
-                            >
-                              <CollapsibleTrigger asChild>
-                                <SidebarMenuButton
-                                  asChild
-                                  tooltip={item.label}
-                                  size="lg"
-                                  className={`${
-                                    isMenuActive(item)
-                                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                      : ""
-                                  }`}
-                                >
-                                  <NavLink
-                                    to={item.to}
-                                    className="flex items-center gap-2 w-full"
-                                  >
-                                    <item.icon className="size-4" />
-                                    <span className="group-data-[collapsible=icon]:hidden flex-1 text-left">
-                                      {item.label}
-                                    </span>
-                                    <ChevronRight className="ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden data-[state=open]:rotate-90" />
-                                  </NavLink>
-                                </SidebarMenuButton>
-                              </CollapsibleTrigger>
-                              <CollapsibleContent>
-                                <SidebarMenuSub>
-                                  {item.subItems.map((subItem) => (
-                                    <SidebarMenuSubItem key={subItem.to}>
-                                      <SidebarMenuSubButton
-                                        asChild
-                                        isActive={isSubMenuActive(subItem)}
-                                      >
-                                        <NavLink to={subItem.to}>
-                                          <subItem.icon className="size-4" />
-                                          <span>{subItem.label}</span>
-                                        </NavLink>
-                                      </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                  ))}
-                                </SidebarMenuSub>
-                              </CollapsibleContent>
-                            </Collapsible>
-                          ) : (
-                            <SidebarMenuButton
-                              asChild
-                              tooltip={item.label}
-                              size="lg"
-                            >
-                              <NavLink
-                                to={item.to}
-                                className={({ isActive }) =>
-                                  `flex items-center gap-2 ${
-                                    isActive
-                                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                                      : ""
-                                  }`
-                                }
-                              >
-                                <item.icon className="size-4" />
-                                <span className="group-data-[collapsible=icon]:hidden">
-                                  {item.label}
-                                </span>
-                              </NavLink>
-                            </SidebarMenuButton>
-                          )}
-                        </SidebarMenuItem>
-                      )}
-                    </PermissionGuard>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <SidebarNavigation />
           </SidebarContent>
 
           <SidebarFooter>

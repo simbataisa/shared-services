@@ -7,74 +7,69 @@ import type {
   CreatePaymentRequestDto,
   ProcessPaymentDto,
   CreateRefundDto,
-  PaymentRequestFilters,
-  PaymentTransactionFilters,
-  PaymentRefundFilters,
   PaymentRequestStatus,
-  PaymentTransactionStatus,
-  PaymentStats
-} from "@/types/payment";
+  PaymentTransactionStatus} from "@/types/payment";
 import type { ApiResponse } from "@/types/api";
 
 // Payment Requests API
 export const paymentRequestApi = {
   // Get all payment requests with pagination
   getAll: async (page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentRequest[]; totalElements: number; totalPages: number }>>(`/v1/payments/requests?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentRequest[]; totalElements: number; totalPages: number }>>(`/payments/requests?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get payment request by ID
   getById: async (id: string) => {
-    const response = await api.get<ApiResponse<PaymentRequest>>(`/v1/payments/requests/${id}`);
+    const response = await api.get<ApiResponse<PaymentRequest>>(`/payments/requests/${id}`);
     return response.data;
   },
 
   // Get payment request by code
   getByCode: async (code: string) => {
-    const response = await api.get<ApiResponse<PaymentRequest>>(`/v1/payments/requests/code/${code}`);
+    const response = await api.get<ApiResponse<PaymentRequest>>(`/payments/requests/code/${code}`);
     return response.data;
   },
 
   // Get payment requests by tenant
   getByTenant: async (tenantId: number, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentRequest[]; totalElements: number; totalPages: number }>>(`/v1/payments/requests/tenant/${tenantId}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentRequest[]; totalElements: number; totalPages: number }>>(`/payments/requests/tenant/${tenantId}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get payment requests by status
   getByStatus: async (status: PaymentRequestStatus, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentRequest[]; totalElements: number; totalPages: number }>>(`/v1/payments/requests/status/${status}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentRequest[]; totalElements: number; totalPages: number }>>(`/payments/requests/status/${status}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Create new payment request
   create: async (data: CreatePaymentRequestDto) => {
-    const response = await api.post<ApiResponse<PaymentRequest>>("/v1/payments/requests", data);
+    const response = await api.post<ApiResponse<PaymentRequest>>("/payments/requests", data);
     return response.data;
   },
 
   // Update payment request
   update: async (id: string, data: CreatePaymentRequestDto) => {
-    const response = await api.put<ApiResponse<PaymentRequest>>(`/v1/payments/requests/${id}`, data);
+    const response = await api.put<ApiResponse<PaymentRequest>>(`/payments/requests/${id}`, data);
     return response.data;
   },
 
   // Cancel payment request
   cancel: async (id: string) => {
-    const response = await api.patch<ApiResponse<void>>(`/v1/payments/requests/${id}/cancel`);
+    const response = await api.patch<ApiResponse<void>>(`/payments/requests/${id}/cancel`);
     return response.data;
   },
 
   // Approve payment request
   approve: async (id: string) => {
-    const response = await api.patch<ApiResponse<void>>(`/v1/payments/requests/${id}/approve`);
+    const response = await api.patch<ApiResponse<void>>(`/payments/requests/${id}/approve`);
     return response.data;
   },
 
   // Reject payment request
   reject: async (id: string) => {
-    const response = await api.patch<ApiResponse<void>>(`/v1/payments/requests/${id}/reject`);
+    const response = await api.patch<ApiResponse<void>>(`/payments/requests/${id}/reject`);
     return response.data;
   }
 };
@@ -83,49 +78,49 @@ export const paymentRequestApi = {
 export const paymentTransactionApi = {
   // Get all transactions with pagination
   getAll: async (page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentTransaction[]; totalElements: number; totalPages: number }>>(`/v1/payments/transactions?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentTransaction[]; totalElements: number; totalPages: number }>>(`/payments/transactions?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get transaction by ID
   getById: async (id: string) => {
-    const response = await api.get<ApiResponse<PaymentTransaction>>(`/v1/payments/transactions/${id}`);
+    const response = await api.get<ApiResponse<PaymentTransaction>>(`/payments/transactions/${id}`);
     return response.data;
   },
 
   // Get transaction by code
   getByCode: async (code: string) => {
-    const response = await api.get<ApiResponse<PaymentTransaction>>(`/v1/payments/transactions/code/${code}`);
+    const response = await api.get<ApiResponse<PaymentTransaction>>(`/payments/transactions/code/${code}`);
     return response.data;
   },
 
   // Get transactions by request
   getByRequest: async (requestId: string, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentTransaction[]; totalElements: number; totalPages: number }>>(`/v1/payments/transactions/request/${requestId}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentTransaction[]; totalElements: number; totalPages: number }>>(`/payments/transactions/request/${requestId}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get transactions by status
   getByStatus: async (status: PaymentTransactionStatus, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentTransaction[]; totalElements: number; totalPages: number }>>(`/v1/payments/transactions/status/${status}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentTransaction[]; totalElements: number; totalPages: number }>>(`/payments/transactions/status/${status}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Process payment
   process: async (data: ProcessPaymentDto) => {
-    const response = await api.post<ApiResponse<PaymentTransaction>>("/v1/payments/transactions/process", data);
+    const response = await api.post<ApiResponse<PaymentTransaction>>("/payments/transactions/process", data);
     return response.data;
   },
 
   // Retry transaction
   retry: async (id: string) => {
-    const response = await api.patch<ApiResponse<void>>(`/v1/payments/transactions/${id}/retry`);
+    const response = await api.patch<ApiResponse<void>>(`/payments/transactions/${id}/retry`);
     return response.data;
   },
 
   // Cancel transaction
   cancel: async (id: string) => {
-    const response = await api.patch<ApiResponse<void>>(`/v1/payments/transactions/${id}/cancel`);
+    const response = await api.patch<ApiResponse<void>>(`/payments/transactions/${id}/cancel`);
     return response.data;
   }
 };
@@ -134,43 +129,43 @@ export const paymentTransactionApi = {
 export const paymentRefundApi = {
   // Get all refunds with pagination
   getAll: async (page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentRefund[]; totalElements: number; totalPages: number }>>(`/v1/payments/refunds?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentRefund[]; totalElements: number; totalPages: number }>>(`/payments/refunds?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get refund by ID
   getById: async (id: number) => {
-    const response = await api.get<ApiResponse<PaymentRefund>>(`/v1/payments/refunds/${id}`);
+    const response = await api.get<ApiResponse<PaymentRefund>>(`/payments/refunds/${id}`);
     return response.data;
   },
 
   // Get refund by code
   getByCode: async (code: string) => {
-    const response = await api.get<ApiResponse<PaymentRefund>>(`/v1/payments/refunds/code/${code}`);
+    const response = await api.get<ApiResponse<PaymentRefund>>(`/payments/refunds/code/${code}`);
     return response.data;
   },
 
   // Get refunds by transaction
   getByTransaction: async (transactionId: string, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentRefund[]; totalElements: number; totalPages: number }>>(`/v1/payments/refunds/transaction/${transactionId}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentRefund[]; totalElements: number; totalPages: number }>>(`/payments/refunds/transaction/${transactionId}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get refunds by status
   getByStatus: async (status: PaymentTransactionStatus, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentRefund[]; totalElements: number; totalPages: number }>>(`/v1/payments/refunds/status/${status}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentRefund[]; totalElements: number; totalPages: number }>>(`/payments/refunds/status/${status}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Create refund
   create: async (data: CreateRefundDto) => {
-    const response = await api.post<ApiResponse<PaymentRefund>>("/v1/payments/refunds", data);
+    const response = await api.post<ApiResponse<PaymentRefund>>("/payments/refunds", data);
     return response.data;
   },
 
   // Cancel refund
   cancel: async (id: string) => {
-    const response = await api.patch<ApiResponse<void>>(`/v1/payments/refunds/${id}/cancel`);
+    const response = await api.patch<ApiResponse<void>>(`/payments/refunds/${id}/cancel`);
     return response.data;
   }
 };
@@ -179,43 +174,43 @@ export const paymentRefundApi = {
 export const paymentAuditLogApi = {
   // Get all audit logs with pagination
   getAll: async (page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/payments/audit-logs?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get audit log by ID
   getById: async (id: string) => {
-    const response = await api.get<ApiResponse<PaymentAuditLog>>(`/v1/payments/audit-logs/${id}`);
+    const response = await api.get<ApiResponse<PaymentAuditLog>>(`/payments/audit-logs/${id}`);
     return response.data;
   },
 
   // Get audit logs by payment request
   getByPaymentRequest: async (requestId: string, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/request/${requestId}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/payments/audit-logs/request/${requestId}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get audit logs by transaction
   getByTransaction: async (transactionId: string, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/transaction/${transactionId}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/payments/audit-logs/transaction/${transactionId}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get audit logs by refund
   getByRefund: async (refundId: string, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/refund/${refundId}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/payments/audit-logs/refund/${refundId}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Get audit logs by user
   getByUser: async (userId: number, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/user/${userId}?page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/payments/audit-logs/user/${userId}?page=${page}&size=${size}`);
     return response.data;
   },
 
   // Search audit logs
   search: async (searchTerm: string, page = 0, size = 10) => {
-    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/v1/payments/audit-logs/search?searchTerm=${encodeURIComponent(searchTerm)}&page=${page}&size=${size}`);
+    const response = await api.get<ApiResponse<{ content: PaymentAuditLog[]; totalElements: number; totalPages: number }>>(`/payments/audit-logs/search?searchTerm=${encodeURIComponent(searchTerm)}&page=${page}&size=${size}`);
     return response.data;
   }
 };
@@ -224,25 +219,25 @@ export const paymentAuditLogApi = {
 export const paymentStatsApi = {
   // Get payment request statistics
   getRequestStats: async () => {
-    const response = await api.get<ApiResponse<Record<string, number>>>("/v1/payments/stats/requests");
+    const response = await api.get<ApiResponse<Record<string, number>>>("/payments/stats/requests");
     return response.data;
   },
 
   // Get transaction statistics
   getTransactionStats: async () => {
-    const response = await api.get<ApiResponse<Record<string, number>>>("/v1/payments/stats/transactions");
+    const response = await api.get<ApiResponse<Record<string, number>>>("/payments/stats/transactions");
     return response.data;
   },
 
   // Get refund statistics
   getRefundStats: async () => {
-    const response = await api.get<ApiResponse<Record<string, number>>>("/v1/payments/stats/refunds");
+    const response = await api.get<ApiResponse<Record<string, number>>>("/payments/stats/refunds");
     return response.data;
   },
 
   // Get audit log statistics
   getAuditLogStats: async () => {
-    const response = await api.get<ApiResponse<Record<string, any>>>("/v1/payments/stats/audit-logs");
+    const response = await api.get<ApiResponse<Record<string, any>>>("/payments/stats/audit-logs");
     return response.data;
   }
 };

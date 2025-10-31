@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
+import type { Module, Product } from "@/types/entities";
 import {
   Card,
   CardContent,
@@ -25,29 +26,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Save, X } from "lucide-react";
 
-interface Module {
-  id: number;
-  name: string;
-  description: string;
-  code: string;
-  productId: number;
-  productName: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface ModuleFormData {
   name: string;
   description: string;
   code: string;
   productId: string;
   isActive: boolean;
-}
-
-interface Product {
-  id: number;
-  name: string;
 }
 
 const ModuleEdit: React.FC = () => {
@@ -71,21 +55,20 @@ const ModuleEdit: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [moduleResponse, productsResponse] = await Promise.all([
-          api.get(`/v1/modules/${id}`),
-          api.get("/products"),
+        const [moduleData, products] = await Promise.all([
+          httpClient.getModuleById(Number(id)),
+          httpClient.getProducts(),
         ]);
 
-        const moduleData = moduleResponse.data;
         setModule(moduleData);
         setFormData({
           name: moduleData.name,
           description: moduleData.description,
           code: moduleData.code,
           productId: moduleData.productId.toString(),
-          isActive: moduleData.isActive,
+          isActive: moduleData.moduleStatus === 'ACTIVE',
         });
-        setProducts(productsResponse.data);
+        setProducts(products);
       } catch (error) {
         console.error("Error fetching data:", error);
         setErrors({ fetch: "Failed to load module data" });
@@ -143,10 +126,9 @@ const ModuleEdit: React.FC = () => {
       setSaving(true);
       setErrors({});
 
-      await api.put(`/v1/modules/${id}`, {
+      await httpClient.updateModule(Number(id), {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        code: formData.code.trim(),
         productId: parseInt(formData.productId),
         isActive: formData.isActive,
       });

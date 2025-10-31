@@ -32,42 +32,42 @@ class HttpClient {
   // User API methods
   async getUsers(): Promise<User[]> {
     const response: AxiosResponse<ApiResponse<User[]>> = await api.get(
-      "/v1/users"
+      "/users"
     );
     return response.data.data;
   }
 
   async getUserById(id: number): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.get(
-      `/v1/users/${id}`
+      `/users/${id}`
     );
     return response.data.data;
   }
 
   async getUserByUsername(username: string): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.get(
-      `/v1/users/username/${username}`
+      `/users/username/${username}`
     );
     return response.data.data;
   }
 
   async getUserByEmail(email: string): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.get(
-      `/v1/users/email/${email}`
+      `/users/email/${email}`
     );
     return response.data.data;
   }
 
   async searchUsers(query: string): Promise<User[]> {
     const response: AxiosResponse<ApiResponse<User[]>> = await api.get(
-      `/v1/users/search?query=${query}`
+      `/users/search?query=${query}`
     );
     return response.data.data;
   }
 
   async createUser(userData: CreateUserRequest): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.post(
-      "/v1/users",
+      "/users",
       userData
     );
     return response.data.data;
@@ -75,7 +75,7 @@ class HttpClient {
 
   async updateUser(id: number, userData: UpdateUserRequest): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.put(
-      `/v1/users/${id}`,
+      `/users/${id}`,
       userData
     );
     return response.data.data;
@@ -83,54 +83,54 @@ class HttpClient {
 
   async updateUserStatus(id: number, status: string): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.put(
-      `/v1/users/${id}/status`,
+      `/users/${id}/status`,
       { userStatus: status }
     );
     return response.data.data;
   }
 
   async deleteUser(id: number): Promise<void> {
-    await api.delete(`/v1/users/${id}`);
+    await api.delete(`/users/${id}`);
   }
 
   async getUsersByStatus(status: string): Promise<User[]> {
     const response: AxiosResponse<ApiResponse<User[]>> = await api.get(
-      `/v1/users/status/${status}`
+      `/users/status/${status}`
     );
     return response.data.data;
   }
 
   async getLockedUsers(): Promise<User[]> {
     const response: AxiosResponse<ApiResponse<User[]>> = await api.get(
-      "/v1/users/locked"
+      "/users/locked"
     );
     return response.data.data;
   }
 
   async getInactiveUsers(cutoffDate?: string): Promise<User[]> {
     const url = cutoffDate
-      ? `/v1/users/inactive?cutoffDate=${cutoffDate}`
-      : "/v1/users/inactive";
+      ? `/users/inactive?cutoffDate=${cutoffDate}`
+      : "/users/inactive";
     const response: AxiosResponse<ApiResponse<User[]>> = await api.get(url);
     return response.data.data;
   }
 
   // Role API methods
   async getRoles(): Promise<Role[]> {
-    const response: AxiosResponse<Role[]> = await api.get("/v1/roles");
+    const response: AxiosResponse<Role[]> = await api.get("/roles");
     return response.data;
   }
 
   async getRoleById(id: number): Promise<Role> {
     const response: AxiosResponse<ApiResponse<Role>> = await api.get(
-      `/v1/roles/${id}`
+      `/roles/${id}`
     );
     return response.data.data;
   }
 
   async getRoleDetails(id: number): Promise<RoleDetails> {
     const response: AxiosResponse<RoleDetails> = await api.get(
-      `/v1/roles/${id}`
+      `/roles/${id}`
     );
     return response.data;
   }
@@ -141,7 +141,7 @@ class HttpClient {
     permissionIds: number[];
   }): Promise<Role> {
     const response: AxiosResponse<ApiResponse<Role>> = await api.post(
-      "/v1/roles",
+      "/roles",
       roleData
     );
     return response.data.data;
@@ -152,7 +152,7 @@ class HttpClient {
     roleData: { name?: string; description?: string; permissionIds?: number[] }
   ): Promise<Role> {
     const response: AxiosResponse<ApiResponse<Role>> = await api.put(
-      `/v1/roles/${id}`,
+      `/roles/${id}`,
       roleData
     );
     return response.data.data;
@@ -160,42 +160,42 @@ class HttpClient {
 
   async updateRoleStatus(id: number, status: string): Promise<RoleDetails> {
     const response: AxiosResponse<ApiResponse<RoleDetails>> = await api.put(
-      `/v1/roles/${id}`,
+      `/roles/${id}`,
       { roleStatus: status }
     );
     return response.data.data;
   }
 
   async deleteRole(id: number): Promise<void> {
-    await api.delete(`/v1/roles/${id}`);
+    await api.delete(`/roles/${id}`);
   }
 
   async assignPermissionsToRole(
     roleId: number,
     permissionIds: number[]
   ): Promise<void> {
-    await api.put(`/v1/roles/${roleId}/permissions`, permissionIds);
+    await api.put(`/roles/${roleId}/permissions`, permissionIds);
   }
 
   async removePermissionsFromRole(
     roleId: number,
     permissionIds: number[]
   ): Promise<void> {
-    await api.delete(`/v1/roles/${roleId}/permissions`, {
+    await api.delete(`/roles/${roleId}/permissions`, {
       data: permissionIds,
     });
   }
 
   async getPermissions(): Promise<Permission[]> {
     const response: AxiosResponse<Permission[]> = await api.get(
-      "/v1/permissions"
+      "/permissions"
     );
     return response.data;
   }
 
   async getPermissionById(id: number): Promise<Permission> {
     const response: AxiosResponse<Permission> = await api.get(
-      `/v1/permissions/${id}`
+      `/permissions/${id}`
     );
     console.log(response);
     return response.data;
@@ -206,7 +206,7 @@ class HttpClient {
     permissionData: { name?: string; description?: string }
   ): Promise<Permission> {
     const response: AxiosResponse<Permission> = await api.put(
-      `/v1/permissions/${id}`,
+      `/permissions/${id}`,
       permissionData
     );
     return response.data;
@@ -217,7 +217,7 @@ class HttpClient {
     isActive: boolean
   ): Promise<Permission> {
     const response: AxiosResponse<Permission> = await api.put(
-      `/v1/permissions/${id}`,
+      `/permissions/${id}`,
       { isActive }
     );
     return response.data;
@@ -225,7 +225,7 @@ class HttpClient {
 
   async assignRoles(userId: number, roleIds: number[]): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.post(
-      `/v1/users/${userId}/roles`,
+      `/users/${userId}/roles`,
       roleIds
     );
     return response.data.data;
@@ -233,7 +233,7 @@ class HttpClient {
 
   async removeRoles(userId: number, roleIds: number[]): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.delete(
-      `/v1/users/${userId}/roles`,
+      `/users/${userId}/roles`,
       { data: roleIds }
     );
     return response.data.data;
@@ -242,14 +242,14 @@ class HttpClient {
   // User Group API methods
   async getUserGroups(): Promise<Page<UserGroup>> {
     const response: AxiosResponse<ApiResponse<Page<UserGroup>>> = await api.get(
-      "/v1/user-groups"
+      "/user-groups"
     );
     return response.data.data;
   }
 
   async getUserGroupById(id: number): Promise<UserGroup> {
     const response: AxiosResponse<UserGroup> = await api.get(
-      `/v1/user-groups/${id}`
+      `/user-groups/${id}`
     );
     return response.data;
   }
@@ -259,7 +259,7 @@ class HttpClient {
     description?: string;
   }): Promise<UserGroup> {
     const response: AxiosResponse<ApiResponse<UserGroup>> = await api.post(
-      "/v1/user-groups",
+      "/user-groups",
       groupData
     );
     return response.data.data;
@@ -270,14 +270,14 @@ class HttpClient {
     groupData: { name?: string; description?: string }
   ): Promise<UserGroup> {
     const response: AxiosResponse<ApiResponse<UserGroup>> = await api.put(
-      `/v1/user-groups/${id}`,
+      `/user-groups/${id}`,
       groupData
     );
     return response.data.data;
   }
 
   async deleteUserGroup(id: number): Promise<void> {
-    await api.delete(`/v1/user-groups/${id}`);
+    await api.delete(`/user-groups/${id}`);
   }
 
   async assignUserGroups(
@@ -285,7 +285,7 @@ class HttpClient {
     userGroupIds: number[]
   ): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.post(
-      `/v1/users/${userId}/user-groups`,
+      `/users/${userId}/user-groups`,
       userGroupIds
     );
     return response.data.data;
@@ -296,7 +296,7 @@ class HttpClient {
     userGroupIds: number[]
   ): Promise<User> {
     const response: AxiosResponse<ApiResponse<User>> = await api.delete(
-      `/v1/users/${userId}/user-groups`,
+      `/users/${userId}/user-groups`,
       { data: userGroupIds }
     );
     return response.data.data;
@@ -306,14 +306,14 @@ class HttpClient {
     userGroupId: number,
     roleIds: number[]
   ): Promise<void> {
-    await api.post(`/v1/user-groups/${userGroupId}/roles`, { roleIds });
+    await api.post(`/user-groups/${userGroupId}/roles`, { roleIds });
   }
 
   async removeRolesFromUserGroup(
     userGroupId: number,
     roleIds: number[]
   ): Promise<void> {
-    await api.delete(`/v1/user-groups/${userGroupId}/roles`, {
+    await api.delete(`/user-groups/${userGroupId}/roles`, {
       data: { roleIds },
     });
   }
@@ -321,28 +321,28 @@ class HttpClient {
   // Tenant API methods
   async getTenants(): Promise<Tenant[]> {
     const response: AxiosResponse<ApiResponse<Tenant[]>> = await api.get(
-      "/v1/tenants"
+      "/tenants"
     );
     return response.data.data;
   }
 
   async getTenantById(id: number): Promise<Tenant> {
     const response: AxiosResponse<ApiResponse<Tenant>> = await api.get(
-      `/v1/tenants/${id}`
+      `/tenants/${id}`
     );
     return response.data.data;
   }
 
   async searchTenants(query: string): Promise<Tenant[]> {
     const response: AxiosResponse<ApiResponse<Tenant[]>> = await api.get(
-      `/v1/tenants/search?query=${query}`
+      `/tenants/search?query=${query}`
     );
     return response.data.data;
   }
 
   async createTenant(tenantData: CreateTenantRequest): Promise<Tenant> {
     const response: AxiosResponse<ApiResponse<Tenant>> = await api.post(
-      "/v1/tenants",
+      "/tenants",
       tenantData
     );
     return response.data.data;
@@ -353,7 +353,7 @@ class HttpClient {
     tenantData: Partial<CreateTenantRequest>
   ): Promise<Tenant> {
     const response: AxiosResponse<ApiResponse<Tenant>> = await api.put(
-      `/v1/tenants/${id}`,
+      `/tenants/${id}`,
       tenantData
     );
     return response.data.data;
@@ -361,37 +361,37 @@ class HttpClient {
 
   async updateTenantStatus(id: number, status: string): Promise<Tenant> {
     const response: AxiosResponse<ApiResponse<Tenant>> = await api.patch(
-      `/v1/tenants/${id}/status`,
+      `/tenants/${id}/status`,
       { status }
     );
     return response.data.data;
   }
 
   async deleteTenant(id: number): Promise<void> {
-    await api.delete(`/v1/tenants/${id}`);
+    await api.delete(`/tenants/${id}`);
   }
 
   // Module API methods
   async getModules(): Promise<Module[]> {
-    const response: AxiosResponse<Module[]> = await api.get("/v1/modules");
+    const response: AxiosResponse<Module[]> = await api.get("/modules");
     return response.data;
   }
 
   async getModuleById(id: number): Promise<Module> {
-    const response: AxiosResponse<Module> = await api.get(`/v1/modules/${id}`);
+    const response: AxiosResponse<Module> = await api.get(`/modules/${id}`);
     return response.data;
   }
 
   async getModulesByProductId(productId: number): Promise<Module[]> {
     const response: AxiosResponse<Module[]> = await api.get(
-      `/v1/modules/product/${productId}`
+      `/modules/product/${productId}`
     );
     return response.data;
   }
 
   async createModule(moduleData: CreateModuleRequest): Promise<Module> {
     const response: AxiosResponse<Module> = await api.post(
-      "/v1/modules",
+      "/modules",
       moduleData
     );
     return response.data;
@@ -402,14 +402,14 @@ class HttpClient {
     moduleData: Partial<CreateModuleRequest & { isActive?: boolean }>
   ): Promise<Module> {
     const response: AxiosResponse<Module> = await api.put(
-      `/v1/modules/${id}`,
+      `/modules/${id}`,
       moduleData
     );
     return response.data;
   }
 
   async deleteModule(id: number): Promise<void> {
-    await api.delete(`/v1/modules/${id}`);
+    await api.delete(`/modules/${id}`);
   }
 
   // Product API methods
@@ -449,14 +449,14 @@ class HttpClient {
   // Dashboard API methods
   async getDashboardStats(): Promise<DashboardStats> {
     const response: AxiosResponse<ApiResponse<DashboardStats>> = await api.get(
-      "/v1/dashboard/stats"
+      "/dashboard/stats"
     );
     return response.data.data;
   }
 
   async getRecentActivities(): Promise<Activity[]> {
     const response: AxiosResponse<ApiResponse<Activity[]>> = await api.get(
-      "/v1/dashboard/recent-activities"
+      "/dashboard/recent-activities"
     );
     return response.data.data;
   }
@@ -466,8 +466,8 @@ class HttpClient {
     activities: RecentActivity[];
   }> {
     const [statsResponse, activitiesResponse] = await Promise.all([
-      api.get("/v1/dashboard/stats"),
-      api.get("/v1/dashboard/recent-activities"),
+      api.get("/dashboard/stats"),
+      api.get("/dashboard/recent-activities"),
     ]);
     
     return {
@@ -479,7 +479,7 @@ class HttpClient {
   // Auth API methods
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response: AxiosResponse<LoginResponse> = await api.post(
-      "/v1/auth/login",
+      "/auth/login",
       credentials
     );
     return response.data;

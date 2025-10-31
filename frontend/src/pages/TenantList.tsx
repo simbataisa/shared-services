@@ -2,23 +2,16 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Building2,
-  Edit,
-  Trash2,
-  Eye,
-  MoreHorizontal,
   Plus,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { StatusBadge } from "@/components/common/StatusBadge";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
-import { getStatusIcon } from "@/lib/status-utils";
-import { normalizeEntityStatus } from "@/lib/status-utils";
-import api from "@/lib/api";
 import { type Tenant } from "@/types/entities";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
 import TenantTable from "@/components/tenant/TenantTable";
+import httpClient from "@/lib/httpClient";
 
 export default function TenantList() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -34,9 +27,9 @@ export default function TenantList() {
   const fetchTenants = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/v1/tenants");
+      const response = await httpClient.getTenants();
       // Extract the actual tenant array from the ApiResponse wrapper
-      setTenants(response.data.data || []);
+      setTenants(response || []);
     } catch (error) {
       console.error("Failed to fetch tenants:", error);
     } finally {
@@ -46,7 +39,7 @@ export default function TenantList() {
 
   const handleStatusChange = async (tenantId: number, newStatus: string) => {
     try {
-      await api.patch(`/v1/tenants/${tenantId}/status`, { status: newStatus });
+      await httpClient.updateTenantStatus(tenantId, newStatus);
       await fetchTenants(); // Refresh the list
     } catch (error) {
       console.error("Failed to update tenant status:", error);
@@ -56,7 +49,7 @@ export default function TenantList() {
   const handleDelete = async (tenantId: number) => {
     if (window.confirm("Are you sure you want to delete this tenant?")) {
       try {
-        await api.delete(`/v1/tenants/${tenantId}`);
+        await httpClient.deleteTenant(tenantId); 
         await fetchTenants(); // Refresh the list
       } catch (error) {
         console.error("Failed to delete tenant:", error);

@@ -22,18 +22,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
 import { SearchAndFilter } from "@/components/common/SearchAndFilter";
+import { PermissionTable } from "@/components/permission/PermissionTable";
 import type { Permission, CreatePermissionForm } from "@/types";
 import httpClient from "@/lib/httpClient";
 
@@ -192,7 +185,7 @@ const PermissionList: React.FC = () => {
 
     const matchesSearch =
       permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      permission.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (permission.description && permission.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
       resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
       action.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -209,27 +202,6 @@ const PermissionList: React.FC = () => {
   const uniqueActions = Array.from(
     new Set(permissions.map((p) => parsePermissionName(p.name).action))
   ).sort();
-
-  const getActionBadgeVariant = (action: string) => {
-    if (!action || typeof action !== "string") {
-      return "outline";
-    }
-
-    switch (action.toLowerCase()) {
-      case "create":
-        return "default";
-      case "read":
-        return "secondary";
-      case "update":
-        return "outline";
-      case "delete":
-        return "destructive";
-      case "admin":
-        return "default";
-      default:
-        return "outline";
-    }
-  };
 
   if (!canViewPermissions) {
     return (
@@ -339,135 +311,6 @@ const PermissionList: React.FC = () => {
         </Alert>
       )}
 
-      {/* Search and Filters */}
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search permissions by name or description..."
-        filters={[
-          {
-            label: "Resource",
-            value: resourceFilter,
-            onChange: setResourceFilter,
-            options: [
-              { value: "all", label: "All Resources" },
-              ...uniqueResources.map((resource) => ({
-                value: resource,
-                label: resource,
-              })),
-            ],
-            placeholder: "Filter by resource",
-            width: "w-[180px]",
-          },
-          {
-            label: "Action",
-            value: actionFilter,
-            onChange: setActionFilter,
-            options: [
-              { value: "all", label: "All Actions" },
-              ...uniqueActions.map((action) => ({
-                value: action,
-                label: action,
-              })),
-            ],
-            placeholder: "Filter by action",
-            width: "w-[180px]",
-          },
-        ]}
-        actions={
-          canManagePermissions && (
-            <Dialog
-              open={isCreateDialogOpen}
-              onOpenChange={setIsCreateDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Permission
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Create New Permission</DialogTitle>
-                  <DialogDescription>
-                    Create a new permission for system access control.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={createForm.name}
-                      onChange={(e) =>
-                        setCreateForm({ ...createForm, name: e.target.value })
-                      }
-                      className="col-span-3"
-                      placeholder="e.g., user:read"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="description" className="text-right">
-                      Description
-                    </Label>
-                    <Textarea
-                      id="description"
-                      value={createForm.description}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          description: e.target.value,
-                        })
-                      }
-                      className="col-span-3"
-                      placeholder="Describe what this permission allows"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="resource" className="text-right">
-                      Resource
-                    </Label>
-                    <Input
-                      id="resource"
-                      value={createForm.resource}
-                      onChange={(e) =>
-                        setCreateForm({
-                          ...createForm,
-                          resource: e.target.value,
-                        })
-                      }
-                      className="col-span-3"
-                      placeholder="e.g., user, role, permission"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="action" className="text-right">
-                      Action
-                    </Label>
-                    <Input
-                      id="action"
-                      value={createForm.action}
-                      onChange={(e) =>
-                        setCreateForm({ ...createForm, action: e.target.value })
-                      }
-                      className="col-span-3"
-                      placeholder="e.g., create, read, update, delete"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" onClick={handleCreatePermission}>
-                    Create Permission
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )
-        }
-      />
-
       <Card>
         <CardHeader>
           <CardTitle>Permissions</CardTitle>
@@ -483,58 +326,135 @@ const PermissionList: React.FC = () => {
               ))}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Resource</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPermissions.map((permission) => {
-                  const { resource, action } = parsePermissionName(
-                    permission.name
-                  );
-                  return (
-                    <TableRow key={permission.id}>
-                      <TableCell className="font-medium">
-                        {permission.name}
-                      </TableCell>
-                      <TableCell>{permission.description}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{resource}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getActionBadgeVariant(action)}>
-                          {action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(permission.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {canViewPermissions && (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewPermission(permission)}
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <PermissionTable
+              permissions={filteredPermissions}
+              onViewPermission={handleViewPermission}
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder="Search permissions by name or description..."
+              filters={[
+                {
+                  label: "Resource",
+                  value: resourceFilter,
+                  onChange: setResourceFilter,
+                  options: [
+                    { value: "all", label: "All Resources" },
+                    ...uniqueResources.map((resource) => ({
+                      value: resource,
+                      label: resource,
+                    })),
+                  ],
+                  placeholder: "Filter by resource",
+                  width: "w-[180px]",
+                },
+                {
+                  label: "Action",
+                  value: actionFilter,
+                  onChange: setActionFilter,
+                  options: [
+                    { value: "all", label: "All Actions" },
+                    ...uniqueActions.map((action) => ({
+                      value: action,
+                      label: action,
+                    })),
+                  ],
+                  placeholder: "Filter by action",
+                  width: "w-[180px]",
+                },
+              ]}
+              actions={
+                canManagePermissions && (
+                  <Dialog
+                    open={isCreateDialogOpen}
+                    onOpenChange={setIsCreateDialogOpen}
+                  >
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Permission
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Create New Permission</DialogTitle>
+                        <DialogDescription>
+                          Create a new permission for system access control.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="name" className="text-right">
+                            Name
+                          </Label>
+                          <Input
+                            id="name"
+                            value={createForm.name}
+                            onChange={(e) =>
+                              setCreateForm({ ...createForm, name: e.target.value })
+                            }
+                            className="col-span-3"
+                            placeholder="e.g., user:read"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="description" className="text-right">
+                            Description
+                          </Label>
+                          <Textarea
+                            id="description"
+                            value={createForm.description}
+                            onChange={(e) =>
+                              setCreateForm({
+                                ...createForm,
+                                description: e.target.value,
+                              })
+                            }
+                            className="col-span-3"
+                            placeholder="Describe what this permission allows"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="resource" className="text-right">
+                            Resource
+                          </Label>
+                          <Input
+                            id="resource"
+                            value={createForm.resource}
+                            onChange={(e) =>
+                              setCreateForm({
+                                ...createForm,
+                                resource: e.target.value,
+                              })
+                            }
+                            className="col-span-3"
+                            placeholder="e.g., user, role, permission"
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="action" className="text-right">
+                            Action
+                          </Label>
+                          <Input
+                            id="action"
+                            value={createForm.action}
+                            onChange={(e) =>
+                              setCreateForm({ ...createForm, action: e.target.value })
+                            }
+                            className="col-span-3"
+                            placeholder="e.g., create, read, update, delete"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button type="submit" onClick={handleCreatePermission}>
+                          Create Permission
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )
+              }
+            />
           )}
         </CardContent>
       </Card>

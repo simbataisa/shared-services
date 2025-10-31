@@ -83,7 +83,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           )}
 
           {/* Additional Actions */}
-          {actions && <div className="flex gap-2">{actions}</div>}
+          {actions && <div className="flex gap-2 items-center">{actions}</div>}
         </div>
       </CardContent>
     </Card>

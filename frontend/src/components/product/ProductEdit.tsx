@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { DetailHeaderCard } from "@/components/common";
 import { ENTITY_STATUS_MAPPINGS, type Product } from "@/types/entities";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
 
 const ProductEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -74,14 +74,13 @@ const ProductEdit: React.FC = () => {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/products/${id}`);
-      const productData = response.data;
+      const productData = await httpClient.getProductById(Number(id));
 
       const transformedProduct: Product = {
         id: productData.id,
         name: productData.name,
         description: productData.description,
-        code: productData.productCode,
+        code: productData.code,
         productStatus: productData.productStatus,
         version: productData.version || "1.0.0",
         createdAt: productData.createdAt,
@@ -147,7 +146,7 @@ const ProductEdit: React.FC = () => {
         version: formData.version.trim(),
       };
 
-      await api.put(`/products/${id}`, updateData);
+      await httpClient.updateProduct(Number(id), updateData);
       navigate(`/products/${id}`);
     } catch (error: any) {
       console.error("Error updating product:", error);

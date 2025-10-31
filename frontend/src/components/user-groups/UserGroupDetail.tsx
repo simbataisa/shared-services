@@ -33,7 +33,7 @@ import { BasicInformationCard } from "./BasicInformationCard";
 import { RoleAssignmentsCard } from "./RoleAssignmentsCard";
 import UserGroupStatusCard from "./UserGroupStatusCard";
 import type { UserGroupDetails, UserGroupStats, Module, Role } from "@/types";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
 
 export default function UserGroupDetail() {
   const { id } = useParams<{ id: string }>();
@@ -70,10 +70,23 @@ export default function UserGroupDetail() {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/v1/user-groups/${id}`);
-      const groupData = response.data.data; // Access the actual data from ApiResponse wrapper
+      const groupData = await httpClient.getUserGroupById(Number(id));
 
-      setUserGroup(groupData);
+      // Transform UserGroup to UserGroupDetails
+      const userGroupDetails: UserGroupDetails = {
+        userGroupId: groupData.userGroupId,
+        name: groupData.name,
+        description: groupData.description || "", // Convert optional to required
+        memberCount: groupData.memberCount,
+        roleCount: groupData.roleCount,
+        roleAssignments: groupData.roleAssignments,
+        createdAt: groupData.createdAt,
+        updatedAt: groupData.updatedAt,
+        createdBy: groupData.createdBy,
+        updatedBy: groupData.updatedBy,
+      };
+
+      setUserGroup(userGroupDetails);
 
       // Calculate stats
       const groupStats: UserGroupStats = {
@@ -95,17 +108,10 @@ export default function UserGroupDetail() {
   const fetchModulesAndRoles = async () => {
     try {
       setRoleLoading(true);
-      const [modulesResponse, rolesResponse] = await Promise.all([
-        api.get("/v1/modules"),
-        api.get("/v1/roles"),
+      const [modulesData, rolesData] = await Promise.all([
+        httpClient.getModules(),
+        httpClient.getRoles(),
       ]);
-
-      const modulesData = Array.isArray(modulesResponse.data)
-        ? modulesResponse.data
-        : modulesResponse.data.data || [];
-      const rolesData = Array.isArray(rolesResponse.data)
-        ? rolesResponse.data
-        : rolesResponse.data.data || [];
 
       setAvailableModules(modulesData);
       setAvailableRoles(rolesData);
@@ -124,17 +130,12 @@ export default function UserGroupDetail() {
 
     try {
       setUpdating(true);
-      const response = await api.put(
-        `/v1/user-groups/${userGroup.userGroupId}`,
-        {
-          name: data.name,
-          description: data.description,
-        }
-      );
+      await httpClient.updateUserGroup(userGroup.userGroupId, {
+        name: data.name,
+        description: data.description,
+      });
 
-      if (response.data) {
-        await fetchUserGroupDetails();
-      }
+      await fetchUserGroupDetails();
     } catch (error) {
       console.error("Failed to update user group:", error);
       setError("Failed to update user group");
@@ -148,9 +149,7 @@ export default function UserGroupDetail() {
 
     try {
       setUpdating(true);
-      await api.post(`/v1/user-groups/${userGroup.userGroupId}/roles`, {
-        roleIds: roleIds,
-      });
+      await httpClient.assignRolesToUserGroup(userGroup.userGroupId, roleIds);
 
       await fetchUserGroupDetails();
     } catch (error) {
@@ -166,8 +165,8 @@ export default function UserGroupDetail() {
 
     try {
       setUpdating(true);
-      await api.delete(
-        `/v1/user-groups/${userGroup.userGroupId}/role-assignments/${assignmentId}`
+      await httpClient.delete(
+        `/user-groups/${userGroup.userGroupId}/role-assignments/${assignmentId}`
       );
       await fetchUserGroupDetails();
     } catch (error) {
@@ -183,7 +182,7 @@ export default function UserGroupDetail() {
 
     try {
       setUpdating(true);
-      await api.delete(`/v1/user-groups/${userGroup.userGroupId}`);
+      await httpClient.deleteUserGroup(userGroup.userGroupId);
       navigate("/user-groups");
     } catch (error) {
       console.error("Failed to delete user group:", error);
@@ -343,6 +342,8 @@ export default function UserGroupDetail() {
               name: userGroup.name,
               description: userGroup.description,
               memberCount: userGroup.memberCount,
+              roleCount: userGroup.roleCount,
+              userGroupStatus: "ACTIVE" as const, // Default status since it's not in UserGroupDetails
             }}
             onUpdate={handleBasicInfoUpdate}
             updating={updating}

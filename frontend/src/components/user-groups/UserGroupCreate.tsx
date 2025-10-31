@@ -24,7 +24,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
 import type { UserGroupFormData } from "@/types";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
 
 export default function UserGroupCreate() {
   const navigate = useNavigate();
@@ -69,14 +69,13 @@ export default function UserGroupCreate() {
       setLoading(true);
       setError(null);
 
-      const response = await api.post("/v1/user-groups", {
+      const newGroup = await httpClient.createUserGroup({
         name: formData.name.trim(),
         description: formData.description.trim(),
       });
 
       // Navigate to the newly created group's detail page
-      const newGroupId = response.data.userGroupId;
-      navigate(`/user-groups/${newGroupId}`);
+      navigate(`/user-groups/${newGroup.userGroupId}`);
     } catch (error: any) {
       console.error("Failed to create user group:", error);
       if (error.response?.data?.message) {

@@ -4,7 +4,7 @@ import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { usePermissions } from "@/hooks/usePermissions";
 import { normalizeEntityStatus } from "@/lib/status-utils";
-import api from "@/lib/api";
+import httpClient from "@/lib/httpClient";
 import {
   Card,
   CardContent,
@@ -27,22 +27,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Edit, Trash2, Save, X } from "lucide-react";
+import type { Module, Product } from "@/types/entities";
 
-interface Module {
-  id: number;
+interface ModuleFormData {
   name: string;
   description: string;
   code: string;
-  productId: number;
-  productName: string;
+  productId: string;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
 }
 
 const ModuleDetail: React.FC = () => {
@@ -76,8 +68,7 @@ const ModuleDetail: React.FC = () => {
   const fetchModuleData = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/v1/modules/${id}`);
-      const moduleData = response.data;
+      const moduleData = await httpClient.getModuleById(Number(id));
 
       setModule(moduleData);
       setFormData({
@@ -85,7 +76,7 @@ const ModuleDetail: React.FC = () => {
         description: moduleData.description,
         code: moduleData.code,
         productId: moduleData.productId.toString(),
-        isActive: moduleData.isActive,
+        isActive: moduleData.moduleStatus === 'ACTIVE',
       });
     } catch (error) {
       console.error("Error fetching module:", error);
@@ -97,8 +88,8 @@ const ModuleDetail: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get("/products");
-      setProducts(response.data || []);
+      const products = await httpClient.getProducts();
+      setProducts(products || []);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -144,12 +135,11 @@ const ModuleDetail: React.FC = () => {
       const updateData = {
         name: formData.name,
         description: formData.description,
-        code: formData.code,
         productId: parseInt(formData.productId),
         isActive: formData.isActive,
       };
 
-      await api.put(`/v1/modules/${id}`, updateData);
+      await httpClient.updateModule(Number(id), updateData);
 
       // Refresh module data
       await fetchModuleData();
@@ -174,7 +164,7 @@ const ModuleDetail: React.FC = () => {
 
     setDeleting(true);
     try {
-      await api.delete(`/v1/modules/${id}`);
+      await httpClient.deleteModule(Number(id));
       navigate("/modules");
     } catch (error) {
       console.error("Error deleting module:", error);
@@ -199,7 +189,7 @@ const ModuleDetail: React.FC = () => {
         description: module.description,
         code: module.code,
         productId: module.productId.toString(),
-        isActive: module.isActive,
+        isActive: module.moduleStatus === 'ACTIVE',
       });
     }
     setEditing(false);
@@ -421,7 +411,7 @@ const ModuleDetail: React.FC = () => {
                       <StatusBadge
                         status={normalizeEntityStatus(
                           "module",
-                          module.isActive ? "ACTIVE" : "INACTIVE"
+                          module.moduleStatus
                         )}
                         className="mt-1"
                       />
