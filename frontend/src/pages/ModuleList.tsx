@@ -1,27 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { usePermissions } from "@/hooks/usePermissions";
-import { SearchAndFilter } from "@/components/common/SearchAndFilter";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import httpClient from "@/lib/httpClient";
-import { ENTITY_STATUS_MAPPINGS, type Module } from "@/types";
+import {
+  ENTITY_STATUS_MAPPINGS,
+  type ErrorWithActions,
+  type Module,
+} from "@/types";
+import { type TableFilter } from "@/types/components";
 import ModuleTable from "@/components/module/ModuleTable";
+import LoadingSpinner from "@/components/common/LoadingSpinner";
+import { ErrorCard } from "@/components/common";
 
 const ModuleList: React.FC = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorWithActions | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     | "all"
@@ -29,10 +26,6 @@ const ModuleList: React.FC = () => {
     | typeof ENTITY_STATUS_MAPPINGS.module.INACTIVE
   >("all");
   const [productFilter, setProductFilter] = useState<string>("all");
-
-  const handleStatusFilterChange = (value: string) => {
-    setStatusFilter(value as "all" | "active" | "inactive");
-  };
   const [products, setProducts] = useState<{ id: number; name: string }[]>([]);
 
   const { canCreateModules, canUpdateModules, canDeleteModules } =
@@ -49,7 +42,15 @@ const ModuleList: React.FC = () => {
       const modules = await httpClient.getModules();
       setModules(modules || []);
     } catch (err) {
-      setError("Failed to fetch modules");
+      setError({
+        id: `server-${Date.now()}`,
+        type: "server",
+        severity: "high",
+        message: err instanceof Error ? err.message : "Unknown error",
+        timestamp: new Date(),
+        details: err instanceof Error ? err.message : "Unknown error",
+        actions: [],
+      });
       console.error("Error fetching modules:", err);
     } finally {
       setLoading(false);
@@ -61,23 +62,16 @@ const ModuleList: React.FC = () => {
       const products = await httpClient.getProducts();
       setProducts(products || []);
     } catch (err) {
+      setError({
+        id: `server-${Date.now()}`,
+        type: "server",
+        severity: "high",
+        message: err instanceof Error ? err.message : "Unknown error",
+        timestamp: new Date(),
+        details: err instanceof Error ? err.message : "Unknown error",
+        actions: [],
+      });
       console.error("Error fetching products:", err);
-    }
-  };
-
-  const handleStatusChange = async (moduleId: number, newStatus: boolean) => {
-    if (!canUpdateModules) return;
-
-    try {
-      await httpClient.updateModule(moduleId, { isActive: newStatus });
-      setModules((prev) =>
-        prev.map((module) =>
-          module.id === moduleId ? { ...module, isActive: newStatus } : module
-        )
-      );
-    } catch (err) {
-      setError("Failed to update module status");
-      console.error("Error updating module status:", err);
     }
   };
 
@@ -89,127 +83,119 @@ const ModuleList: React.FC = () => {
         await httpClient.deleteModule(moduleId);
         setModules((prev) => prev.filter((module) => module.id !== moduleId));
       } catch (err) {
-        setError("Failed to delete module");
+        setError({
+          id: `server-${Date.now()}`,
+          type: "server",
+          severity: "high",
+          message: err instanceof Error ? err.message : "Unknown error",
+          timestamp: new Date(),
+          details: err instanceof Error ? err.message : "Unknown error",
+          actions: [],
+        });
         console.error("Error deleting module:", err);
       }
     }
   };
 
-  const filteredModules = modules.filter((module) => {
-    const matchesSearch =
-      module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (module.description &&
-        module.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (module.code &&
-        module.code.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Filter modules using useMemo for performance
+  const filteredModules = useMemo(() => {
+    return modules.filter((module) => {
+      const matchesSearch =
+        module.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (module.description &&
+          module.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())) ||
+        (module.code &&
+          module.code.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === ENTITY_STATUS_MAPPINGS.module.ACTIVE &&
-        module.moduleStatus === ENTITY_STATUS_MAPPINGS.module.ACTIVE) ||
-      (statusFilter === ENTITY_STATUS_MAPPINGS.module.INACTIVE &&
-        module.moduleStatus === ENTITY_STATUS_MAPPINGS.module.INACTIVE);
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === ENTITY_STATUS_MAPPINGS.module.ACTIVE &&
+          module.moduleStatus === ENTITY_STATUS_MAPPINGS.module.ACTIVE) ||
+        (statusFilter === ENTITY_STATUS_MAPPINGS.module.INACTIVE &&
+          module.moduleStatus === ENTITY_STATUS_MAPPINGS.module.INACTIVE);
 
-    const matchesProduct =
-      productFilter === "all" || module.productId?.toString() === productFilter;
+      const matchesProduct =
+        productFilter === "all" ||
+        module.productId?.toString() === productFilter;
 
-    return matchesSearch && matchesStatus && matchesProduct;
-  });
+      return matchesSearch && matchesStatus && matchesProduct;
+    });
+  }, [modules, searchTerm, statusFilter, productFilter]);
+
+  // Define filters for the table
+  const filters: TableFilter[] = [
+    {
+      label: "Status",
+      value: statusFilter,
+      onChange: (value: string) =>
+        setStatusFilter(value as "all" | "active" | "inactive"),
+      options: [
+        { value: "all", label: "All Status" },
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" },
+      ],
+      placeholder: "Filter by status",
+      width: "w-[180px]",
+    },
+    {
+      label: "Product",
+      value: productFilter,
+      onChange: setProductFilter,
+      options: [
+        { value: "all", label: "All Products" },
+        ...products.map((product) => ({
+          value: product.id.toString(),
+          label: product.name,
+        })),
+      ],
+      placeholder: "Filter by product",
+      width: "w-[200px]",
+    },
+  ];
+
+  // Define actions for the table
+  const actions = canCreateModules ? (
+    <Button asChild>
+      <Link to="/modules/create">
+        <Plus className="mr-2 h-4 w-4" />
+        Create Module
+      </Link>
+    </Button>
+  ) : null;
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return <ErrorCard error={error} />;
+  }
 
   return (
     <PermissionGuard permission="MODULE_MGMT:read">
-      <div className="container mx-auto py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+      <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
+          <div className="space-y-1">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Module Management
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Manage system modules and their configurations
             </p>
           </div>
         </div>
 
-        {error && (
-          <Alert className="mb-6">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Search and Filters */}
-        <SearchAndFilter
+        <ModuleTable
+          data={filteredModules}
+          loading={loading}
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          searchPlaceholder="Search modules by name, description, or code..."
-          filters={[
-            {
-              label: "Status",
-              value: statusFilter,
-              onChange: handleStatusFilterChange,
-              options: [
-                { value: "all", label: "All Status" },
-                { value: "active", label: "Active" },
-                { value: "inactive", label: "Inactive" },
-              ],
-              placeholder: "Filter by status",
-              width: "w-[180px]",
-            },
-            {
-              label: "Product",
-              value: productFilter,
-              onChange: setProductFilter,
-              options: [
-                { value: "all", label: "All Products" },
-                ...products.map((product) => ({
-                  value: product.id.toString(),
-                  label: product.name,
-                })),
-              ],
-              placeholder: "Filter by product",
-              width: "w-[200px]",
-            },
-          ]}
-          actions={
-            canCreateModules && (
-              <Button asChild>
-                <Link to="/modules/create">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Module
-                </Link>
-              </Button>
-            )
-          }
+          filters={filters}
+          actions={actions}
+          onDelete={handleDelete}
         />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Modules</CardTitle>
-            <CardDescription>
-              A list of all modules in the system
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-2">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : (
-              <ModuleTable modules={filteredModules} onDelete={handleDelete} />
-            )}
-
-            {!loading && filteredModules.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-muted-foreground">
-                  {modules.length === 0
-                    ? "No modules found."
-                    : "No modules match your filters."}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </PermissionGuard>
   );

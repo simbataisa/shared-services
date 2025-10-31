@@ -1,185 +1,226 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
-import { SearchAndFilter } from "@/components/common/SearchAndFilter";
-import { PermissionGuard } from "@/components/common/PermissionGuard";
-import PaymentTransactionTable from "./PaymentTransactionTable";
-import { paymentApi } from "@/lib/paymentApi";
-import type { PaymentTransaction, PaymentTransactionStatus } from "@/types/payment";
+import { CreditCard } from "lucide-react";
+import { PaymentTransactionTable } from "./PaymentTransactionTable";
+import { paymentTransactionApi } from "@/lib/paymentApi";
+import type { PaymentTransaction } from "@/types/payment";
+import type { TableFilter } from "@/types/components";
+import {
+  PAYMENT_TRANSACTION_STATUS_MAPPINGS,
+  PAYMENT_TRANSACTION_TYPE_MAPPINGS,
+} from "@/types/payment";
 
-const PaymentTransactionList: React.FC = () => {
+interface PaymentTransactionListProps {
+  className?: string;
+}
+
+export const PaymentTransactionList: React.FC<PaymentTransactionListProps> = ({
+  className,
+}) => {
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 10;
 
-  const statusOptions = [
-    { value: "all", label: "All Statuses" },
-    { value: "PENDING", label: "Pending" },
-    { value: "SUCCESS", label: "Success" },
-    { value: "FAILED", label: "Failed" },
-    { value: "CANCELLED", label: "Cancelled" }
-  ];
+  // Status and type options for filters
+  const statusOptions = Object.entries(PAYMENT_TRANSACTION_STATUS_MAPPINGS).map(
+    ([value, label]) => ({
+      value,
+      label,
+    })
+  );
 
-  const typeOptions = [
-    { value: "all", label: "All Types" },
-    { value: "PAYMENT", label: "Payment" },
-    { value: "REFUND", label: "Refund" },
-    { value: "CHARGEBACK", label: "Chargeback" },
-    { value: "ADJUSTMENT", label: "Adjustment" }
-  ];
+  const typeOptions = Object.entries(PAYMENT_TRANSACTION_TYPE_MAPPINGS).map(
+    ([value, label]) => ({
+      value,
+      label,
+    })
+  );
 
-  const fetchTransactions = async () => {
-    try {
+  // Fetch transactions
+  useEffect(() => {
+    const fetchTransactions = async () => {
       setLoading(true);
-      let response;
-      
-      if (statusFilter && statusFilter !== "all") {
-        response = await paymentApi.transactions.getByStatus(statusFilter as PaymentTransactionStatus, currentPage - 1, 10);
-      } else {
-        response = await paymentApi.transactions.getAll(currentPage - 1, 10);
+      try {
+        // Make actual API call to fetch transactions
+        const response = await paymentTransactionApi.getAll(currentPage, 10);
+
+        if (response.success && response.data) {
+          setTransactions(response.data.content || []);
+          setTotalPages(response.data.totalPages || 1);
+        } else {
+          console.error("Failed to fetch transactions:", response.message);
+          setTransactions([]);
+        }
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        setTransactions([]);
+      } finally {
+        setLoading(false);
       }
-      
-      setTransactions(response.data.content || []);
-      setTotalPages(response.data.totalPages || 1);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      setTransactions([]);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    fetchTransactions();
+  }, [currentPage, statusFilter, typeFilter]);
+
+  // Filter data based on search term and filters
+  const filteredData = useMemo(() => {
+    return transactions.filter((transaction) => {
+      const matchesSearch =
+        !searchTerm ||
+        transaction.transactionCode
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (transaction.gatewayName &&
+          transaction.gatewayName
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())) ||
+        transaction.paymentMethod
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        !statusFilter || transaction.transactionStatus === statusFilter;
+      const matchesType =
+        !typeFilter || transaction.paymentMethod === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [transactions, searchTerm, statusFilter, typeFilter]);
+
+  // Define filters for the table
+  const filters: TableFilter[] = [
+    {
+      label: "Status",
+      options: statusOptions,
+      value: statusFilter,
+      onChange: setStatusFilter,
+    },
+    {
+      label: "Type",
+      options: typeOptions,
+      value: typeFilter,
+      onChange: setTypeFilter,
+    },
+  ];
+
+  // Handle search change
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
   };
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [currentPage, searchTerm, statusFilter, typeFilter]);
+  // Handle view transaction
+  const handleViewTransaction = (transaction: PaymentTransaction) => {
+    console.log("View transaction:", transaction);
+    // Implement view transaction logic
+  };
 
-  if (loading && transactions.length === 0) {
-    return (
-      <div className="container mx-auto py-10">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Payment Transactions
-            </h1>
-            <p className="text-muted-foreground">
-              Manage and monitor payment transactions across all gateways
-            </p>
-          </div>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Transactions</CardTitle>
-            <CardDescription>
-              A list of all payment transactions in the system
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Calculate statistics
+  const totalTransactions = transactions.length;
+  const completedTransactions = transactions.filter(
+    (t) => t.transactionStatus === "COMPLETED"
+  ).length;
+  const pendingTransactions = transactions.filter(
+    (t) => t.transactionStatus === "PENDING"
+  ).length;
+  const failedTransactions = transactions.filter(
+    (t) => t.transactionStatus === "FAILED"
+  ).length;
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Payment Transactions
+    <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            Payment Transaction Management
           </h1>
-          <p className="text-muted-foreground">
-            Manage and monitor payment transactions across all gateways
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Manage payment transactions and their statuses
           </p>
         </div>
       </div>
+      {/* Header with Statistics
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Transactions
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">{totalTransactions}</div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Search and Filters */}
-      <SearchAndFilter
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <div className="h-2 w-2 rounded-full bg-green-500" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold text-green-600">
+                {completedTransactions}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <div className="h-2 w-2 rounded-full bg-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold text-yellow-600">
+                {pendingTransactions}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Failed</CardTitle>
+            <div className="h-2 w-2 rounded-full bg-red-500" />
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold text-red-600">
+                {failedTransactions}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div> */}
+
+      {/* Transaction Table */}
+
+      <PaymentTransactionTable
+        data={filteredData}
+        loading={loading}
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search by transaction ID, gateway reference..."
-        filters={[
-          {
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: statusOptions,
-            placeholder: "All Statuses",
-            width: "w-[180px]"
-          },
-          {
-            label: "Type",
-            value: typeFilter,
-            onChange: setTypeFilter,
-            options: typeOptions,
-            placeholder: "All Types",
-            width: "w-[180px]"
-          }
-        ]}
-        actions={
-          <PermissionGuard permission="PAYMENT_MGMT:create">
-            <Button asChild>
-              <Link to="/payments/requests/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Payment Request
-              </Link>
-            </Button>
-          </PermissionGuard>
-        }
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search by transaction code, gateway, or payment method..."
+        filters={filters}
+        onViewTransaction={handleViewTransaction}
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Transactions</CardTitle>
-          <CardDescription>
-            A list of all payment transactions in the system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <PaymentTransactionTable
-            transactions={transactions}
-            loading={loading}
-            showActions={true}
-            emptyMessage="No payment transactions found"
-          />
-        </CardContent>
-      </Card>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </Button>
-          <span className="flex items-center px-4">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </Button>
-        </div>
-      )}
     </div>
   );
 };
