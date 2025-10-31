@@ -14,26 +14,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Undo2, Eye, MoreHorizontal, RefreshCw } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Eye } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
 import { SearchAndFilter } from "@/components/common/SearchAndFilter";
-import { PermissionGuard } from "@/components/common/PermissionGuard";
 import type { PaymentRefund } from "@/types/payment";
 import type { BaseTableProps } from "@/types/components";
 import { PAYMENT_TRANSACTION_STATUS_MAPPINGS } from "@/types/payment";
 import { getTransactionStatusBadgeProps } from "@/lib/status-utils";
 
 interface PaymentRefundTableProps extends BaseTableProps<PaymentRefund> {
-  onViewRefund?: (refund: PaymentRefund) => void;
-  onRetryRefund?: (refundId: string) => void;
+  data: PaymentRefund[];
+  selectedRefundId?: string;
+  showActions?: boolean;
+  onViewRefund: (refund: PaymentRefund) => void;
 }
 
 // Utility functions
@@ -56,32 +51,42 @@ const formatDate = (dateString: string) => {
 };
 
 export const PaymentRefundTable: React.FC<PaymentRefundTableProps> = ({
-  data,
+  data = [],
   loading = false,
   searchTerm = "",
   onSearchChange = () => {},
   searchPlaceholder = "Search refunds...",
   filters = [],
   actions,
+  showActions = true,
+  selectedRefundId,
   onViewRefund,
-  onRetryRefund,
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
 
-  const columns = useMemo<ColumnDef<PaymentRefund>[]>(
-    () => [
+  // Ensure data is always an array to prevent undefined errors
+  const safeData = data || [];
+
+  // Set up row selection based on selectedRefundId
+  const rowSelection = React.useMemo(() => {
+    if (selectedRefundId === undefined) return {};
+    const selectedIndex = safeData.findIndex(
+      (refund) => refund.id === selectedRefundId
+    );
+    return selectedIndex >= 0 ? { [selectedIndex]: true } : {};
+  }, [selectedRefundId, safeData]);
+
+  const columns: ColumnDef<PaymentRefund>[] = React.useMemo(() => {
+    const baseColumns: ColumnDef<PaymentRefund>[] = [
       {
         accessorKey: "refundCode",
         header: ({ column }) => (
           <DataTableColumnHeader column={column} title="Refund Code" />
         ),
         cell: ({ row }) => (
-          <div className="font-mono text-sm">
-            {row.getValue("refundCode")}
-          </div>
+          <div className="font-mono text-sm">{row.getValue("refundCode")}</div>
         ),
       },
       {
@@ -97,17 +102,6 @@ export const PaymentRefundTable: React.FC<PaymentRefundTableProps> = ({
             </div>
           );
         },
-      },
-      {
-        accessorKey: "reason",
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Reason" />
-        ),
-        cell: ({ row }) => (
-          <div className="max-w-[200px] truncate text-sm">
-            {row.getValue("reason")}
-          </div>
-        ),
       },
       {
         accessorKey: "gatewayName",
@@ -160,70 +154,34 @@ export const PaymentRefundTable: React.FC<PaymentRefundTableProps> = ({
           return <div className="text-sm">{formatDate(createdAt)}</div>;
         },
       },
-      {
-        accessorKey: "externalRefundId",
-        header: "External ID",
-        cell: ({ row }) => {
-          const externalId = row.getValue("externalRefundId") as string;
-          return externalId ? (
-            <div className="font-mono text-xs max-w-[120px] truncate">
-              {externalId}
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">-</div>
-          );
-        },
-      },
-      {
+    ];
+
+    if (showActions) {
+      baseColumns.push({
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
           const refund = row.original;
-
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <PermissionGuard permission="payment:refund:read">
-                  <DropdownMenuItem asChild>
-                    <Link to={`/payment/refunds/${refund.id}`}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Details
-                    </Link>
-                  </DropdownMenuItem>
-                </PermissionGuard>
-                {onViewRefund && (
-                  <DropdownMenuItem onClick={() => onViewRefund(refund)}>
-                    <Undo2 className="mr-2 h-4 w-4" />
-                    View Refund
-                  </DropdownMenuItem>
-                )}
-                {refund.refundStatus === "FAILED" && onRetryRefund && (
-                  <PermissionGuard permission="payment:refund:retry">
-                    <DropdownMenuItem
-                      onClick={() => onRetryRefund(refund.id.toString())}
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Retry Refund
-                    </DropdownMenuItem>
-                  </PermissionGuard>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onViewRefund(refund)}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
           );
         },
-      },
-    ],
-    [onViewRefund, onRetryRefund]
-  );
+      });
+    }
+    return baseColumns;
+  }, [showActions, onViewRefund]);
 
   const table = useReactTable({
-    data,
+    data: safeData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -232,7 +190,7 @@ export const PaymentRefundTable: React.FC<PaymentRefundTableProps> = ({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: () => {},
     state: {
       sorting,
       columnFilters,
@@ -288,7 +246,7 @@ export const PaymentRefundTable: React.FC<PaymentRefundTableProps> = ({
         filters={filters}
         actions={combinedActions}
       />
-      <DataTable columns={columns} data={data} table={table} />
+      <DataTable columns={columns} data={safeData} table={table} />
     </div>
   );
 };

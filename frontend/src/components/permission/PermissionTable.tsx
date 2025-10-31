@@ -59,7 +59,7 @@ const getActionBadgeVariant = (action: string): "default" | "secondary" | "destr
 }
 
 export function PermissionTable({ 
-  permissions,
+  permissions = [],
   onViewPermission,
   searchTerm = "",
   onSearchChange,
@@ -67,6 +67,8 @@ export function PermissionTable({
   filters = [],
   actions
 }: PermissionTableProps) {
+  // Ensure permissions is always an array to prevent TypeError
+  const safePermissions = permissions || [];
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -165,7 +167,7 @@ export function PermissionTable({
   ]
 
   const table = useReactTable({
-    data: permissions,
+    data: safePermissions,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -204,7 +206,7 @@ export function PermissionTable({
       )}
       <DataTable
         columns={columns}
-        data={permissions}
+        data={safePermissions}
         table={table}
       />
     </div>

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ahss.dto.PermissionDto;
+import com.ahss.dto.response.ApiResponse;
 import com.ahss.service.PermissionService;
 
 import jakarta.validation.Valid;
@@ -29,66 +30,76 @@ public class PermissionController {
     private PermissionService permissionService;
 
     @GetMapping
-    public ResponseEntity<List<PermissionDto>> getAllPermissions() {
+    public ResponseEntity<ApiResponse<List<PermissionDto>>> getAllPermissions() {
         List<PermissionDto> permissions = permissionService.getAllActivePermissions();
-        return ResponseEntity.ok(permissions);
+        return ResponseEntity.ok(ApiResponse.ok(permissions, "Permissions retrieved successfully", "/api/v1/permissions"));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PermissionDto> getPermissionById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PermissionDto>> getPermissionById(@PathVariable Long id) {
         Optional<PermissionDto> permission = permissionService.getPermissionById(id);
-        return permission.map(ResponseEntity::ok)
-                        .orElse(ResponseEntity.notFound().build());
+        if (permission.isPresent()) {
+            return ResponseEntity.ok(ApiResponse.ok(permission.get(), "Permission retrieved successfully", "/api/v1/permissions/" + id));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notOk(null, "Permission not found", "/api/v1/permissions/" + id));
+        }
     }
 
     @PostMapping
-    public ResponseEntity<PermissionDto> createPermission(@Valid @RequestBody PermissionDto permissionDto) {
+    public ResponseEntity<ApiResponse<PermissionDto>> createPermission(@Valid @RequestBody PermissionDto permissionDto) {
         try {
             PermissionDto createdPermission = permissionService.createPermission(permissionDto);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdPermission);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.ok(createdPermission, "Permission created successfully", "/api/v1/permissions"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/permissions"));
         }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PermissionDto> updatePermission(@PathVariable Long id, 
+    public ResponseEntity<ApiResponse<PermissionDto>> updatePermission(@PathVariable Long id, 
                                                          @Valid @RequestBody PermissionDto permissionDto) {
         try {
             PermissionDto updatedPermission = permissionService.updatePermission(id, permissionDto);
-            return ResponseEntity.ok(updatedPermission);
+            return ResponseEntity.ok(ApiResponse.ok(updatedPermission, "Permission updated successfully", "/api/v1/permissions/" + id));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/permissions/" + id));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePermission(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deletePermission(@PathVariable Long id) {
         try {
             permissionService.deletePermission(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.ok(null, "Permission deleted successfully", "/api/v1/permissions/" + id));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/permissions/" + id));
         }
     }
 
-    @PatchMapping("/{id}/activate")
-    public ResponseEntity<Void> activatePermission(@PathVariable Long id) {
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<ApiResponse<Void>> activatePermission(@PathVariable Long id) {
         try {
             permissionService.activatePermission(id);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ApiResponse.ok(null, "Permission activated successfully", "/api/v1/permissions/" + id + "/activate"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/permissions/" + id + "/activate"));
         }
     }
 
-    @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<Void> deactivatePermission(@PathVariable Long id) {
+    @PutMapping("/{id}/deactivate")
+    public ResponseEntity<ApiResponse<Void>> deactivatePermission(@PathVariable Long id) {
         try {
             permissionService.deactivatePermission(id);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ApiResponse.ok(null, "Permission deactivated successfully", "/api/v1/permissions/" + id + "/deactivate"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/permissions/" + id + "/deactivate"));
         }
     }
 }

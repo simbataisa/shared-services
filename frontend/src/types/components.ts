@@ -8,6 +8,7 @@ import type {
   Module, 
   Permission 
 } from './entities';
+import type { PaymentRefund } from './payment';
 
 // Layout and navigation
 export interface LayoutProps {
@@ -246,4 +247,14 @@ export interface RoleTableRow {
   permissions: Permission[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface RefundListProps {
+  data: PaymentRefund[];
+  permissions: Permission[];
+  loading?: boolean;
+  onRefundSelect?: (refund: PaymentRefund) => void;
+  selectedRefundId?: string;
+  showActions?: boolean;
+  className?: string;
 }

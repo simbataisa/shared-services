@@ -76,7 +76,7 @@ const getPaymentMethodLabel = (method: string) => {
 export const PaymentTransactionTable: React.FC<
   PaymentTransactionTableProps
 > = ({
-  data,
+  data = [],
   loading = false,
   searchTerm = "",
   onSearchChange = () => {},
@@ -89,6 +89,9 @@ export const PaymentTransactionTable: React.FC<
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+
+  // Ensure data is always an array to prevent undefined errors
+  const safeData = data || [];
 
   const columns = useMemo<ColumnDef<PaymentTransaction>[]>(
     () => [
@@ -235,7 +238,7 @@ export const PaymentTransactionTable: React.FC<
   );
 
   const table = useReactTable({
-    data,
+    data: safeData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -300,7 +303,7 @@ export const PaymentTransactionTable: React.FC<
         filters={filters}
         actions={combinedActions}
       />
-      <DataTable columns={columns} data={data} table={table} />
+      <DataTable columns={columns} data={safeData} table={table} />
     </div>
   );
 };

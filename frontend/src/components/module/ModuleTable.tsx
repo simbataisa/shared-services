@@ -27,7 +27,7 @@ interface ModuleTableProps extends BaseTableProps<Module> {
 }
 
 export default function ModuleTable({ 
-  data, 
+  data = [], 
   loading, 
   searchTerm, 
   onSearchChange, 
@@ -36,6 +36,8 @@ export default function ModuleTable({
   actions,
   onDelete 
 }: ModuleTableProps) {
+  // Ensure data is always an array to prevent TypeError
+  const safeData = data || [];
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -145,7 +147,7 @@ export default function ModuleTable({
   );
 
   const table = useReactTable({
-    data,
+    data: safeData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -186,7 +188,7 @@ export default function ModuleTable({
           ))}
         </div>
       ) : (
-        <DataTable columns={columns} data={data} table={table} />
+        <DataTable columns={columns} data={safeData} table={table} />
       )}
     </div>
   );

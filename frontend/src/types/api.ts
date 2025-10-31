@@ -1,10 +1,11 @@
 // API-related types and interfaces
 
 export interface ApiResponse<T> {
+  success: boolean;
   data: T;
   message: string;
+  timestamp: string;
   path: string;
-  success?: boolean;
 }
 
 // Pagination interface for paginated responses

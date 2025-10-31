@@ -43,6 +43,7 @@ import ErrorDemoPage from "./pages/ErrorDemoPage";
 import { useAuth } from "./store/auth";
 import GlobalLoader from "@/components/common/GlobalLoader";
 import { ErrorBoundary } from "./components/common";
+import PaymentRefundDetail from "./components/payment/refund/PaymentRefundDetail";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -351,7 +352,16 @@ function App() {
             path="payments/refunds"
             element={
               <ProtectedRoute permission="PAYMENT_MGMT:read">
-                <PaymentRefundList />
+                <PaymentRefundList data={[]} permissions={[]} />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/refunds/:id"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentRefundDetail />
               </ProtectedRoute>
             }
           />

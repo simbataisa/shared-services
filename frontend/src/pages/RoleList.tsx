@@ -198,7 +198,7 @@ const RoleList: React.FC<RoleListProps> = ({
       )}
 
       <RoleTable
-        roles={filteredRoles}
+        data={filteredRoles}
         selectedRoleId={selectedRoleId}
         showActions={showActions}
         canManageRoles={canManageRoles}

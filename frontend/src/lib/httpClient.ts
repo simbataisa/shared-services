@@ -117,8 +117,8 @@ class HttpClient {
 
   // Role API methods
   async getRoles(): Promise<Role[]> {
-    const response: AxiosResponse<Role[]> = await api.get("/roles");
-    return response.data;
+    const response: AxiosResponse<ApiResponse<Role[]>> = await api.get("/roles");
+    return response.data.data;
   }
 
   async getRoleById(id: number): Promise<Role> {
@@ -129,10 +129,10 @@ class HttpClient {
   }
 
   async getRoleDetails(id: number): Promise<RoleDetails> {
-    const response: AxiosResponse<RoleDetails> = await api.get(
+    const response: AxiosResponse<ApiResponse<RoleDetails>> = await api.get(
       `/roles/${id}`
     );
-    return response.data;
+    return response.data.data;
   }
 
   async createRole(roleData: {
@@ -187,40 +187,40 @@ class HttpClient {
   }
 
   async getPermissions(): Promise<Permission[]> {
-    const response: AxiosResponse<Permission[]> = await api.get(
+    const response: AxiosResponse<ApiResponse<Permission[]>> = await api.get(
       "/permissions"
     );
-    return response.data;
+    return response.data.data;
   }
 
   async getPermissionById(id: number): Promise<Permission> {
-    const response: AxiosResponse<Permission> = await api.get(
+    const response: AxiosResponse<ApiResponse<Permission>> = await api.get(
       `/permissions/${id}`
     );
     console.log(response);
-    return response.data;
+    return response.data.data;
   }
 
   async updatePermission(
     id: number,
     permissionData: { name?: string; description?: string }
   ): Promise<Permission> {
-    const response: AxiosResponse<Permission> = await api.put(
+    const response: AxiosResponse<ApiResponse<Permission>> = await api.put(
       `/permissions/${id}`,
       permissionData
     );
-    return response.data;
+    return response.data.data;
   }
 
   async updatePermissionStatus(
     id: number,
     isActive: boolean
   ): Promise<Permission> {
-    const response: AxiosResponse<Permission> = await api.put(
+    const response: AxiosResponse<ApiResponse<Permission>> = await api.put(
       `/permissions/${id}`,
       { isActive }
     );
-    return response.data;
+    return response.data.data;
   }
 
   async assignRoles(userId: number, roleIds: number[]): Promise<User> {
@@ -248,10 +248,10 @@ class HttpClient {
   }
 
   async getUserGroupById(id: number): Promise<UserGroup> {
-    const response: AxiosResponse<UserGroup> = await api.get(
+    const response: AxiosResponse<ApiResponse<UserGroup>> = await api.get(
       `/user-groups/${id}`
     );
-    return response.data;
+    return response.data.data;
   }
 
   async createUserGroup(groupData: {
@@ -373,39 +373,39 @@ class HttpClient {
 
   // Module API methods
   async getModules(): Promise<Module[]> {
-    const response: AxiosResponse<Module[]> = await api.get("/modules");
-    return response.data;
+    const response: AxiosResponse<ApiResponse<Module[]>> = await api.get("/modules");
+    return response.data.data;
   }
 
   async getModuleById(id: number): Promise<Module> {
-    const response: AxiosResponse<Module> = await api.get(`/modules/${id}`);
-    return response.data;
+    const response: AxiosResponse<ApiResponse<Module>> = await api.get(`/modules/${id}`);
+    return response.data.data;
   }
 
   async getModulesByProductId(productId: number): Promise<Module[]> {
-    const response: AxiosResponse<Module[]> = await api.get(
+    const response: AxiosResponse<ApiResponse<Module[]>> = await api.get(
       `/modules/product/${productId}`
     );
-    return response.data;
+    return response.data.data;
   }
 
   async createModule(moduleData: CreateModuleRequest): Promise<Module> {
-    const response: AxiosResponse<Module> = await api.post(
+    const response: AxiosResponse<ApiResponse<Module>> = await api.post(
       "/modules",
       moduleData
     );
-    return response.data;
+    return response.data.data;
   }
 
   async updateModule(
     id: number,
     moduleData: Partial<CreateModuleRequest & { isActive?: boolean }>
   ): Promise<Module> {
-    const response: AxiosResponse<Module> = await api.put(
+    const response: AxiosResponse<ApiResponse<Module>> = await api.put(
       `/modules/${id}`,
       moduleData
     );
-    return response.data;
+    return response.data.data;
   }
 
   async deleteModule(id: number): Promise<void> {
@@ -414,32 +414,32 @@ class HttpClient {
 
   // Product API methods
   async getProducts(): Promise<Product[]> {
-    const response: AxiosResponse<Product[]> = await api.get("/products");
-    return response.data;
+    const response: AxiosResponse<ApiResponse<Product[]>> = await api.get("/products");
+    return response.data.data;
   }
 
   async getProductById(id: number): Promise<Product> {
-    const response: AxiosResponse<Product> = await api.get(`/products/${id}`);
-    return response.data;
+    const response: AxiosResponse<ApiResponse<Product>> = await api.get(`/products/${id}`);
+    return response.data.data;
   }
 
   async createProduct(productData: CreateProductRequest): Promise<Product> {
-    const response: AxiosResponse<Product> = await api.post(
+    const response: AxiosResponse<ApiResponse<Product>> = await api.post(
       "/products",
       productData
     );
-    return response.data;
+    return response.data.data;
   }
 
   async updateProduct(
     id: number,
     productData: Partial<CreateProductRequest>
   ): Promise<Product> {
-    const response: AxiosResponse<Product> = await api.put(
+    const response: AxiosResponse<ApiResponse<Product>> = await api.put(
       `/products/${id}`,
       productData
     );
-    return response.data;
+    return response.data.data;
   }
 
   async deleteProduct(id: number): Promise<void> {
@@ -466,8 +466,8 @@ class HttpClient {
     activities: RecentActivity[];
   }> {
     const [statsResponse, activitiesResponse] = await Promise.all([
-      api.get("/dashboard/stats"),
-      api.get("/dashboard/recent-activities"),
+      api.get<ApiResponse<DashboardStats>>("/dashboard/stats"),
+      api.get<ApiResponse<RecentActivity[]>>("/dashboard/recent-activities"),
     ]);
     
     return {
@@ -478,11 +478,15 @@ class HttpClient {
 
   // Auth API methods
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response: AxiosResponse<LoginResponse> = await api.post(
+    const response: AxiosResponse<ApiResponse<{ token: string }>> = await api.post(
       "/auth/login",
       credentials
     );
-    return response.data;
+    
+    return {
+      token: response.data.data.token,
+      user: null as any // User info will be extracted from JWT token in the auth store
+    };
   }
 
   // Generic API methods for flexibility

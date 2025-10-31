@@ -30,7 +30,7 @@ interface ProductTableProps extends BaseTableProps<ProductWithModules> {
 }
 
 export function ProductTable({
-  data,
+  data = [],
   loading = false,
   searchTerm = "",
   onSearchChange = () => {},
@@ -39,6 +39,8 @@ export function ProductTable({
   actions,
   onDeleteProduct,
 }: ProductTableProps) {
+  // Ensure data is always an array to prevent TypeError
+  const safeData = data || [];
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -156,7 +158,7 @@ export function ProductTable({
   );
 
   const table = useReactTable({
-    data,
+    data: safeData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -200,7 +202,7 @@ export function ProductTable({
           ))}
         </div>
       ) : (
-        <DataTable columns={columns} data={data} table={table} />
+        <DataTable columns={columns} data={safeData} table={table} />
       )}
     </div>
   );

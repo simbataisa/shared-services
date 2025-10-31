@@ -6,13 +6,19 @@ import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { paymentApi } from "@/lib/paymentApi";
 import { PaymentRefundTable } from "./PaymentRefundTable";
 import type { PaymentRefund, PaymentTransactionStatus } from "@/types/payment";
-import type { TableFilter } from "@/types/components";
+import type { RefundListProps, TableFilter } from "@/types/components";
+import { useNavigate } from "react-router-dom";
 
-const PaymentRefundList: React.FC = () => {
+const PaymentRefundList: React.FC<RefundListProps> = ({
+  onRefundSelect,
+  selectedRefundId,
+  showActions = true,
+}) => {
   const [refunds, setRefunds] = useState<PaymentRefund[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const navigate = useNavigate();
 
   const statusOptions = [
     { value: "all", label: "All Statuses" },
@@ -50,19 +56,10 @@ const PaymentRefundList: React.FC = () => {
     fetchRefunds();
   }, [statusFilter]);
 
-  const handleRetryRefund = async (refundId: string) => {
-    try {
-      // Note: Retry functionality might need to be implemented in the backend
-      console.log("Retry refund:", refundId);
-      fetchRefunds(); // Refresh the list
-    } catch (error) {
-      console.error("Error retrying refund:", error);
-    }
-  };
-
   const handleViewRefund = (refund: PaymentRefund) => {
-    console.log("View refund:", refund);
-    // Navigate to refund detail page or open modal
+    console.log("Viewing refund:", refund);
+    navigate(`/payments/refunds/${refund.id}`);
+    onRefundSelect?.(refund);
   };
 
   // Filter data based on search term and status filter
@@ -125,7 +122,6 @@ const PaymentRefundList: React.FC = () => {
         filters={filters}
         actions={actions}
         onViewRefund={handleViewRefund}
-        onRetryRefund={handleRetryRefund}
       />
     </div>
   );

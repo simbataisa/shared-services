@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { paymentApi } from '@/lib/paymentApi';
 import { DetailHeaderCard, StatisticsCard } from '@/components/common';
+import { useAuth } from '@/store/auth';
 import { PaymentRequestDetailsCard } from './PaymentRequestDetailsCard';
 import { PaymentTransactionTable } from './transaction/PaymentTransactionTable';
 import PaymentRequestStatsCard from './PaymentRequestStatsCard';
@@ -38,6 +39,7 @@ import {
 const PaymentRequestDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
   const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
@@ -227,7 +229,10 @@ const PaymentRequestDetail: React.FC = () => {
         title={paymentRequest.title}
         description={`Request Code: ${paymentRequest.requestCode}`}
         breadcrumbs={[
-          { label: "Payment Requests", href: "/payments" },
+          ...(hasPermission("PAYMENT_MGMT:read") 
+            ? [{ label: "Payment Requests", href: "/payments" }] 
+            : []
+          ),
           { label: paymentRequest.title },
         ]}
       />
@@ -263,9 +268,8 @@ const PaymentRequestDetail: React.FC = () => {
 
                  <TabsContent value="transactions" className="mt-4">
                   <PaymentTransactionTable
-                    transactions={transactions}
+                    data={transactions}
                     loading={transactionsLoading}
-                    emptyMessage="No transactions found for this payment request."
                   />
                 </TabsContent>
 

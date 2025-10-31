@@ -134,7 +134,7 @@ export const paymentRefundApi = {
   },
 
   // Get refund by ID
-  getById: async (id: number) => {
+  getById: async (id: string) => {
     const response = await api.get<ApiResponse<PaymentRefund>>(`/payments/refunds/${id}`);
     return response.data;
   },

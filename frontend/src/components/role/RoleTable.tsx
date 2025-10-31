@@ -15,17 +15,16 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from "@tanstack/react-table";
-import type { 
-  ColumnDef, 
-  SortingState, 
-  ColumnFiltersState, 
-  VisibilityState 
+import type {
+  ColumnDef,
+  SortingState,
+  ColumnFiltersState,
+  VisibilityState,
 } from "@tanstack/react-table";
 import type { Role, Permission } from "@/types/entities";
 import { type BaseTableProps, type TableFilter } from "@/types/components";
 
-interface RoleTableProps extends Omit<BaseTableProps<Role>, 'data'> {
-  roles: Role[];
+interface RoleTableProps extends BaseTableProps<Role> {
   selectedRoleId?: number;
   showActions?: boolean;
   canManageRoles: boolean;
@@ -33,7 +32,7 @@ interface RoleTableProps extends Omit<BaseTableProps<Role>, 'data'> {
 }
 
 const RoleTable: React.FC<RoleTableProps> = ({
-  roles,
+  data = [],
   selectedRoleId,
   showActions = true,
   canManageRoles,
@@ -44,16 +43,23 @@ const RoleTable: React.FC<RoleTableProps> = ({
   filters = [],
   actions,
 }) => {
+  // Ensure roles is always an array to prevent TypeError
+  const safeRoles = data || [];
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
-  
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
+
   // Set up row selection based on selectedRoleId
   const rowSelection = React.useMemo(() => {
     if (selectedRoleId === undefined) return {};
-    const selectedIndex = roles.findIndex(role => role.id === selectedRoleId);
+    const selectedIndex = safeRoles.findIndex(
+      (role) => role.id === selectedRoleId
+    );
     return selectedIndex >= 0 ? { [selectedIndex]: true } : {};
-  }, [selectedRoleId, roles]);
+  }, [selectedRoleId, safeRoles]);
 
   const columns: ColumnDef<Role>[] = React.useMemo(() => {
     const baseColumns: ColumnDef<Role>[] = [
@@ -94,17 +100,15 @@ const RoleTable: React.FC<RoleTableProps> = ({
           const permissions = row.getValue("permissions") as Permission[];
           return (
             <div className="flex flex-wrap gap-1">
-              {permissions
-                ?.slice(0, 3)
-                .map((permission: Permission) => (
-                  <Badge
-                    key={permission.id}
-                    variant="outline"
-                    className="text-xs"
-                  >
-                    {permission.name}
-                  </Badge>
-                ))}
+              {permissions?.slice(0, 3).map((permission: Permission) => (
+                <Badge
+                  key={permission.id}
+                  variant="outline"
+                  className="text-xs"
+                >
+                  {permission.name}
+                </Badge>
+              ))}
               {permissions && permissions.length > 3 && (
                 <Badge variant="outline" className="text-xs">
                   +{permissions.length - 3} more
@@ -152,7 +156,7 @@ const RoleTable: React.FC<RoleTableProps> = ({
   }, [showActions, canManageRoles, onViewRole]);
 
   const table = useReactTable({
-    data: roles,
+    data: safeRoles,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -189,11 +193,7 @@ const RoleTable: React.FC<RoleTableProps> = ({
           actions={combinedActions}
         />
       )}
-      <DataTable
-        columns={columns}
-        data={roles}
-        table={table}
-      />
+      <DataTable columns={columns} data={safeRoles} table={table} />
     </div>
   );
 };

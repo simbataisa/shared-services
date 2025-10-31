@@ -267,7 +267,6 @@ export function getStatusIcon(status: string) {
   const normalizedStatus = normalizeStatus(status);
   const config = STATUS_CONFIG[normalizedStatus] || STATUS_CONFIG.inactive;
   const IconComponent = config.icon;
-  console.log("getStatusIcon", config);
   return <IconComponent className={`h-4 w-4 ${config.iconColor}`} />;
 }
 
@@ -474,7 +473,9 @@ function normalizeStatus(status: string): StatusType {
  * @param status - The PaymentRequestStatus type
  * @returns String with Tailwind CSS classes for background, text, hover, and border colors
  */
-export const getPaymentRequestStatusColor = (status: PaymentRequestStatus): string => {
+export const getPaymentRequestStatusColor = (
+  status: PaymentRequestStatus
+): string => {
   switch (status) {
     case "DRAFT":
       return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
@@ -574,36 +575,36 @@ export const getPaymentRequestStatusIcon = (status: PaymentRequestStatus) => {
  */
 export const getTransactionStatusBadgeProps = (status: string) => {
   switch (status) {
-    case 'SUCCESS':
-    case 'COMPLETED':
+    case "SUCCESS":
+    case "COMPLETED":
       return {
-        variant: 'default' as const,
-        className: 'bg-green-100 text-green-800 hover:bg-green-200'
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800 hover:bg-green-200",
       };
-    case 'PENDING':
+    case "PENDING":
       return {
-        variant: 'secondary' as const,
-        className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+        variant: "secondary" as const,
+        className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
       };
-    case 'PROCESSING':
+    case "PROCESSING":
       return {
-        variant: 'outline' as const,
-        className: 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+        variant: "outline" as const,
+        className: "bg-blue-100 text-blue-800 hover:bg-blue-200",
       };
-    case 'FAILED':
+    case "FAILED":
       return {
-        variant: 'destructive' as const,
-        className: 'bg-red-100 text-red-800 hover:bg-red-200'
+        variant: "destructive" as const,
+        className: "bg-red-100 text-red-800 hover:bg-red-200",
       };
-    case 'CANCELLED':
+    case "CANCELLED":
       return {
-        variant: 'secondary' as const,
-        className: 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+        variant: "secondary" as const,
+        className: "bg-gray-100 text-gray-800 hover:bg-gray-200",
       };
     default:
       return {
-        variant: 'secondary' as const,
-        className: 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+        variant: "secondary" as const,
+        className: "bg-gray-100 text-gray-800 hover:bg-gray-200",
       };
   }
 };
