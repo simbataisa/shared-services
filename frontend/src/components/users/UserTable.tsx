@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   type ColumnDef,
   getCoreRowModel,
@@ -13,14 +13,12 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { DataTableViewOptions } from "@/components/ui/data-table-view-options";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { normalizeEntityStatus } from "@/lib/status-utils";
 import SearchAndFilter from "@/components/common/SearchAndFilter";
-import { PermissionGuard } from "@/components/common/PermissionGuard";
 import { Eye } from "lucide-react";
 import type { User } from "@/types";
 import { type BaseTableProps } from "@/types/components";

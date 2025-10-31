@@ -427,7 +427,7 @@ export default function Layout({ children }: LayoutProps) {
           </header>
 
           {/* Main content area */}
-          <div className="flex-1 p-6">{children}</div>
+          <div className="flex-1">{children}</div>
         </main>
       </div>
     </SidebarProvider>

@@ -1438,6 +1438,134 @@ const columns: ColumnDef<DataType>[] = [
 <DataTable columns={columns} data={data} />
 ```
 
+## Layout Optimization
+
+### Full-Page Responsive Design
+
+The data table system has been optimized to work with a full-page responsive design pattern that maximizes the available screen space for table content. This optimization involved removing unnecessary padding constraints from the application layout.
+
+#### Layout Component Changes
+
+**Problem Identified:**
+The main Layout component (`/src/components/common/Layout.tsx`) was applying padding (`p-6`) to all page content through its main content wrapper:
+
+```typescript
+// Before optimization
+<div className="flex-1 p-6">{children}</div>
+```
+
+**Solution Applied:**
+The padding was removed to allow pages to utilize the full available space:
+
+```typescript
+// After optimization
+<div className="flex-1">{children}</div>
+```
+
+#### Page-Level Responsive Containers
+
+With the layout padding removed, individual pages now implement their own responsive container patterns using a standardized approach:
+
+```typescript
+// Standardized page container pattern
+<div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
+  {/* Page content including data tables */}
+</div>
+```
+
+#### Benefits of Layout Optimization
+
+1. **Maximized Space Utilization**: Tables now have access to the full available viewport width
+2. **Consistent Responsive Design**: All pages follow the same container pattern with proper breakpoint handling
+3. **Mobile-First Approach**: Responsive padding scales appropriately across device sizes:
+   - Mobile: `px-4` (16px horizontal padding)
+   - Tablet: `sm:px-6` (24px horizontal padding)
+   - Desktop: `lg:px-8` (32px horizontal padding)
+4. **Improved User Experience**: More content visible on screen, especially beneficial for data tables
+5. **Better Mobile Experience**: No wasted space on smaller screens
+
+#### Implementation Examples
+
+**UserGroups Page:**
+```typescript
+// Updated layout in UserGroups.tsx
+<div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl space-y-6">
+  <div>
+    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Groups</h1>
+    <p className="text-sm sm:text-base text-muted-foreground">
+      Manage user groups and their permissions
+    </p>
+  </div>
+  
+  {error && (
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
+  )}
+
+  <UserGroupsTable
+    data={filteredGroups}
+    loading={loading}
+    searchTerm={searchTerm}
+    onSearchChange={setSearchTerm}
+    searchPlaceholder="Search user groups..."
+    actions={actions}
+  />
+</div>
+```
+
+**UserList Page:**
+```typescript
+// Updated layout in UserList.tsx
+<div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl space-y-6">
+  <div>
+    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>
+    <p className="text-sm sm:text-base text-muted-foreground">
+      Manage users, their roles, and permissions
+    </p>
+  </div>
+
+  {error && (
+    <Alert variant="destructive">
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
+  )}
+
+  <UserTable
+    data={filteredUsers}
+    loading={loading}
+    searchTerm={searchTerm}
+    onSearchChange={setSearchTerm}
+    searchPlaceholder="Search users..."
+    filters={filters}
+    actions={actions}
+  />
+</div>
+```
+
+#### Responsive Design Principles Applied
+
+1. **Container Constraints**: `max-w-7xl` ensures content doesn't become too wide on large screens
+2. **Responsive Typography**: Headers scale from `text-2xl` on mobile to `text-3xl` on larger screens
+3. **Adaptive Spacing**: Consistent vertical spacing with `space-y-6` and responsive horizontal padding
+4. **Mobile-First Breakpoints**: Uses Tailwind's `sm:` and `lg:` prefixes for progressive enhancement
+
+#### Migration Guidelines
+
+When implementing new pages or updating existing ones, follow this pattern:
+
+1. **Remove Card Wrappers**: Eliminate unnecessary `Card` components that add extra padding
+2. **Apply Container Pattern**: Use the standardized responsive container classes
+3. **Responsive Headers**: Implement mobile-first typography scaling
+4. **Consistent Error Handling**: Use the standardized Alert component pattern
+5. **Proper Spacing**: Maintain consistent spacing with `space-y-6` for vertical layout
+
+This layout optimization ensures that data tables have maximum space to display content while maintaining a consistent, responsive design across all pages in the application.
+
 ## Future Enhancements
 
 ### Planned Features
