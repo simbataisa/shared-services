@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,8 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
-import { SearchAndFilter } from "@/components/common/SearchAndFilter";
+import { Plus, Shield } from "lucide-react";
 import { PermissionTable } from "@/components/permission/PermissionTable";
 import type { Permission, CreatePermissionForm } from "@/types";
 import httpClient from "@/lib/httpClient";
@@ -185,7 +183,10 @@ const PermissionList: React.FC = () => {
 
     const matchesSearch =
       permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (permission.description && permission.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (permission.description &&
+        permission.description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
       resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
       action.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -312,12 +313,6 @@ const PermissionList: React.FC = () => {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Permissions</CardTitle>
-          <CardDescription>
-            A list of all permissions in the system
-          </CardDescription>
-        </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-2">
@@ -390,7 +385,10 @@ const PermissionList: React.FC = () => {
                             id="name"
                             value={createForm.name}
                             onChange={(e) =>
-                              setCreateForm({ ...createForm, name: e.target.value })
+                              setCreateForm({
+                                ...createForm,
+                                name: e.target.value,
+                              })
                             }
                             className="col-span-3"
                             placeholder="e.g., user:read"
@@ -438,7 +436,10 @@ const PermissionList: React.FC = () => {
                             id="action"
                             value={createForm.action}
                             onChange={(e) =>
-                              setCreateForm({ ...createForm, action: e.target.value })
+                              setCreateForm({
+                                ...createForm,
+                                action: e.target.value,
+                              })
                             }
                             className="col-span-3"
                             placeholder="e.g., create, read, update, delete"

@@ -133,16 +133,11 @@ const RoleList: React.FC<RoleListProps> = ({
   // Computed values
   const filteredRoles = roles.filter((role) => {
     const matchesSearch =
-      role.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      role.description
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" ||
-      (role.status || "ACTIVE") === statusFilter;
+      statusFilter === "all" || (role.status || "ACTIVE") === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -191,10 +186,6 @@ const RoleList: React.FC<RoleListProps> = ({
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Roles</CardTitle>
-          <CardDescription>A list of all roles in the system</CardDescription>
-        </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-2">
