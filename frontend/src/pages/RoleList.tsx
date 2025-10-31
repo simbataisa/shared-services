@@ -156,8 +156,20 @@ const RoleList: React.FC<RoleListProps> = ({
     );
   }
 
+  if (loading) {
+    return (
+      <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Role Management</h1>
@@ -185,59 +197,47 @@ const RoleList: React.FC<RoleListProps> = ({
         </Alert>
       )}
 
-      <Card>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : (
-            <RoleTable
-              roles={filteredRoles}
-              selectedRoleId={selectedRoleId}
-              showActions={showActions}
-              canManageRoles={canManageRoles}
-              onViewRole={handleViewRole}
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              searchPlaceholder="Search roles by name or description..."
-              filters={[
-                {
-                  label: "Status",
-                  value: statusFilter,
-                  onChange: setStatusFilter,
-                  options: [
-                    { value: "all", label: "All Status" },
-                    { value: "ACTIVE", label: "Active" },
-                    { value: "INACTIVE", label: "Inactive" },
-                    { value: "DEPRECATED", label: "Deprecated" },
-                  ],
-                },
-              ]}
-              actions={
-                canManageRoles &&
-                showActions && (
-                  <>
-                    <Button onClick={() => navigate("/roles/new")}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Role
-                    </Button>
-                    <RoleDialog
-                      open={isCreateDialogOpen}
-                      onOpenChange={setIsCreateDialogOpen}
-                      onSave={handleCreateRole}
-                      permissions={permissions}
-                      loading={saving}
-                    />
-                  </>
-                )
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
+      <RoleTable
+        roles={filteredRoles}
+        selectedRoleId={selectedRoleId}
+        showActions={showActions}
+        canManageRoles={canManageRoles}
+        onViewRole={handleViewRole}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search roles by name or description..."
+        filters={[
+          {
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: "all", label: "All Status" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "INACTIVE", label: "Inactive" },
+              { value: "DEPRECATED", label: "Deprecated" },
+            ],
+          },
+        ]}
+        actions={
+          canManageRoles &&
+          showActions && (
+            <>
+              <Button onClick={() => navigate("/roles/new")}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Role
+              </Button>
+              <RoleDialog
+                open={isCreateDialogOpen}
+                onOpenChange={setIsCreateDialogOpen}
+                onSave={handleCreateRole}
+                permissions={permissions}
+                loading={saving}
+              />
+            </>
+          )
+        }
+      />
     </div>
   );
 };

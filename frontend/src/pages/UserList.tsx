@@ -132,10 +132,12 @@ const UserList: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
         <div className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            User Management
+          </h1>
           <p className="text-sm sm:text-base text-muted-foreground">
             Manage users, their roles, and permissions
           </p>
@@ -157,9 +159,9 @@ const UserList: React.FC = () => {
             ))}
           </div>
         ) : (
-          <UserTable 
-            users={users} 
-            loading={loading} 
+          <UserTable
+            users={users}
+            loading={loading}
             filters={statusFilters}
             actions={
               canManageUsers && (

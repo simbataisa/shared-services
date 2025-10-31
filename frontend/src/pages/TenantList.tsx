@@ -156,8 +156,20 @@ export default function TenantList() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
         <div className="space-y-1">
@@ -171,43 +183,38 @@ export default function TenantList() {
       </div>
 
       {/* Tenants Table */}
-      <Card>
-        <CardContent className="p-0">
-          <TenantTable
-            data={filteredTenants}
-            loading={false}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            searchPlaceholder="Search tenants by name or code..."
-            filters={filters}
-            actions={actions}
-          />
 
-          {filteredTenants.length === 0 && !loading && (
-            <div className="text-center py-12">
-              <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-medium">No tenants found</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {searchTerm || statusFilter !== "all" || typeFilter !== "all"
-                  ? "Try adjusting your search or filter criteria."
-                  : "Get started by creating a new tenant."}
-              </p>
-              {!searchTerm &&
-                statusFilter === "all" &&
-                typeFilter === "all" && (
-                  <PermissionGuard permission="TENANT_MGMT:create">
-                    <Button className="mt-4" asChild>
-                      <Link to="/tenants/create">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Your First Tenant
-                      </Link>
-                    </Button>
-                  </PermissionGuard>
-                )}
-            </div>
+      <TenantTable
+        data={filteredTenants}
+        loading={false}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search tenants by name or code..."
+        filters={filters}
+        actions={actions}
+      />
+
+      {filteredTenants.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-2 text-sm font-medium">No tenants found</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {searchTerm || statusFilter !== "all" || typeFilter !== "all"
+              ? "Try adjusting your search or filter criteria."
+              : "Get started by creating a new tenant."}
+          </p>
+          {!searchTerm && statusFilter === "all" && typeFilter === "all" && (
+            <PermissionGuard permission="TENANT_MGMT:create">
+              <Button className="mt-4" asChild>
+                <Link to="/tenants/create">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Tenant
+                </Link>
+              </Button>
+            </PermissionGuard>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }

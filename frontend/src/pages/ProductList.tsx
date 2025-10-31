@@ -25,9 +25,9 @@ export default function ProductList() {
       setError(null);
       const response = await httpClient.getProducts();
       // Ensure modules is always an array for ProductWithModules type
-      const productsWithModules = response.map(product => ({
+      const productsWithModules = response.map((product) => ({
         ...product,
-        modules: product.modules || []
+        modules: product.modules || [],
       }));
       setProducts(productsWithModules);
     } catch (error) {
@@ -45,7 +45,9 @@ export default function ProductList() {
 
     try {
       await httpClient.deleteProduct(parseInt(productId));
-      setProducts(products.filter((product) => product.id.toString() !== productId));
+      setProducts(
+        products.filter((product) => product.id.toString() !== productId)
+      );
     } catch (error) {
       console.error("Error deleting product:", error);
       setError("Failed to delete product");
@@ -54,11 +56,12 @@ export default function ProductList() {
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return products;
-    
-    return products.filter((product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    return products.filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [products, searchTerm]);
 
@@ -88,7 +91,7 @@ export default function ProductList() {
   );
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Products</h1>
         <p className="text-muted-foreground">
