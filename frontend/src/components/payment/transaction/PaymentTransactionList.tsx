@@ -10,6 +10,7 @@ import {
   PAYMENT_TRANSACTION_STATUS_MAPPINGS,
   PAYMENT_TRANSACTION_TYPE_MAPPINGS,
 } from "@/types/payment";
+import { useNavigate } from "react-router-dom";
 
 interface PaymentTransactionListProps {
   className?: string;
@@ -25,6 +26,7 @@ export const PaymentTransactionList: React.FC<PaymentTransactionListProps> = ({
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
 
   // Status and type options for filters
   const statusOptions = Object.entries(PAYMENT_TRANSACTION_STATUS_MAPPINGS).map(
@@ -116,7 +118,7 @@ export const PaymentTransactionList: React.FC<PaymentTransactionListProps> = ({
   // Handle view transaction
   const handleViewTransaction = (transaction: PaymentTransaction) => {
     console.log("View transaction:", transaction);
-    // Implement view transaction logic
+    navigate(`/payments/transactions/${transaction.id}`);
   };
 
   // Calculate statistics
