@@ -15,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+// Use fully qualified Swagger annotations to avoid confusion and import issues
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +25,25 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Users", description = "Manage users, status, roles, and groups")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
+@io.swagger.v3.oas.annotations.responses.ApiResponses({
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Not found",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class)))
+})
 public class UserController {
 
     @Autowired
@@ -31,6 +51,10 @@ public class UserController {
 
     // Get all active users
     @GetMapping
+    @io.swagger.v3.oas.annotations.Operation(summary = "List users", description = "Retrieve all active users")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users retrieved successfully")
+    })
     public ResponseEntity<ApiResponse<List<UserResponse>>> getAllUsers() {
         List<UserDto> users = userService.getAllActiveUsers();
         List<UserResponse> userResponses = users.stream()
@@ -41,6 +65,10 @@ public class UserController {
 
     // Get users by status
     @GetMapping("/status/{status}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "List users by status", description = "Retrieve users filtered by status")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Users retrieved successfully")
+    })
     public ResponseEntity<ApiResponse<List<UserResponse>>> getUsersByStatus(@PathVariable UserStatus status) {
         List<UserDto> users = userService.getUsersByStatus(status);
         List<UserResponse> userResponses = users.stream()
@@ -51,6 +79,11 @@ public class UserController {
 
     // Get user by ID
     @GetMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get user by ID", description = "Retrieve user details by ID")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
         Optional<UserDto> user = userService.getUserById(id);
         if (user.isPresent()) {
@@ -64,6 +97,11 @@ public class UserController {
 
     // Get user by username
     @GetMapping("/username/{username}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get user by username", description = "Retrieve user details by username")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> getUserByUsername(@PathVariable String username) {
         Optional<UserDto> user = userService.getUserByUsername(username);
         if (user.isPresent()) {
@@ -77,6 +115,11 @@ public class UserController {
 
     // Get user by email
     @GetMapping("/email/{email}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get user by email", description = "Retrieve user details by email")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> getUserByEmail(@PathVariable String email) {
         Optional<UserDto> user = userService.getUserByEmail(email);
         if (user.isPresent()) {
@@ -90,6 +133,10 @@ public class UserController {
 
     // Search users
     @GetMapping("/search")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Search users", description = "Full-text search users by username or email")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Search completed successfully")
+    })
     public ResponseEntity<ApiResponse<List<UserResponse>>> searchUsers(@RequestParam String query) {
         List<UserDto> users = userService.searchUsers(query);
         List<UserResponse> userResponses = users.stream()
@@ -100,6 +147,15 @@ public class UserController {
 
     // Create user
     @PostMapping
+    @io.swagger.v3.oas.annotations.Operation(summary = "Create user", description = "Create a new user",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(name = "CreateUser",
+                    value = "{\n  \"username\": \"jdoe\",\n  \"email\": \"jdoe@example.com\",\n  \"password\": \"Str0ngP@ss!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"roleIds\": [1,2],\n  \"userGroupIds\": [3]\n}"))))
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "User created successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request payload")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> createUser(@Valid @RequestBody CreateUserRequest request) {
         try {
             UserDto userDto = convertCreateRequestToDto(request);
@@ -126,6 +182,12 @@ public class UserController {
 
     // Update user
     @PutMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Update user", description = "Update an existing user by ID")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User updated successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request payload")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(@PathVariable Long id, 
                                                                @Valid @RequestBody UpdateUserRequest request) {
         try {
@@ -178,6 +240,11 @@ public class UserController {
 
     // Delete user (soft delete)
     @DeleteMapping("/{id}")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Delete user", description = "Soft delete a user by ID")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "User deleted successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "User not found")
+    })
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);

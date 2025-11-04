@@ -35,7 +35,10 @@ import { getTransactionStatusBadgeProps } from "@/lib/status-utils";
 
 interface PaymentTransactionTableProps
   extends BaseTableProps<PaymentTransaction> {
-  onViewTransaction?: (transaction: PaymentTransaction) => void;
+  data: PaymentTransaction[];
+  selectedPaymentTrxId?: string;
+  showActions?: boolean;
+  onViewTransaction: (transaction: PaymentTransaction) => void;
 }
 
 // Utility functions
@@ -83,6 +86,7 @@ export const PaymentTransactionTable: React.FC<
   searchPlaceholder = "Search transactions...",
   filters = [],
   actions,
+  showActions = true,
   onViewTransaction,
 }) => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -93,8 +97,8 @@ export const PaymentTransactionTable: React.FC<
   // Ensure data is always an array to prevent undefined errors
   const safeData = data || [];
 
-  const columns = useMemo<ColumnDef<PaymentTransaction>[]>(
-    () => [
+  const columns: ColumnDef<PaymentTransaction>[] = useMemo(() => {
+    const baseColumns: ColumnDef<PaymentTransaction>[] = [
       {
         accessorKey: "transactionCode",
         header: ({ column }) => (
@@ -199,43 +203,32 @@ export const PaymentTransactionTable: React.FC<
           </div>
         ),
       },
-      {
+    ];
+
+    if (showActions) {
+      baseColumns.push({
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
           const transaction = row.original;
 
           return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to={`/payment/transactions/${transaction.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Details
-                  </Link>
-                </DropdownMenuItem>
-                {onViewTransaction && (
-                  <DropdownMenuItem
-                    onClick={() => onViewTransaction(transaction)}
-                  >
-                    <Receipt className="mr-2 h-4 w-4" />
-                    View Receipt
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onViewTransaction(transaction)}
+                className="text-blue-600 hover:text-blue-700"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
           );
         },
-      },
-    ],
-    [onViewTransaction]
-  );
+      });
+    }
+    return baseColumns;
+  }, [onViewTransaction]);
 
   const table = useReactTable({
     data: safeData,

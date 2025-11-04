@@ -5,6 +5,7 @@ import com.ahss.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+// Use fully qualified Swagger annotations to avoid import issues
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,12 +16,36 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Dashboard", description = "System statistics and recent activities")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
+@io.swagger.v3.oas.annotations.responses.ApiResponses({
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Not found",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class)))
+})
 public class DashboardController {
 
     @Autowired
     private UserService userService;
 
     @GetMapping("/stats")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get dashboard stats", description = "Retrieve system statistics and KPIs")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Dashboard statistics retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Failed to retrieve dashboard statistics")
+    })
     public ResponseEntity<ApiResponse<Map<String, Object>>> getDashboardStats() {
         try {
             Map<String, Object> stats = new HashMap<>();
@@ -43,6 +68,11 @@ public class DashboardController {
     }
 
     @GetMapping("/recent-activities")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get recent activities", description = "Retrieve recent system activities")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Recent activities retrieved successfully"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Failed to retrieve recent activities")
+    })
     public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getRecentActivities() {
         try {
             List<Map<String, Object>> activities = new ArrayList<>();

@@ -37,7 +37,7 @@ import PaymentRequestDetail from "./components/payment/PaymentRequestDetail";
 import PaymentTransactionList from "./components/payment/transaction/PaymentTransactionList";
 import PaymentTransactionDetail from "./components/payment/transaction/PaymentTransactionDetail";
 import PaymentRefundList from "./components/payment/refund/PaymentRefundList";
-import PaymentAuditLogList from "./components/payment/PaymentAuditLogList";
+import PaymentAuditLogList from "./components/payment/audit/PaymentAuditLogList";
 import Unauthorized from "./pages/Unauthorized";
 import ErrorDemoPage from "./pages/ErrorDemoPage";
 import { useAuth } from "./store/auth";
