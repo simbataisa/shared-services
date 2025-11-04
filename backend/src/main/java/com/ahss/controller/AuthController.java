@@ -77,7 +77,7 @@ public class AuthController {
             if (null == loginRequest.username() || null == loginRequest.password() || loginRequest.username().trim().isEmpty() || loginRequest.password().trim().isEmpty()) {
                 log.warn("Authentication failed: Missing username or password");
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.ok(null, "Username and password are required", "/api/v1/auth/login"));
+                        .body(ApiResponse.notOk(null, "Username and password are required", "/api/v1/auth/login"));
             }
             final String username = loginRequest.username().trim().toLowerCase();
 

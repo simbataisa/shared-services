@@ -1,7 +1,7 @@
 # Backend Test Plan
 
 ## Current Coverage Snapshot
-- Existing automation is limited to `src/test/java/com/ahss/util/BCryptTest.java:1`, which prints BCrypt hashes without assertions; effectively none of the Spring services, controllers, repositories, or entities have regression protection today.
+- Existing automation includes multiple JUnit 5 suites across controllers, security, and utilities. Notable tests include `AuthControllerTest`, `ModuleControllerTest`, `TenantControllerTest`, `DashboardControllerTest`, `PermissionControllerTest`, `UserControllerTest`, `RoleControllerTest`, `ProductControllerTest`, `UserGroupControllerTest`, `PaymentControllerTest`, `JwtTokenProviderTest`, `JwtAuthenticationFilterTest`, and `BCryptTest`. Allure reporting is enabled and writes results to `backend/build/allure-results`.
 
 ## Testing Goals & Principles
 - Establish fast, deterministic unit coverage for service/business logic while keeping database-heavy scenarios in focused integration suites; favour behaviour assertions over implementation details.
@@ -15,6 +15,80 @@
 - Run JPA/repository and end-to-end tests against PostgreSQL Testcontainers because entities such as `PaymentRequest` (`src/main/java/com/ahss/entity/PaymentRequest.java:24`), `PaymentTransaction` (`src/main/java/com/ahss/entity/PaymentTransaction.java:33`), and `PaymentRefund` (`src/main/java/com/ahss/entity/PaymentRefund.java:28`) depend on JSONB, enum arrays, and UUID types that H2 cannot emulate reliably. Reuse singleton containers between suites to keep execution time predictable.
 - Publish Allure reports from CI for both unit and integration stages so flaky failures and coverage deltas are visible to the team.
 - Provide reusable factory utilities for complex aggregates (users with roles, payment requests with transactions) and centralise Flyway baseline data seeding for integration tests.
+
+## Allure Reporting
+- Adapter: `allure-junit5` is included and JUnit 5 extension auto-detection is enabled via `junit.jupiter.extensions.autodetection.enabled=true`.
+- Results: Allure writes to `backend/build/allure-results` through the `allure.results.directory` system property.
+- CLI tasks: Gradle provides `unzipAllure`, `allureGenerate`, and `allureServe` tasks; the CLI runs from the dynamically detected `allure-*` distribution extracted under `backend/build/allure-commandline/`.
+- Local workflow:
+  - Run tests: `./gradlew clean test`
+  - Generate report: `./gradlew allureGenerate`
+  - Serve interactively: `./gradlew allureServe` (opens a local server)
+- Static HTML: View `backend/build/allure-report/index.html` for the generated report without the server.
+- CI notes: Archive `backend/build/allure-results` as an artifact and publish a report using the Allure CLI or a CI action (e.g., GitHub Pages). Consider separate jobs for unit and integration, then combine results before publishing.
+- Optional: Add AspectJ agent if using `@Step` and `@Attachment` for richer reporting.
+
+### Allure Annotations & Usage Guidelines
+- Prefer annotations over runtime label calls to avoid lifecycle errors and keep metadata declarative.
+  - Class-level: `@Epic("…")`, `@Feature("…")`, `@Owner("backend")`
+  - Method-level: `@Story("…")`, `@Severity(SeverityLevel.CRITICAL|NORMAL|MINOR|TRIVIAL)`
+- Use direct APIs for steps and attachments:
+  - Steps: `Allure.step("Description", () -> { /* code */ });`
+  - Attachments: `Allure.addAttachment("Name", MediaType.APPLICATION_JSON_VALUE, jsonString);`
+- Naming patterns:
+  - Epic = top domain (e.g., `Security`, `Catalogue`, `Payment Lifecycle`).
+  - Feature = component or slice (e.g., `Authentication Filter`, `Tenant`, `Module`).
+  - Story = test intent written as behaviour (e.g., `Get tenant by ID returns 404 when missing`).
+  - Severity = impact of failure on product or CI gates.
+- Suppression toggle:
+  - Runtime Allure calls are suppressed by default to prevent noisy lifecycle errors.
+  - Enable full reporting per run with `-Dallure.suppress=false`.
+- Example (controller slice):
+  ```java
+  @WebMvcTest(controllers = TenantController.class)
+  @AutoConfigureMockMvc(addFilters = false)
+  @Epic("Catalogue")
+  @Feature("Tenant")
+  @Owner("backend")
+  class TenantControllerTest {
+      @Test
+      @Story("Get tenant by ID returns 404 when missing")
+      @Severity(SeverityLevel.MINOR)
+      void get_tenant_by_id_not_found_returns_404() throws Exception {
+          Allure.step("Stub service to return empty for id=99", () ->
+              when(tenantService.getTenantById(99L)).thenReturn(Optional.empty())
+          );
+          var result = Allure.step("GET /api/v1/tenants/99", () ->
+              mockMvc.perform(get("/api/v1/tenants/99"))
+                    .andExpect(status().isNotFound())
+                    .andReturn()
+          );
+          Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE,
+              result.getResponse().getContentAsString());
+      }
+  }
+  ```
+- Example (security/unit):
+  ```java
+  @Epic("Security")
+  @Feature("JWT")
+  @Owner("backend")
+  class JwtTokenProviderTest {
+      @Test
+      @Story("JWT includes user info, roles, and permissions")
+      @Severity(SeverityLevel.CRITICAL)
+      void generateTokenWithUserInfo_includes_user_claims_roles_permissions() {
+          String token = Allure.step("Generate JWT with user info",
+              () -> JwtTokenProvider.generateTokenWithUserInfo(sampleUser()));
+          Allure.addAttachment("JWT Token", MediaType.TEXT_PLAIN_VALUE, token);
+          Claims claims = Allure.step("Parse JWT", () -> JwtTokenProvider.parse(token));
+          Allure.addAttachment("JWT Claims", MediaType.APPLICATION_JSON_VALUE,
+              new ObjectMapper().valueToTree(claims).toString());
+          // assertions...
+      }
+  }
+  ```
+- Do not call runtime label helpers (e.g., `labelStory`, `labelSeverity`) inside `@BeforeEach`; annotations should express metadata, and steps/attachments should run inside test methods.
 
 ## Component Isolation Strategy
 - Default to plain JUnit + Mockito for pure business services and converters; avoid Spring context startup unless a bean lifecycle or annotation processor is being exercised.

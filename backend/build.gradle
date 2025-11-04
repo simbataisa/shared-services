@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
+    id 'jacoco'
 }
 
 group = 'com.ahss'
@@ -34,8 +35,124 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // Allure test instrumentation
+    testImplementation 'io.qameta.allure:allure-junit5:2.27.0'
+    testImplementation 'io.qameta.allure:allure-java-commons:2.27.0'
+    testImplementation 'io.qameta.allure:allure-assertj:2.27.0'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    systemProperty 'allure.results.directory', "$buildDir/allure-results"
+}
+
+jacoco {
+    toolVersion = '0.8.11'
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('jacocoTestReport')
+}
+
+jacocoTestCoverageVerification {
+    dependsOn tasks.named('test')
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.70
+            }
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('jacocoTestCoverageVerification')
+}
+
+// Write coverage summary into Allure environment.properties so it shows in the report
+tasks.register('writeCoverageToAllureEnv') {
+    dependsOn tasks.named('jacocoTestReport')
+    doLast {
+        def xmlFile = file("$buildDir/reports/jacoco/test/jacocoTestReport.xml")
+        if (!xmlFile.exists()) {
+            logger.warn("Jacoco XML not found: ${xmlFile}")
+            return
+        }
+        def text = xmlFile.getText('UTF-8')
+        def counters = [:]
+        def pattern = /<counter\s+type=\"([A-Z]+)\"\s+missed=\"(\d+)\"\s+covered=\"(\d+)\"\s*\/>/
+        def matcher = (text =~ pattern)
+        matcher.each { m ->
+            def type = m[1]
+            def missed = new BigDecimal(m[2])
+            def covered = new BigDecimal(m[3])
+            def total = missed.add(covered)
+            def pct = total.compareTo(BigDecimal.ZERO) > 0 ? covered.divide(total, 4, java.math.RoundingMode.HALF_UP).multiply(new BigDecimal(100)) : BigDecimal.ZERO
+            counters[type] = String.format('%.2f', pct)
+        }
+        def resultsDir = file("$buildDir/allure-results")
+        resultsDir.mkdirs()
+        def envFile = file(new File(resultsDir, 'environment.properties'))
+        def lines = counters.collect { k, v -> "Coverage.${k}=${v}%" }
+        // Add both a relative path (works when opening the static report from disk) and a file:// URL
+        def htmlIndex = file("$buildDir/reports/jacoco/test/html/index.html")
+        def relativeLink = "../reports/jacoco/test/html/index.html"
+        lines << "Coverage.Report=${relativeLink}"
+        lines << "Coverage.ReportUrl=file://${htmlIndex.absolutePath}"
+        envFile.text = lines.join('\n')
+        logger.lifecycle("Wrote coverage summary to ${envFile}")
+    }
+}
+
+configurations {
+    allureCommandline {
+        transitive = false
+    }
+}
+
+dependencies {
+    allureCommandline 'io.qameta.allure:allure-commandline:2.27.0@zip'
+}
+
+tasks.register('unzipAllure', Copy) {
+    def zipFile = configurations.allureCommandline.files.find { it.name.endsWith('.zip') }
+    from { zipTree(zipFile) }
+    into "$buildDir/allure-commandline"
+}
+
+tasks.register('allureGenerate', Exec) {
+    dependsOn 'unzipAllure', 'copyAllureCategories', 'writeCoverageToAllureEnv'
+    doFirst {
+        def distDir = file("$buildDir/allure-commandline").listFiles().find { it.name.startsWith('allure-') && it.isDirectory() }
+        workingDir distDir
+        commandLine './bin/allure', 'generate', '--clean', "$buildDir/allure-results", '-o', "$buildDir/allure-report"
+    }
+}
+
+tasks.register('allureServe', Exec) {
+    dependsOn 'unzipAllure', 'copyAllureCategories', 'writeCoverageToAllureEnv'
+    doFirst {
+        def distDir = file("$buildDir/allure-commandline").listFiles().find { it.name.startsWith('allure-') && it.isDirectory() }
+        workingDir distDir
+        commandLine './bin/allure', 'serve', "$buildDir/allure-results"
+    }
+}
+
+tasks.register('copyAllureCategories', Copy) {
+    dependsOn 'test'
+    from('src/test/resources/categories.json')
+    into("$buildDir/allure-results")
 }
