@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+// Use fully qualified Swagger annotations to avoid import issues
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -23,6 +24,24 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Authentication", description = "User authentication and token issuance")
+@io.swagger.v3.oas.annotations.responses.ApiResponses({
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Not found",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class)))
+})
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -33,6 +52,19 @@ public class AuthController {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @PostMapping("/login")
+    @io.swagger.v3.oas.annotations.Operation(summary = "Login", description = "Authenticate user and issue JWT token",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
+            content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+                examples = {
+                    @io.swagger.v3.oas.annotations.media.ExampleObject(name = "ValidLogin", value = "{\n  \"username\": \"admin@ahss.com\",\n  \"password\": \"Admin@123\"\n}"),
+                    @io.swagger.v3.oas.annotations.media.ExampleObject(name = "InvalidLogin", value = "{\n  \"username\": \"unknown@ahss.com\",\n  \"password\": \"wrong\"\n}")
+                })))
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Login successful"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request or invalid credentials"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     public ResponseEntity<ApiResponse<Map<String, String>>> login(@RequestBody LoginRequest loginRequest) {
         log.debug("=== AuthController.login() - Starting authentication process ===");
         log.debug("Request body received: {}", loginRequest);

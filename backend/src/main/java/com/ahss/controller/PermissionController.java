@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+// Use fully qualified Swagger annotations to avoid import issues
 
 import com.ahss.dto.PermissionDto;
 import com.ahss.dto.response.ApiResponse;
@@ -24,12 +25,35 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/v1/permissions")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Permissions", description = "Manage permissions and actions")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
+@io.swagger.v3.oas.annotations.responses.ApiResponses({
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Not found",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class)))
+})
 public class PermissionController {
 
     @Autowired
     private PermissionService permissionService;
 
     @GetMapping
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all permissions", description = "Retrieve all active permissions")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Permissions retrieved successfully")
+    })
     public ResponseEntity<ApiResponse<List<PermissionDto>>> getAllPermissions() {
         List<PermissionDto> permissions = permissionService.getAllActivePermissions();
         return ResponseEntity.ok(ApiResponse.ok(permissions, "Permissions retrieved successfully", "/api/v1/permissions"));

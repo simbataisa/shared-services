@@ -31,6 +31,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/payments")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
     @Autowired

@@ -8,18 +8,42 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+// Use fully qualified Swagger annotations to avoid import issues
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/modules")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Modules", description = "Manage modules belonging to products")
+@io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
+@io.swagger.v3.oas.annotations.responses.ApiResponses({
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad request",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Not found",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class))),
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Internal server error",
+        content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
+            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = com.ahss.dto.response.ApiResponse.class)))
+})
 public class ModuleController {
 
     @Autowired
     private ModuleService moduleService;
 
     @GetMapping
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get all modules", description = "Retrieve all active modules")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Modules retrieved successfully")
+    })
     public ResponseEntity<ApiResponse<List<ModuleDto>>> getAllModules() {
         List<ModuleDto> modules = moduleService.getAllActiveModules();
         return ResponseEntity.ok(ApiResponse.ok(modules, "Modules retrieved successfully", "/api/v1/modules"));
