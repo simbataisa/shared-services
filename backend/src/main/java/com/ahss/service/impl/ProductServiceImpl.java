@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.ahss.dto.ProductDto;
 import com.ahss.entity.Product;
+import com.ahss.entity.ProductStatus;
 import com.ahss.repository.ProductRepository;
 import com.ahss.service.ModuleService;
 import com.ahss.service.ProductService;
@@ -27,7 +28,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductDto> getAllActiveProducts() {
-        return productRepository.findAllActive()
+        return productRepository.findAllActive(ProductStatus.ACTIVE)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -37,18 +38,18 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public Optional<ProductDto> getProductById(Long id) {
         return productRepository.findById(id)
-                .filter(product -> product.getProductStatus() == com.ahss.entity.ProductStatus.ACTIVE)
+                .filter(product -> product.getProductStatus() == ProductStatus.ACTIVE)
                 .map(this::convertToDto);
     }
 
     @Override
     public ProductDto createProduct(ProductDto productDto) {
-        if (productRepository.existsActiveByName(productDto.getName())) {
+        if (productRepository.existsActiveByName(productDto.getName(), ProductStatus.ACTIVE)) {
             throw new IllegalArgumentException("Product with name '" + productDto.getName() + "' already exists");
         }
         
         Product product = convertToEntity(productDto);
-        product.setProductStatus(com.ahss.entity.ProductStatus.ACTIVE);
+        product.setProductStatus(ProductStatus.ACTIVE);
         Product savedProduct = productRepository.save(product);
         return convertToDto(savedProduct);
     }
@@ -58,13 +59,13 @@ public class ProductServiceImpl implements ProductService {
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + id));
         
-        if (existingProduct.getProductStatus() != com.ahss.entity.ProductStatus.ACTIVE) {
+        if (existingProduct.getProductStatus() != ProductStatus.ACTIVE) {
             throw new IllegalArgumentException("Cannot update inactive product");
         }
         
         // Check if name is being changed and if new name already exists
         if (!existingProduct.getName().equals(productDto.getName()) && 
-            productRepository.existsActiveByName(productDto.getName())) {
+            productRepository.existsActiveByName(productDto.getName(), ProductStatus.ACTIVE)) {
             throw new IllegalArgumentException("Product with name '" + productDto.getName() + "' already exists");
         }
         
@@ -80,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + id));
         
-        product.setProductStatus(com.ahss.entity.ProductStatus.INACTIVE);
+        product.setProductStatus(ProductStatus.INACTIVE);
         productRepository.save(product);
     }
 
@@ -89,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + id));
         
-        product.setProductStatus(com.ahss.entity.ProductStatus.ACTIVE);
+        product.setProductStatus(ProductStatus.ACTIVE);
         productRepository.save(product);
     }
 
@@ -98,14 +99,14 @@ public class ProductServiceImpl implements ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + id));
         
-        product.setProductStatus(com.ahss.entity.ProductStatus.INACTIVE);
+        product.setProductStatus(ProductStatus.INACTIVE);
         productRepository.save(product);
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsByName(String name) {
-        return productRepository.existsActiveByName(name);
+        return productRepository.existsActiveByName(name, ProductStatus.ACTIVE);
     }
 
     private ProductDto convertToDto(Product product) {

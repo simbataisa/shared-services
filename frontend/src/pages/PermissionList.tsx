@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -22,18 +21,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
-import { SearchAndFilter } from "@/components/common/SearchAndFilter";
+import { Plus, Shield } from "lucide-react";
+import { PermissionTable } from "@/components/permission/PermissionTable";
 import type { Permission, CreatePermissionForm } from "@/types";
 import httpClient from "@/lib/httpClient";
 
@@ -192,7 +183,10 @@ const PermissionList: React.FC = () => {
 
     const matchesSearch =
       permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      permission.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (permission.description &&
+        permission.description
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
       resource.toLowerCase().includes(searchTerm.toLowerCase()) ||
       action.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -210,27 +204,6 @@ const PermissionList: React.FC = () => {
     new Set(permissions.map((p) => parsePermissionName(p.name).action))
   ).sort();
 
-  const getActionBadgeVariant = (action: string) => {
-    if (!action || typeof action !== "string") {
-      return "outline";
-    }
-
-    switch (action.toLowerCase()) {
-      case "create":
-        return "default";
-      case "read":
-        return "secondary";
-      case "update":
-        return "outline";
-      case "delete":
-        return "destructive";
-      case "admin":
-        return "default";
-      default:
-        return "outline";
-    }
-  };
-
   if (!canViewPermissions) {
     return (
       <div className="container mx-auto py-10">
@@ -244,8 +217,20 @@ const PermissionList: React.FC = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -339,8 +324,9 @@ const PermissionList: React.FC = () => {
         </Alert>
       )}
 
-      {/* Search and Filters */}
-      <SearchAndFilter
+      <PermissionTable
+        permissions={filteredPermissions}
+        onViewPermission={handleViewPermission}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search permissions by name or description..."
@@ -402,7 +388,10 @@ const PermissionList: React.FC = () => {
                       id="name"
                       value={createForm.name}
                       onChange={(e) =>
-                        setCreateForm({ ...createForm, name: e.target.value })
+                        setCreateForm({
+                          ...createForm,
+                          name: e.target.value,
+                        })
                       }
                       className="col-span-3"
                       placeholder="e.g., user:read"
@@ -450,7 +439,10 @@ const PermissionList: React.FC = () => {
                       id="action"
                       value={createForm.action}
                       onChange={(e) =>
-                        setCreateForm({ ...createForm, action: e.target.value })
+                        setCreateForm({
+                          ...createForm,
+                          action: e.target.value,
+                        })
                       }
                       className="col-span-3"
                       placeholder="e.g., create, read, update, delete"
@@ -467,77 +459,6 @@ const PermissionList: React.FC = () => {
           )
         }
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Permissions</CardTitle>
-          <CardDescription>
-            A list of all permissions in the system
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Resource</TableHead>
-                  <TableHead>Action</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPermissions.map((permission) => {
-                  const { resource, action } = parsePermissionName(
-                    permission.name
-                  );
-                  return (
-                    <TableRow key={permission.id}>
-                      <TableCell className="font-medium">
-                        {permission.name}
-                      </TableCell>
-                      <TableCell>{permission.description}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{resource}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getActionBadgeVariant(action)}>
-                          {action}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(permission.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {canViewPermissions && (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewPermission(permission)}
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };

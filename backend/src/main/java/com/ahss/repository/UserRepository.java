@@ -1,16 +1,17 @@
 package com.ahss.repository;
 
-import com.ahss.entity.User;
-import com.ahss.entity.UserStatus;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import com.ahss.entity.User;
+import com.ahss.entity.UserStatus;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -27,7 +28,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.userStatus = :status")
     List<User> findByUserStatus(@Param("status") UserStatus status);
     
-    @Query("SELECT u FROM User u WHERE u.userStatus = com.ahss.entity.UserStatus.ACTIVE")
+    @Query("SELECT u FROM User u WHERE u.userStatus = 'ACTIVE'")
     List<User> findAllActive();
     
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.id = :id")

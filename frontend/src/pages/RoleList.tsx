@@ -8,23 +8,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Plus, Edit, Trash2, Shield, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Shield } from "lucide-react";
 import RoleDialog from "@/components/role/RoleDialog";
-import SearchAndFilter from "@/components/common/SearchAndFilter";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { normalizeEntityStatus } from "@/lib/status-utils";
+import RoleTable from "@/components/role/RoleTable";
 import httpClient from "@/lib/httpClient";
 import type {
   Role,
@@ -43,10 +32,8 @@ const RoleList: React.FC<RoleListProps> = ({
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchFilters, setSearchFilters] = useState<RoleSearchFilters>({
-    searchTerm: "",
-    status: "all",
-  });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -56,8 +43,8 @@ const RoleList: React.FC<RoleListProps> = ({
   const navigate = useNavigate();
 
   // Event handlers
-  const handleSearchChange = (searchTerm: string) => {
-    setSearchFilters((prev: RoleSearchFilters) => ({ ...prev, searchTerm }));
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
   };
 
   const handleCreateRole = async (form: CreateRoleRequest) => {
@@ -146,16 +133,11 @@ const RoleList: React.FC<RoleListProps> = ({
   // Computed values
   const filteredRoles = roles.filter((role) => {
     const matchesSearch =
-      role.name
-        .toLowerCase()
-        .includes(searchFilters.searchTerm.toLowerCase()) ||
-      role.description
-        ?.toLowerCase()
-        .includes(searchFilters.searchTerm.toLowerCase());
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      searchFilters.status === "all" ||
-      (role.status || "ACTIVE") === searchFilters.status;
+      statusFilter === "all" || (role.status || "ACTIVE") === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -174,8 +156,20 @@ const RoleList: React.FC<RoleListProps> = ({
     );
   }
 
+  if (loading) {
+    return (
+      <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto py-10">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Role Management</h1>
@@ -203,11 +197,28 @@ const RoleList: React.FC<RoleListProps> = ({
         </Alert>
       )}
 
-      {/* Search and Filters */}
-      <SearchAndFilter
-        searchTerm={searchFilters.searchTerm}
-        onSearchChange={handleSearchChange}
+      <RoleTable
+        data={filteredRoles}
+        selectedRoleId={selectedRoleId}
+        showActions={showActions}
+        canManageRoles={canManageRoles}
+        onViewRole={handleViewRole}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         searchPlaceholder="Search roles by name or description..."
+        filters={[
+          {
+            label: "Status",
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: [
+              { value: "all", label: "All Status" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "INACTIVE", label: "Inactive" },
+              { value: "DEPRECATED", label: "Deprecated" },
+            ],
+          },
+        ]}
         actions={
           canManageRoles &&
           showActions && (
@@ -227,95 +238,6 @@ const RoleList: React.FC<RoleListProps> = ({
           )
         }
       />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Roles</CardTitle>
-          <CardDescription>A list of all roles in the system</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Permissions</TableHead>
-                  <TableHead>Created</TableHead>
-                  {showActions && <TableHead>Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRoles.map((role) => (
-                  <TableRow
-                    key={role.id}
-                    className={selectedRoleId === role.id ? "bg-muted/50" : ""}
-                  >
-                    <TableCell className="font-medium">{role.name}</TableCell>
-                    <TableCell>{role.description}</TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        status={normalizeEntityStatus(
-                          "role",
-                          role.status || "ACTIVE"
-                        )}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {role.permissions
-                          ?.slice(0, 3)
-                          .map((permission: Permission) => (
-                            <Badge
-                              key={permission.id}
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {permission.name}
-                            </Badge>
-                          ))}
-                        {role.permissions && role.permissions.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{role.permissions.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {role.createdAt
-                        ? new Date(role.createdAt).toLocaleDateString()
-                        : ""}
-                    </TableCell>
-                    {showActions && (
-                      <TableCell>
-                        {canManageRoles && (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewRole(role)}
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 };

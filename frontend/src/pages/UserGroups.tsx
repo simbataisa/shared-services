@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import httpClient from "@/lib/httpClient";
-import type { UserGroup, Role, Module, CreateGroupForm } from "@/types";
-import SearchAndFilter from "@/components/common/SearchAndFilter";
+import type { UserGroup, CreateGroupForm } from "@/types";
 import UserGroupsTable from "@/components/user-groups/UserGroupsTable";
 import { Button } from "@/components/ui/button";
 import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { type TableFilter } from "@/types/components";
 
 const UserGroups: React.FC = () => {
   const [groups, setGroups] = useState<UserGroup[]>([]);
@@ -19,15 +19,6 @@ const UserGroups: React.FC = () => {
     name: "",
     description: "",
   });
-
-  // Role assignment state
-  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<UserGroup | null>(null);
-  const [modules, setModules] = useState<Module[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [selectedModule, setSelectedModule] = useState<string>("");
-  const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
-  const [roleLoading, setRoleLoading] = useState(false);
 
   // Filter groups based on search term and member count
   const filteredGroups = groups.filter((group) => {
@@ -96,6 +87,36 @@ const UserGroups: React.FC = () => {
     }
   };
 
+  // Define filters for the table
+  const filters: TableFilter[] = [
+    {
+      label: "Member Count",
+      value: memberCountFilter,
+      onChange: setMemberCountFilter,
+      options: [
+        { value: "all", label: "All Groups" },
+        { value: "empty", label: "Empty (0 members)" },
+        { value: "small", label: "Small (1-5 members)" },
+        { value: "medium", label: "Medium (6-20 members)" },
+        { value: "large", label: "Large (20+ members)" },
+      ],
+      placeholder: "Filter by size",
+      width: "w-48",
+    },
+  ];
+
+  // Define actions for the table
+  const actions = (
+    <PermissionGuard permission="GROUP_MGMT:create">
+      <Button asChild>
+        <Link to="/user-groups/create">
+          <Plus className="h-4 w-4 mr-2" />
+          Create Group
+        </Link>
+      </Button>
+    </PermissionGuard>
+  );
+
   if (loading && groups.length === 0) {
     return <div className="p-6">Loading...</div>;
   }
@@ -105,55 +126,35 @@ const UserGroups: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">User Groups</h1>
-          <p className="text-muted-foreground">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">User Groups</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage permission groups and their members
           </p>
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search user groups..."
-        filters={[
-          {
-            label: "Member Count",
-            value: memberCountFilter,
-            onChange: setMemberCountFilter,
-            options: [
-              { value: "all", label: "All Groups" },
-              { value: "empty", label: "Empty (0 members)" },
-              { value: "small", label: "Small (1-5 members)" },
-              { value: "medium", label: "Medium (6-20 members)" },
-              { value: "large", label: "Large (20+ members)" },
-            ],
-            placeholder: "Filter by size",
-            width: "w-48",
-          },
-        ]}
-        actions={
-          <PermissionGuard permission="GROUP_MGMT:create">
-            <Button asChild>
-              <Link to="/user-groups/create">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Group
-              </Link>
-            </Button>
-          </PermissionGuard>
-        }
-      />
+      {error && (
+        <div className="mb-6 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+          Error: {error}
+        </div>
+      )}
 
-      {/* Groups Table */}
-      <UserGroupsTable
-        filteredGroups={filteredGroups}
-        loading={loading}
-        onDeleteGroup={deleteGroup}
-      />
+      {/* User Groups Table with integrated search and filters */}
+      <div className="w-full">
+        <UserGroupsTable
+          userGroups={filteredGroups}
+          loading={loading}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search user groups..."
+          filters={filters}
+          actions={actions}
+          onDeleteGroup={deleteGroup}
+        />
+      </div>
     </div>
   );
 };

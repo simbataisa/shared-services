@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.ahss.dto.ModuleDto;
 import com.ahss.dto.PermissionDto;
 import com.ahss.entity.Module;
+import com.ahss.entity.ModuleStatus;
 import com.ahss.entity.Product;
 import com.ahss.repository.ModuleRepository;
 import com.ahss.repository.ProductRepository;
@@ -31,7 +32,7 @@ public class ModuleServiceImpl implements ModuleService {
     public List<ModuleDto> getAllActiveModules() {
         return moduleRepository.findAll()
                 .stream()
-                .filter(module -> module.getModuleStatus() == com.ahss.entity.ModuleStatus.ACTIVE)
+                .filter(module -> module.getModuleStatus() == ModuleStatus.ACTIVE)
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
     }
@@ -39,7 +40,7 @@ public class ModuleServiceImpl implements ModuleService {
     @Override
     @Transactional(readOnly = true)
     public List<ModuleDto> getModulesByProductId(Long productId) {
-        return moduleRepository.findActiveByProductId(productId)
+        return moduleRepository.findActiveByProductId(productId, ModuleStatus.ACTIVE)
                 .stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -49,7 +50,7 @@ public class ModuleServiceImpl implements ModuleService {
     @Transactional(readOnly = true)
     public Optional<ModuleDto> getModuleById(Long id) {
         return moduleRepository.findById(id)
-                .filter(module -> module.getModuleStatus() == com.ahss.entity.ModuleStatus.ACTIVE)
+                .filter(module -> module.getModuleStatus() == ModuleStatus.ACTIVE)
                 .map(this::convertToDto);
     }
 
@@ -63,12 +64,12 @@ public class ModuleServiceImpl implements ModuleService {
             throw new IllegalArgumentException("Cannot create module for inactive product");
         }
         
-        if (moduleRepository.existsActiveByProductIdAndName(moduleDto.getProductId(), moduleDto.getName())) {
+        if (moduleRepository.existsActiveByProductIdAndName(moduleDto.getProductId(), moduleDto.getName(), ModuleStatus.ACTIVE)) {
             throw new IllegalArgumentException("Module with name '" + moduleDto.getName() + "' already exists for this product");
         }
         
         Module module = convertToEntity(moduleDto, product);
-        module.setModuleStatus(com.ahss.entity.ModuleStatus.ACTIVE);
+        module.setModuleStatus(ModuleStatus.ACTIVE);
         Module savedModule = moduleRepository.save(module);
         return convertToDto(savedModule);
     }
@@ -78,13 +79,13 @@ public class ModuleServiceImpl implements ModuleService {
         Module existingModule = moduleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Module not found with id: " + id));
         
-        if (existingModule.getModuleStatus() != com.ahss.entity.ModuleStatus.ACTIVE) {
+        if (existingModule.getModuleStatus() != ModuleStatus.ACTIVE) {
             throw new IllegalArgumentException("Cannot update inactive module");
         }
         
         // Check if name is being changed and if new name already exists
         if (!existingModule.getName().equals(moduleDto.getName()) && 
-            moduleRepository.existsActiveByProductIdAndName(existingModule.getProduct().getId(), moduleDto.getName())) {
+            moduleRepository.existsActiveByProductIdAndName(existingModule.getProduct().getId(), moduleDto.getName(), ModuleStatus.ACTIVE)) {
             throw new IllegalArgumentException("Module with name '" + moduleDto.getName() + "' already exists for this product");
         }
         
@@ -100,7 +101,7 @@ public class ModuleServiceImpl implements ModuleService {
         Module module = moduleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Module not found with id: " + id));
         
-        module.setModuleStatus(com.ahss.entity.ModuleStatus.INACTIVE);
+        module.setModuleStatus(ModuleStatus.INACTIVE);
         moduleRepository.save(module);
     }
 
@@ -109,7 +110,7 @@ public class ModuleServiceImpl implements ModuleService {
         Module module = moduleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Module not found with id: " + id));
         
-        module.setModuleStatus(com.ahss.entity.ModuleStatus.ACTIVE);
+        module.setModuleStatus(ModuleStatus.ACTIVE);
         moduleRepository.save(module);
     }
 
@@ -118,14 +119,14 @@ public class ModuleServiceImpl implements ModuleService {
         Module module = moduleRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Module not found with id: " + id));
         
-        module.setModuleStatus(com.ahss.entity.ModuleStatus.INACTIVE);
+        module.setModuleStatus(ModuleStatus.INACTIVE);
         moduleRepository.save(module);
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsByNameAndProductId(String name, Long productId) {
-        return moduleRepository.existsActiveByProductIdAndName(productId, name);
+        return moduleRepository.existsActiveByProductIdAndName(productId, name, ModuleStatus.ACTIVE);
     }
 
     private ModuleDto convertToDto(Module module) {

@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import SearchAndFilter from "@/components/common/SearchAndFilter";
 import { UserTable } from "@/components/users/UserTable";
 import { usePermissions } from "@/hooks/usePermissions";
-import { Shield } from "lucide-react";
-import { PermissionGuard } from "@/components/common/PermissionGuard";
+import { Shield, Plus } from "lucide-react";
 import type { User, Role, UserGroup } from "@/types";
+import type { TableFilter } from "@/types/components";
 import httpClient from "@/lib/httpClient";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const UserList: React.FC = () => {
   const navigate = useNavigate();
@@ -18,10 +16,26 @@ const UserList: React.FC = () => {
   const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const { canViewUsers, canManageUsers } = usePermissions();
+
+  // Define status filter configuration
+  const statusFilters: TableFilter[] = [
+    {
+      label: "Status",
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: [
+        { value: "all", label: "All Statuses" },
+        { value: "ACTIVE", label: "Active" },
+        { value: "INACTIVE", label: "Inactive" },
+        { value: "SUSPENDED", label: "Suspended" },
+      ],
+      placeholder: "Filter by status",
+      width: "w-48",
+    },
+  ];
 
   useEffect(() => {
     if (canViewUsers) {
@@ -106,81 +120,60 @@ const UserList: React.FC = () => {
     navigate(`/users/${user.id}/edit`);
   };
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" || user.userStatus === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
   if (!canViewUsers) {
     return (
-      <div className="container mx-auto py-10">
-        <Alert>
-          <Shield className="h-4 w-4" />
-          <AlertDescription>
-            You don't have permission to view users.
-          </AlertDescription>
-        </Alert>
+      <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8 max-w-7xl">
+        <div className="p-4 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md flex items-center">
+          <Shield className="h-4 w-4 mr-2" />
+          You don't have permission to view users.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">
+    <div className="w-full py-6 px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 space-y-4 sm:space-y-0">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            User Management
+          </h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage users, their roles, and permissions
           </p>
         </div>
       </div>
 
       {error && (
-        <Alert className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+        <div className="mb-6 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+          Error: {error}
+        </div>
       )}
 
-      <SearchAndFilter
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search users by username, email, or name..."
-        filters={[
-          {
-            label: "Status",
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { value: "all", label: "All Status" },
-              { value: "ACTIVE", label: "Active" },
-              { value: "INACTIVE", label: "Inactive" },
-            ],
-            width: "w-40",
-          },
-        ]}
-        actions={[
-          <PermissionGuard key="create-user" permission="USER_MGMT:create">
-            <Button asChild>
-              <Link to="/users/create">Create New User</Link>
-            </Button>
-          </PermissionGuard>,
-        ]}
-        className="mb-6"
-      />
-
-      <Card>
-        <CardContent>
-          <UserTable users={filteredUsers} loading={loading} />
-        </CardContent>
-      </Card>
+      {/* User Table with integrated functionality */}
+      <div className="w-full">
+        {loading ? (
+          <div className="space-y-2">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : (
+          <UserTable
+            users={users}
+            loading={loading}
+            filters={statusFilters}
+            actions={
+              canManageUsers && (
+                <Button onClick={() => navigate("/users/new")}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add User
+                </Button>
+              )
+            }
+          />
+        )}
+      </div>
     </div>
   );
 };

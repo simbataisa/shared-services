@@ -1098,6 +1098,174 @@ export const roleService = {
 - Automatic 401 handling with logout and redirect
 - Centralized error logging and reporting
 - User-friendly error messages
+
+### ApiResponse Integration
+
+**Overview:**
+The frontend integrates with the backend's standardized `ApiResponse<T>` wrapper to ensure consistent API response handling across all endpoints.
+
+**ApiResponse Structure:**
+```typescript
+interface ApiResponse<T> {
+  success: boolean;
+  data: T | null;
+  message: string;
+  path: string;
+}
+```
+
+**Response Handling Patterns:**
+
+**1. Successful Response:**
+```typescript
+// Example: Fetching products
+const response = await api.get('/products');
+// Response structure:
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Product A",
+      "description": "Description A"
+    }
+  ],
+  "message": "Products retrieved successfully",
+  "path": "/api/products"
+}
+
+// Access data: response.data.data
+const products = response.data.data;
+```
+
+**2. Error Response:**
+```typescript
+// Example: Resource not found
+try {
+  const response = await api.get('/products/999');
+} catch (error) {
+  // Error response structure:
+  {
+    "success": false,
+    "data": null,
+    "message": "Product not found",
+    "path": "/api/products/999"
+  }
+  
+  // Access error message: error.response.data.message
+  const errorMessage = error.response.data.message;
+}
+```
+
+**3. Validation Error Response:**
+```typescript
+// Example: Invalid input data
+try {
+  const response = await api.post('/products', invalidData);
+} catch (error) {
+  // Validation error response:
+  {
+    "success": false,
+    "data": null,
+    "message": "Validation failed: Name is required",
+    "path": "/api/products"
+  }
+}
+```
+
+**Frontend Service Implementation:**
+
+**Updated Service Methods:**
+```typescript
+// Updated product service with ApiResponse handling
+export const productService = {
+  getProducts: async (params?: QueryParams): Promise<Product[]> => {
+    const response = await api.get("/products", { params });
+    return response.data.data; // Extract data from ApiResponse
+  },
+
+  getProductById: async (id: string): Promise<Product> => {
+    const response = await api.get(`/products/${id}`);
+    return response.data.data; // Extract data from ApiResponse
+  },
+
+  createProduct: async (productData: CreateProductRequest): Promise<Product> => {
+    const response = await api.post("/products", productData);
+    return response.data.data; // Extract data from ApiResponse
+  },
+
+  updateProduct: async (id: string, productData: UpdateProductRequest): Promise<Product> => {
+    const response = await api.put(`/products/${id}`, productData);
+    return response.data.data; // Extract data from ApiResponse
+  },
+
+  deleteProduct: async (id: string): Promise<void> => {
+    await api.delete(`/products/${id}`);
+    // No data extraction needed for delete operations
+  }
+};
+```
+
+**Error Handling with ApiResponse:**
+```typescript
+// Enhanced error handling in components
+const handleApiCall = async () => {
+  try {
+    const products = await productService.getProducts();
+    setProducts(products);
+    setError(null);
+  } catch (error) {
+    const apiError = error.response?.data;
+    if (apiError && !apiError.success) {
+      setError(apiError.message); // Use backend's error message
+      console.error(`API Error at ${apiError.path}: ${apiError.message}`);
+    } else {
+      setError('An unexpected error occurred');
+    }
+  }
+};
+```
+
+**Response Interceptor Enhancement:**
+```typescript
+// Enhanced response interceptor for ApiResponse
+api.interceptors.response.use(
+  (response) => {
+    // Log successful API responses
+    if (response.data.success) {
+      console.log(`API Success: ${response.data.message}`);
+    }
+    return response;
+  },
+  (error) => {
+    // Enhanced error logging with ApiResponse details
+    if (error.response?.data) {
+      const apiError = error.response.data;
+      console.error(`API Error at ${apiError.path}: ${apiError.message}`);
+    }
+    
+    if (error.response?.status === 401) {
+      useAuth.getState().logout();
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+**Benefits of ApiResponse Integration:**
+
+1. **Consistent Response Structure**: All API responses follow the same format
+2. **Enhanced Error Handling**: Standardized error messages and paths
+3. **Better Debugging**: Path information helps identify error sources
+4. **Type Safety**: TypeScript interfaces ensure proper data access
+5. **Improved UX**: Meaningful error messages for users
+6. **Centralized Logging**: Consistent logging across all API calls
+
+**Refactored Controllers:**
+- ProductController: All endpoints return `ResponseEntity<ApiResponse<T>>`
+- ModuleController: All endpoints return `ResponseEntity<ApiResponse<T>>`
+- Additional controllers will be refactored following the same pattern
 - Network error detection and retry logic
 - Permission-based error responses
 

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2 } from "lucide-react";
+import httpClient from "@/lib/httpClient";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -27,9 +28,9 @@ export default function Login() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post("/v1/auth/login", { username, password });
-      const token = data?.data?.token || data?.token;
-      setToken(token);
+      const response = await httpClient.login({ username, password });
+      console.log(response);
+      setToken(response.token);
       navigate("/dashboard");
     } catch (err) {
       setError("Login failed");

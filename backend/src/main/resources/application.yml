@@ -30,7 +30,7 @@ spring:
         show_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
         type:
-          preferred_uuid_jdbc_type: VARCHAR
+          preferred_uuid_jdbc_type: OTHER
         jdbc:
           lob:
             non_contextual_creation: true

@@ -17,9 +17,16 @@ import {
   Shield,
   Building2,
   Activity,
+  FileText,
+  Loader,
+  Ban,
+  RotateCcw,
+  DollarSign,
+  Trash2,
 } from "lucide-react";
 import { type VariantProps } from "class-variance-authority";
 import { badgeVariants } from "@/components/ui/badge";
+import { type PaymentRequestStatus } from "@/types/payment";
 
 // Comprehensive status types used across the application
 export type StatusType =
@@ -260,7 +267,6 @@ export function getStatusIcon(status: string) {
   const normalizedStatus = normalizeStatus(status);
   const config = STATUS_CONFIG[normalizedStatus] || STATUS_CONFIG.inactive;
   const IconComponent = config.icon;
-
   return <IconComponent className={`h-4 w-4 ${config.iconColor}`} />;
 }
 
@@ -461,3 +467,144 @@ function normalizeStatus(status: string): StatusType {
       return STATUS_CONFIG[lowerStatus] ? lowerStatus : "inactive";
   }
 }
+
+/**
+ * Get payment request status color classes for styling
+ * @param status - The PaymentRequestStatus type
+ * @returns String with Tailwind CSS classes for background, text, hover, and border colors
+ */
+export const getPaymentRequestStatusColor = (
+  status: PaymentRequestStatus
+): string => {
+  switch (status) {
+    case "DRAFT":
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+    case "PENDING":
+      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-yellow-200";
+    case "PROCESSING":
+      return "bg-blue-100 text-blue-800 hover:bg-blue-100 border-blue-200";
+    case "COMPLETED":
+      return "bg-green-100 text-green-800 hover:bg-green-100 border-green-200";
+    case "FAILED":
+      return "bg-red-100 text-red-800 hover:bg-red-100 border-red-200";
+    case "CANCELLED":
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+    case "VOIDED":
+      return "bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-200";
+    case "REFUNDED":
+      return "bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-200";
+    case "PARTIAL_REFUND":
+      return "bg-orange-100 text-orange-800 hover:bg-orange-100 border-orange-200";
+    case "APPROVED":
+      return "bg-green-100 text-green-800 hover:bg-green-100 border-green-200";
+    case "REJECTED":
+      return "bg-red-100 text-red-800 hover:bg-red-100 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 hover:bg-gray-100 border-gray-200";
+  }
+};
+
+/**
+ * Get payment request status icon component based on status
+ * @param status - The PaymentRequestStatus type
+ * @returns JSX element with appropriate icon and styling
+ */
+export const getPaymentRequestStatusIcon = (status: PaymentRequestStatus) => {
+  const getIconColor = (status: PaymentRequestStatus): string => {
+    switch (status) {
+      case "DRAFT":
+        return "text-gray-600";
+      case "PENDING":
+        return "text-yellow-600";
+      case "PROCESSING":
+        return "text-blue-600";
+      case "COMPLETED":
+        return "text-green-600";
+      case "FAILED":
+        return "text-red-600";
+      case "CANCELLED":
+        return "text-gray-600";
+      case "VOIDED":
+        return "text-purple-600";
+      case "REFUNDED":
+        return "text-orange-600";
+      case "PARTIAL_REFUND":
+        return "text-orange-600";
+      case "APPROVED":
+        return "text-green-600";
+      case "REJECTED":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  };
+
+  const iconColor = getIconColor(status);
+
+  switch (status) {
+    case "DRAFT":
+      return <FileText className={`h-4 w-4 ${iconColor}`} />;
+    case "PENDING":
+      return <Clock className={`h-4 w-4 ${iconColor}`} />;
+    case "PROCESSING":
+      return <Loader className={`h-4 w-4 ${iconColor}`} />;
+    case "COMPLETED":
+      return <CheckCircle className={`h-4 w-4 ${iconColor}`} />;
+    case "FAILED":
+      return <XCircle className={`h-4 w-4 ${iconColor}`} />;
+    case "CANCELLED":
+      return <Ban className={`h-4 w-4 ${iconColor}`} />;
+    case "VOIDED":
+      return <Trash2 className={`h-4 w-4 ${iconColor}`} />;
+    case "REFUNDED":
+      return <RotateCcw className={`h-4 w-4 ${iconColor}`} />;
+    case "PARTIAL_REFUND":
+      return <RotateCcw className={`h-4 w-4 ${iconColor}`} />;
+    case "APPROVED":
+      return <CheckCircle2 className={`h-4 w-4 ${iconColor}`} />;
+    case "REJECTED":
+      return <XCircle className={`h-4 w-4 ${iconColor}`} />;
+    default:
+      return <AlertCircle className={`h-4 w-4 ${iconColor}`} />;
+  }
+};
+
+/**
+ * Get badge properties for payment transaction status
+ * Returns variant and className for consistent transaction status styling
+ */
+export const getTransactionStatusBadgeProps = (status: string) => {
+  switch (status) {
+    case "SUCCESS":
+    case "COMPLETED":
+      return {
+        variant: "default" as const,
+        className: "bg-green-100 text-green-800 hover:bg-green-200",
+      };
+    case "PENDING":
+      return {
+        variant: "secondary" as const,
+        className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+      };
+    case "PROCESSING":
+      return {
+        variant: "outline" as const,
+        className: "bg-blue-100 text-blue-800 hover:bg-blue-200",
+      };
+    case "FAILED":
+      return {
+        variant: "destructive" as const,
+        className: "bg-red-100 text-red-800 hover:bg-red-200",
+      };
+    case "CANCELLED":
+      return {
+        variant: "secondary" as const,
+        className: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+      };
+    default:
+      return {
+        variant: "secondary" as const,
+        className: "bg-gray-100 text-gray-800 hover:bg-gray-200",
+      };
+  }
+};

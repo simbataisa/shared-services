@@ -8,6 +8,7 @@ import type {
   Module, 
   Permission 
 } from './entities';
+import type { PaymentRefund } from './payment';
 
 // Layout and navigation
 export interface LayoutProps {
@@ -186,15 +187,42 @@ export interface StatusBadgeWithIconProps extends StatusBadgeProps {
   showIcon?: boolean;
 }
 
+// Common table interfaces
+export interface TableFilterOption {
+  value: string;
+  label: string;
+}
+
+export interface TableFilter {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: TableFilterOption[];
+  placeholder?: string;
+  width?: string;
+}
+
+// Base table props interface that can be extended by specific table components
+export interface BaseTableProps<T = any> {
+  data: T[];
+  loading?: boolean;
+  searchTerm?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  filters?: TableFilter[];
+  actions?: React.ReactNode;
+}
+
 export interface SearchAndFilterProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   searchPlaceholder?: string;
-  filters?: FilterOption[];
-  actions?: React.ReactNode[];
+  filters?: TableFilter[];
+  actions?: React.ReactNode;
   className?: string;
 }
 
+// Legacy interface for backward compatibility
 export interface FilterOption {
   label: string;
   value: string;
@@ -219,4 +247,14 @@ export interface RoleTableRow {
   permissions: Permission[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface RefundListProps {
+  data: PaymentRefund[];
+  permissions: Permission[];
+  loading?: boolean;
+  onRefundSelect?: (refund: PaymentRefund) => void;
+  selectedRefundId?: string;
+  showActions?: boolean;
+  className?: string;
 }

@@ -403,16 +403,147 @@ public class EntityDto {
 }
 ```
 
-### Response Wrapper
+### ApiResponse Wrapper
+
+The application uses a standardized `ApiResponse<T>` wrapper for all API responses to ensure consistency across all endpoints.
+
+#### ApiResponse Structure
 ```java
 public class ApiResponse<T> {
+    private boolean success;
     private T data;
     private String message;
+    private String timestamp;
     private String path;
-    private boolean success;
-    // Factory methods: ok(), error()
+    
+    // Factory methods
+    public static <T> ApiResponse<T> ok(T data, String message, String path);
+    public static <T> ApiResponse<T> notOk(T data, String message, String path);
 }
 ```
+
+#### Key Features
+- **Consistent Structure**: All API responses follow the same format regardless of endpoint
+- **Success Indicator**: Boolean flag to indicate operation success/failure
+- **Meaningful Messages**: Descriptive messages for both success and error scenarios
+- **Timestamp**: ISO 8601 formatted timestamp for response tracking
+- **Path Information**: Request path included for debugging and logging purposes
+- **Type Safety**: Generic type parameter ensures type-safe data responses
+
+#### Response Examples
+
+**Successful Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Product Management",
+    "description": "Manage products and their lifecycle"
+  },
+  "message": "Product retrieved successfully",
+  "timestamp": "2025-10-31T12:20:46.255468Z",
+  "path": "/api/v1/products/1"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "Product not found",
+  "timestamp": "2025-10-31T12:21:16.937468Z",
+  "path": "/api/v1/products/999"
+}
+```
+
+**List Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Product Management",
+      "description": "Manage products and their lifecycle"
+    },
+    {
+      "id": 2,
+      "name": "User Management", 
+      "description": "Manage users and permissions"
+    }
+  ],
+  "message": "Products retrieved successfully",
+  "timestamp": "2025-10-31T12:20:46.255468Z",
+  "path": "/api/v1/products"
+}
+```
+
+#### Controller Implementation
+
+All controllers have been refactored to return `ResponseEntity<ApiResponse<T>>`:
+
+```java
+@RestController
+@RequestMapping("/api/v1/products")
+public class ProductController {
+    
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ProductDto>>> getAllProducts() {
+        List<ProductDto> products = productService.getAllActiveProducts();
+        return ResponseEntity.ok(ApiResponse.ok(products, "Products retrieved successfully", "/api/v1/products"));
+    }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProductDto>> getProductById(@PathVariable Long id) {
+        Optional<ProductDto> product = productService.getProductById(id);
+        if (product.isPresent()) {
+            return ResponseEntity.ok(ApiResponse.ok(product.get(), "Product retrieved successfully", "/api/v1/products/" + id));
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notOk(null, "Product not found", "/api/v1/products/" + id));
+        }
+    }
+    
+    @PostMapping
+    public ResponseEntity<ApiResponse<ProductDto>> createProduct(@Valid @RequestBody ProductDto productDto) {
+        try {
+            ProductDto createdProduct = productService.createProduct(productDto);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.ok(createdProduct, "Product created successfully", "/api/v1/products"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/products"));
+        }
+    }
+}
+```
+
+#### Benefits
+
+1. **Consistency**: All API responses follow the same structure
+2. **Error Handling**: Standardized error responses with meaningful messages
+3. **Debugging**: Path and timestamp information aids in troubleshooting
+4. **Frontend Integration**: Predictable response format simplifies frontend development
+5. **API Documentation**: Clear response structure for API consumers
+6. **Monitoring**: Consistent format enables better logging and monitoring
+
+#### Refactored Controllers
+
+The following controllers have been updated to use `ApiResponse<T>`:
+
+- **ProductController**: All 7 endpoints (CRUD + activate/deactivate)
+- **ModuleController**: All 8 endpoints (CRUD + activate/deactivate + product filtering)
+- **Additional controllers**: To be refactored following the same pattern
+
+#### HTTP Status Code Mapping
+
+- **200 OK**: Successful GET, PUT operations
+- **201 CREATED**: Successful POST operations
+- **400 BAD REQUEST**: Validation errors, illegal arguments
+- **404 NOT FOUND**: Resource not found errors
+- **500 INTERNAL SERVER ERROR**: Unexpected server errors
 
 ## Database Migration
 

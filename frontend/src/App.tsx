@@ -31,11 +31,19 @@ import ModuleList from "./pages/ModuleList";
 import ModuleCreate from "./components/module/ModuleCreate";
 import ModuleDetail from "./components/module/ModuleDetail";
 import ModuleEdit from "./components/module/ModuleEdit";
+import PaymentRequestList from "./components/payment/PaymentRequestList";
+import PaymentRequestCreate from "./components/payment/PaymentRequestCreate";
+import PaymentRequestDetail from "./components/payment/PaymentRequestDetail";
+import PaymentTransactionList from "./components/payment/transaction/PaymentTransactionList";
+import PaymentTransactionDetail from "./components/payment/transaction/PaymentTransactionDetail";
+import PaymentRefundList from "./components/payment/refund/PaymentRefundList";
+import PaymentAuditLogList from "./components/payment/audit/PaymentAuditLogList";
 import Unauthorized from "./pages/Unauthorized";
 import ErrorDemoPage from "./pages/ErrorDemoPage";
 import { useAuth } from "./store/auth";
 import GlobalLoader from "@/components/common/GlobalLoader";
 import { ErrorBoundary } from "./components/common";
+import PaymentRefundDetail from "./components/payment/refund/PaymentRefundDetail";
 
 function App() {
   const { isAuthenticated } = useAuth();
@@ -291,6 +299,78 @@ function App() {
             element={
               <ProtectedRoute permission="MODULE_MGMT:update">
                 <ModuleEdit />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentRequestList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/requests/new"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:create">
+                <PaymentRequestCreate />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/requests/:id"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentRequestDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/transactions"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentTransactionList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/transactions/:id"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentTransactionDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/refunds"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentRefundList data={[]} permissions={[]} />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/refunds/:id"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentRefundDetail />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="payments/audit-logs"
+            element={
+              <ProtectedRoute permission="PAYMENT_MGMT:read">
+                <PaymentAuditLogList />
               </ProtectedRoute>
             }
           />

@@ -9,27 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface FilterOption {
-  value: string;
-  label: string;
-}
-
-interface SearchAndFilterProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  searchPlaceholder?: string;
-  filters?: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    options: FilterOption[];
-    placeholder?: string;
-    width?: string;
-  }[];
-  actions?: React.ReactNode;
-  className?: string;
-}
+import { type SearchAndFilterProps } from "@/types/components";
 
 export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   searchTerm,
@@ -83,7 +63,7 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           )}
 
           {/* Additional Actions */}
-          {actions && <div className="flex gap-2">{actions}</div>}
+          {actions && <div className="flex gap-2 items-center">{actions}</div>}
         </div>
       </CardContent>
     </Card>
