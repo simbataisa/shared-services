@@ -1,6 +1,7 @@
 package com.ahss.controller;
 
 import com.ahss.dto.request.CreatePaymentRequestDto;
+import com.ahss.dto.request.CreateRefundDto;
 import com.ahss.dto.request.ProcessPaymentDto;
 import com.ahss.dto.request.UpdatePaymentRequestDto;
 import com.ahss.dto.response.PaymentAuditLogDto;
@@ -805,21 +806,6 @@ class PaymentControllerTest {
   }
 
   @Test
-  @Story("Get audit log by id returns 404 when missing")
-  @Severity(SeverityLevel.MINOR)
-  void get_audit_log_by_id_returns_404() throws Exception {
-    UUID id = UUID.randomUUID();
-    when(auditLogService.getAuditLogById(eq(id))).thenReturn(Optional.empty());
-
-    mockMvc
-        .perform(get("/api/v1/payments/audit-logs/" + id))
-        .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.success", is(false)))
-        .andExpect(jsonPath("$.message", containsString("not found")))
-        .andExpect(jsonPath("$.path", is("/api/v1/payments/audit-logs/" + id)));
-  }
-
-  @Test
   @Story("Audit logs by request returns 200 with page")
   @Severity(SeverityLevel.MINOR)
   void audit_logs_by_request_returns_200() throws Exception {
@@ -1071,5 +1057,808 @@ class PaymentControllerTest {
                     .andExpect(jsonPath("$.success", is(false)))
                     .andExpect(jsonPath("$.message", containsString("Failed to retrieve")))
                     .andExpect(jsonPath("$.path", is("/api/v1/payments/stats/audit-logs"))));
+  }
+
+  @Test
+  @Story("Get payment request by code returns 200 when found")
+  @Severity(SeverityLevel.NORMAL)
+  void get_payment_request_by_code_found_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+    String code = "PAY-123";
+    Allure.step(
+        "Stub service to return payment request for code=" + code,
+        () ->
+            when(paymentRequestService.getPaymentRequestByCode(eq(code)))
+                .thenReturn(Optional.of(requestDto(id))));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/requests/code/" + code,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/requests/code/" + code))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment request retrieved successfully")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/requests/code/" + code)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get payment request by code returns 404 when missing")
+  @Severity(SeverityLevel.MINOR)
+  void get_payment_request_by_code_not_found_returns_404() throws Exception {
+    String code = "PAY-NOTFOUND";
+    Allure.step(
+        "Stub service to return empty for code=" + code,
+        () ->
+            when(paymentRequestService.getPaymentRequestByCode(eq(code)))
+                .thenReturn(Optional.empty()));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/requests/code/" + code,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/requests/code/" + code))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", is("Payment request not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/requests/code/" + code)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get payment requests by tenant returns 200 with page")
+  @Severity(SeverityLevel.NORMAL)
+  void get_payment_requests_by_tenant_returns_200() throws Exception {
+    Long tenantId = 10L;
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<PaymentRequestDto> page =
+        new org.springframework.data.domain.PageImpl<>(
+            List.of(requestDto(UUID.randomUUID())), pageable, 1);
+    when(paymentRequestService.getPaymentRequestsByTenant(eq(tenantId), eq(pageable)))
+        .thenReturn(page);
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/requests/tenant/" + tenantId,
+            () ->
+                mockMvc
+                    .perform(
+                        get("/api/v1/payments/requests/tenant/" + tenantId)
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment requests retrieved successfully")))
+                    .andExpect(
+                        jsonPath("$.path", is("/api/v1/payments/requests/tenant/" + tenantId)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get payment requests by status returns 200 with page")
+  @Severity(SeverityLevel.NORMAL)
+  void get_payment_requests_by_status_returns_200() throws Exception {
+    Pageable pageable = Allure.step("Create pageable", () -> PageRequest.of(0, 10));
+    Page<PaymentRequestDto> page =
+        Allure.step(
+            "Create page of payment requests",
+            () ->
+                new org.springframework.data.domain.PageImpl<>(
+                    List.of(requestDto(UUID.randomUUID())), pageable, 1));
+    Allure.step(
+        "Stub service to return payment requests for status=PENDING",
+        () ->
+            when(paymentRequestService.getPaymentRequestsByStatus(
+                    eq(PaymentRequestStatus.PENDING), eq(pageable)))
+                .thenReturn(page));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/requests/status/PENDING",
+            () ->
+                mockMvc
+                    .perform(
+                        get("/api/v1/payments/requests/status/PENDING")
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment requests retrieved successfully")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/requests/status/PENDING")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Cancel payment request returns 200 when cancelled")
+  @Severity(SeverityLevel.NORMAL)
+  void cancel_payment_request_success_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/payments/requests/" + id + "/cancel",
+            () ->
+                mockMvc
+                    .perform(patch("/api/v1/payments/requests/" + id + "/cancel"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment request cancelled successfully")))
+                    .andExpect(
+                        jsonPath("$.path", is("/api/v1/payments/requests/" + id + "/cancel")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+    verify(paymentRequestService, times(1)).cancelPaymentRequest(eq(id), anyString());
+  }
+
+  @Test
+  @Story("Cancel payment request returns 404 when missing")
+  @Severity(SeverityLevel.MINOR)
+  void cancel_payment_request_not_found_returns_404() throws Exception {
+    UUID id = UUID.randomUUID();
+    Allure.step(
+        "Stub cancelPaymentRequest to throw not found",
+        () ->
+            doThrow(new RuntimeException("Payment request not found"))
+                .when(paymentRequestService)
+                .cancelPaymentRequest(eq(id), anyString()));
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/payments/requests/" + id + "/cancel",
+            () ->
+                mockMvc
+                    .perform(patch("/api/v1/payments/requests/" + id + "/cancel"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", containsString("not found")))
+                    .andExpect(
+                        jsonPath("$.path", is("/api/v1/payments/requests/" + id + "/cancel")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Reject payment request returns 200 when rejected")
+  @Severity(SeverityLevel.NORMAL)
+  void reject_payment_request_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+    PaymentRequestDto dto = Allure.step("Create payment request dto", () -> requestDto(id));
+    Allure.step(
+        "Stub updatePaymentRequest to return dto",
+        () -> when(paymentRequestService.updatePaymentRequest(eq(id), any())).thenReturn(dto));
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/payments/requests/" + id + "/reject",
+            () ->
+                mockMvc
+                    .perform(patch("/api/v1/payments/requests/" + id + "/reject"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment request rejected successfully")))
+                    .andExpect(
+                        jsonPath("$.path", is("/api/v1/payments/requests/" + id + "/reject")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Reject payment request returns 404 when missing")
+  @Severity(SeverityLevel.MINOR)
+  void reject_payment_request_not_found_returns_404() throws Exception {
+    UUID id = UUID.randomUUID();
+    Allure.step(
+        "Stub updatePaymentRequest to throw not found",
+        () ->
+            when(paymentRequestService.updatePaymentRequest(eq(id), any()))
+                .thenThrow(new RuntimeException("Payment request not found")));
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/payments/requests/" + id + "/reject",
+            () ->
+                mockMvc
+                    .perform(patch("/api/v1/payments/requests/" + id + "/reject"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", containsString("not found")))
+                    .andExpect(
+                        jsonPath("$.path", is("/api/v1/payments/requests/" + id + "/reject")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get transaction by ID returns 200 when found")
+  @Severity(SeverityLevel.NORMAL)
+  void get_transaction_by_id_found_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+    Allure.step(
+        "Stub service to return transaction for id=" + id,
+        () ->
+            when(paymentTransactionService.getTransactionById(eq(id)))
+                .thenReturn(Optional.of(transactionDto(id))));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/transactions/" + id,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/transactions/" + id))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.data.id", is(id.toString())))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/transactions/" + id)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get transaction by ID returns 404 when missing")
+  @Severity(SeverityLevel.MINOR)
+  void get_transaction_by_id_not_found_returns_404() throws Exception {
+    UUID id = UUID.randomUUID();
+    Allure.step(
+        "Stub service to return empty for id=" + id,
+        () ->
+            when(paymentTransactionService.getTransactionById(eq(id)))
+                .thenReturn(Optional.empty()));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/transactions/" + id,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/transactions/" + id))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", is("Payment transaction not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/transactions/" + id)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get transaction by code returns 200 when found")
+  @Severity(SeverityLevel.NORMAL)
+  void get_transaction_by_code_found_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+    String code = "TX-123";
+    PaymentTransactionDto dto = Allure.step("Create transaction dto", () -> transactionDto(id));
+    dto.setTransactionCode(code);
+    Allure.step(
+        "Stub service to return transaction for code=" + code,
+        () ->
+            when(paymentTransactionService.getTransactionByCode(eq(code)))
+                .thenReturn(Optional.of(dto)));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/transactions/code/" + code,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/transactions/code/" + code))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(
+                        jsonPath("$.message", is("Payment transaction retrieved successfully")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/transactions/code/" + code)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get transaction by code returns 404 when missing")
+  @Severity(SeverityLevel.MINOR)
+  void get_transaction_by_code_not_found_returns_404() throws Exception {
+    String code = "TX-NOTFOUND";
+    Allure.step(
+        "Stub service to return empty for code=" + code,
+        () ->
+            when(paymentTransactionService.getTransactionByCode(eq(code)))
+                .thenReturn(Optional.empty()));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/transactions/code/" + code,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/transactions/code/" + code))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", is("Payment transaction not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/transactions/code/" + code)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get transactions by request returns 200 with page")
+  @Severity(SeverityLevel.NORMAL)
+  void get_transactions_by_request_returns_200() throws Exception {
+    UUID requestId = UUID.randomUUID();
+    Pageable pageable = Allure.step("Create pageable", () -> PageRequest.of(0, 10));
+    Page<PaymentTransactionDto> page =
+        Allure.step(
+            "Create page of transactions",
+            () ->
+                new org.springframework.data.domain.PageImpl<>(
+                    List.of(transactionDto(UUID.randomUUID())), pageable, 1));
+    Allure.step(
+        "Stub service to return page of transactions for requestId=" + requestId,
+        () ->
+            when(paymentTransactionService.getTransactionsByPaymentRequest(
+                    eq(requestId), eq(pageable)))
+                .thenReturn(page));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/transactions/request/" + requestId,
+            () ->
+                mockMvc
+                    .perform(
+                        get("/api/v1/payments/transactions/request/" + requestId)
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(
+                        jsonPath("$.message", is("Payment transactions retrieved successfully")))
+                    .andExpect(
+                        jsonPath(
+                            "$.path", is("/api/v1/payments/transactions/request/" + requestId)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get transactions by status returns 200 with page")
+  @Severity(SeverityLevel.NORMAL)
+  void get_transactions_by_status_returns_200() throws Exception {
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<PaymentTransactionDto> page =
+        Allure.step(
+            "Create page of transactions",
+            () ->
+                new org.springframework.data.domain.PageImpl<>(
+                    List.of(transactionDto(UUID.randomUUID())), pageable, 1));
+    Allure.step(
+        "Stub service to return page of transactions for status=SUCCESS",
+        () ->
+            when(paymentTransactionService.getTransactionsByStatus(
+                    eq(com.ahss.enums.PaymentTransactionStatus.SUCCESS), eq(pageable)))
+                .thenReturn(page));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/transactions/status/SUCCESS",
+            () ->
+                mockMvc
+                    .perform(
+                        get("/api/v1/payments/transactions/status/SUCCESS")
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(
+                        jsonPath("$.message", is("Payment transactions retrieved successfully")))
+                    .andExpect(
+                        jsonPath("$.path", is("/api/v1/payments/transactions/status/SUCCESS")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Cancel transaction returns 200 when cancelled")
+  @Severity(SeverityLevel.NORMAL)
+  void cancel_transaction_success_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/payments/transactions/" + id + "/cancel",
+            () ->
+                mockMvc
+                    .perform(patch("/api/v1/payments/transactions/" + id + "/cancel"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(
+                        jsonPath("$.message", is("Payment transaction cancelled successfully")))
+                    .andExpect(
+                        jsonPath("$.path", is("/api/v1/payments/transactions/" + id + "/cancel")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+    verify(paymentTransactionService, times(1)).cancelTransaction(eq(id), anyString());
+  }
+
+  @Test
+  @Story("Get refund by code returns 200 when found")
+  @Severity(SeverityLevel.NORMAL)
+  void get_refund_by_code_found_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+    String code = "REF-123";
+    PaymentRefundDto dto = Allure.step("Create refund dto", PaymentRefundDto::new);
+    dto.setId(id);
+    dto.setRefundCode(code);
+    Allure.step(
+        "Stub service to return refund for code=" + code,
+        () -> when(paymentRefundService.getRefundByCode(eq(code))).thenReturn(Optional.of(dto)));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/refunds/code/" + code,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/refunds/code/" + code))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment refund retrieved successfully")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/refunds/code/" + code)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get refund by code returns 404 when missing")
+  @Severity(SeverityLevel.MINOR)
+  void get_refund_by_code_not_found_returns_404() throws Exception {
+    String code = "REF-NOTFOUND";
+    Allure.step(
+        "Stub service to return empty for code=" + code,
+        () -> when(paymentRefundService.getRefundByCode(eq(code))).thenReturn(Optional.empty()));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/refunds/code/" + code,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/refunds/code/" + code))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", is("Payment refund not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/refunds/code/" + code)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Create refund returns 201 with refund payload")
+  @Severity(SeverityLevel.CRITICAL)
+  void create_refund_success_returns_201() throws Exception {
+    UUID id = UUID.randomUUID();
+    PaymentRefundDto dto = new PaymentRefundDto();
+    dto.setId(id);
+    dto.setRefundCode("REF-NEW");
+    Allure.step(
+        "Stub createRefund to return refund DTO",
+        () -> when(paymentRefundService.createRefund(any(CreateRefundDto.class))).thenReturn(dto));
+
+    CreateRefundDto req = Allure.step("Create refund request", () -> new CreateRefundDto());
+    req.setPaymentTransactionId(UUID.randomUUID());
+    req.setRefundAmount(new BigDecimal("50.00"));
+    req.setCurrency("USD");
+    req.setReason("Customer requested refund");
+    String body = objectMapper.writeValueAsString(req);
+    Allure.addAttachment("Request Body", MediaType.APPLICATION_JSON_VALUE, body);
+
+    var result =
+        Allure.step(
+            "POST /api/v1/payments/refunds",
+            () ->
+                mockMvc
+                    .perform(
+                        post("/api/v1/payments/refunds")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment refund created successfully")))
+                    .andExpect(jsonPath("$.data.id", is(id.toString())))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/refunds")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Create refund returns 400 for invalid request")
+  @Severity(SeverityLevel.MINOR)
+  void create_refund_bad_request_returns_400() throws Exception {
+    Allure.step(
+        "Stub createRefund to throw 'Invalid transaction'",
+        () ->
+            when(paymentRefundService.createRefund(any(CreateRefundDto.class)))
+                .thenThrow(new RuntimeException("Invalid transaction")));
+
+    CreateRefundDto req = Allure.step("Create refund request", () -> new CreateRefundDto());
+    req.setPaymentTransactionId(UUID.randomUUID());
+    req.setRefundAmount(new BigDecimal("1000.00"));
+    req.setCurrency("USD");
+    req.setReason("Bad");
+    String body = objectMapper.writeValueAsString(req);
+    Allure.addAttachment("Request Body", MediaType.APPLICATION_JSON_VALUE, body);
+
+    var result =
+        Allure.step(
+            "POST /api/v1/payments/refunds",
+            () ->
+                mockMvc
+                    .perform(
+                        post("/api/v1/payments/refunds")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", containsString("Invalid transaction")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/refunds")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Cancel refund returns 404 when missing")
+  @Severity(SeverityLevel.MINOR)
+  void cancel_refund_not_found_returns_404() throws Exception {
+    UUID id = UUID.randomUUID();
+    Allure.step(
+        "Stub cancelRefund to throw not found",
+        () ->
+            doThrow(new RuntimeException("Refund not found"))
+                .when(paymentRefundService)
+                .cancelRefund(eq(id), anyString()));
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/payments/refunds/" + id + "/cancel",
+            () ->
+                mockMvc
+                    .perform(patch("/api/v1/payments/refunds/" + id + "/cancel"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", containsString("not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/refunds/" + id + "/cancel")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get audit log by id returns 200 when found")
+  @Severity(SeverityLevel.MINOR)
+  void get_audit_log_by_id_returns_200() throws Exception {
+    UUID id = UUID.randomUUID();
+    PaymentAuditLogDto dto = Allure.step("Create audit log dto", () -> new PaymentAuditLogDto());
+    dto.setId(id);
+    Allure.step(
+        "Stub getAuditLogById to return dto",
+        () -> when(auditLogService.getAuditLogById(eq(id))).thenReturn(Optional.of(dto)));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/audit-logs/" + id,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/audit-logs/" + id))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Payment audit log retrieved successfully")))
+                    .andExpect(jsonPath("$.data.id", is(id.toString())))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Get audit log by id returns 404 when not found")
+  @Severity(SeverityLevel.MINOR)
+  void get_audit_log_by_id_returns_404() throws Exception {
+    UUID id = UUID.randomUUID();
+    Allure.step(
+        "Stub getAuditLogById to return empty",
+        () -> when(auditLogService.getAuditLogById(eq(id))).thenReturn(Optional.empty()));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/audit-logs/" + id,
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/audit-logs/" + id))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", is("Payment audit log not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/audit-logs/" + id)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Audit logs by transaction returns 200 with page")
+  @Severity(SeverityLevel.MINOR)
+  void audit_logs_by_transaction_returns_200() throws Exception {
+    UUID txId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<PaymentAuditLogDto> page =
+        Allure.step(
+            "Create audit log page",
+            () ->
+                new org.springframework.data.domain.PageImpl<>(
+                    List.of(new PaymentAuditLogDto()), pageable, 1));
+    Allure.step(
+        "Stub getAuditLogsByTransaction to return page",
+        () -> when(auditLogService.getAuditLogsByTransaction(eq(txId), eq(pageable))).thenReturn(page));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/audit-logs/transaction/" + txId,
+            () ->
+                mockMvc
+                    .perform(
+                        get("/api/v1/payments/audit-logs/transaction/" + txId)
+                            .param("page", "0")
+                            .param("size", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/audit-logs/transaction/" + txId)))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Audit logs by refund returns 200 with page")
+  @Severity(SeverityLevel.MINOR)
+  void audit_logs_by_refund_returns_200() throws Exception {
+    UUID refundId = UUID.randomUUID();
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<PaymentAuditLogDto> page =
+        new org.springframework.data.domain.PageImpl<>(
+            List.of(new PaymentAuditLogDto()), pageable, 1);
+    when(auditLogService.getAuditLogsByRefund(eq(refundId), eq(pageable))).thenReturn(page);
+
+    mockMvc
+        .perform(
+            get("/api/v1/payments/audit-logs/refund/" + refundId)
+                .param("page", "0")
+                .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success", is(true)))
+        .andExpect(jsonPath("$.path", is("/api/v1/payments/audit-logs/refund/" + refundId)));
+  }
+
+  @Test
+  @Story("Audit logs by user returns 200 with page")
+  @Severity(SeverityLevel.MINOR)
+  void audit_logs_by_user_returns_200() throws Exception {
+    Long userId = 5L;
+    Pageable pageable = PageRequest.of(0, 10);
+    Page<PaymentAuditLogDto> page =
+        new org.springframework.data.domain.PageImpl<>(
+            List.of(new PaymentAuditLogDto()), pageable, 1);
+    when(auditLogService.getAuditLogsByUser(eq(userId), eq(pageable))).thenReturn(page);
+
+    mockMvc
+        .perform(
+            get("/api/v1/payments/audit-logs/user/" + userId)
+                .param("page", "0")
+                .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success", is(true)))
+        .andExpect(jsonPath("$.path", is("/api/v1/payments/audit-logs/user/" + userId)));
+  }
+
+  @Test
+  @Story("Transaction stats returns 500 on service error")
+  @Severity(SeverityLevel.MINOR)
+  void transaction_stats_returns_500_on_error() throws Exception {
+    Allure.step(
+        "Stub countByStatus to throw RuntimeException",
+        () ->
+            when(paymentTransactionService.countByStatus(any()))
+                .thenThrow(new RuntimeException("boom")));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/stats/transactions",
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/stats/transactions"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", containsString("Failed to retrieve")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/stats/transactions"))));
+  }
+
+  @Test
+  @Story("Refund stats returns 500 on service error")
+  @Severity(SeverityLevel.MINOR)
+  void refund_stats_returns_500_on_error() throws Exception {
+    Allure.step(
+        "Stub countByStatus to throw RuntimeException",
+        () ->
+            when(paymentRefundService.countByStatus(any()))
+                .thenThrow(new RuntimeException("boom")));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/payments/stats/refunds",
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/payments/stats/refunds"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", containsString("Failed to retrieve")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/payments/stats/refunds"))));
   }
 }
