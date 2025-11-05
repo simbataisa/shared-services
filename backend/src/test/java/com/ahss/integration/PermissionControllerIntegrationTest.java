@@ -119,4 +119,45 @@ public class PermissionControllerIntegrationTest extends BaseIntegrationTest {
         () -> assertFalse(root.path("success").asBoolean()));
     Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
   }
+
+
+  @Test
+  void updatePermission_returns404WhenNotFound() throws Exception {
+    String token = Allure.step("Obtain JWT token", this::obtainToken);
+    String url = "http://localhost:" + port + "/api/v1/permissions/99999";
+
+    Map<String, Object> payload = Map.of("name", "Updated Permission", "description", "Updated desc");
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(token);
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    ResponseEntity<String> resp =
+        Allure.step(
+            "Send PUT request to update non-existent permission",
+            () ->
+                restTemplate.exchange(
+                    url, HttpMethod.PUT, new HttpEntity<>(payload, headers), String.class));
+
+    Allure.step(
+        "Verify response status is 404", () -> assertEquals(404, resp.getStatusCode().value()));
+    Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
+  }
+
+  @Test
+  void deletePermission_returns404WhenNotFound() throws Exception {
+    String token = Allure.step("Obtain JWT token", this::obtainToken);
+    String url = "http://localhost:" + port + "/api/v1/permissions/99999";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(token);
+    ResponseEntity<String> resp =
+        Allure.step(
+            "Send DELETE request to delete non-existent permission",
+            () ->
+                restTemplate.exchange(
+                    url, HttpMethod.DELETE, new HttpEntity<>(headers), String.class));
+
+    Allure.step(
+        "Verify response status is 404", () -> assertEquals(404, resp.getStatusCode().value()));
+    Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
+  }
 }

@@ -174,4 +174,87 @@ public class TenantControllerIntegrationTest extends BaseIntegrationTest {
 
     Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
   }
+
+  @Test
+  void getTenantByCode_returns404WhenNotFound() throws Exception {
+    String token = Allure.step("Obtain JWT token", this::obtainToken);
+    String url = "http://localhost:" + port + "/api/v1/tenants/code/NONEXISTENT";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(token);
+    ResponseEntity<String> resp =
+        Allure.step(
+            "GET /api/v1/tenants/code/NONEXISTENT",
+            () ->
+                restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+
+    Allure.step(
+        "Verify response status is 404 Not Found",
+        () ->
+            assertEquals(
+                404,
+                resp.getStatusCode().value(),
+                "Expected 404 Not Found for non-existent tenant code"));
+
+    Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
+  }
+
+
+  @Test
+  void deleteTenant_returns404WhenNotFound() throws Exception {
+    String token = Allure.step("Obtain JWT token", this::obtainToken);
+    String url = "http://localhost:" + port + "/api/v1/tenants/99999";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(token);
+    ResponseEntity<String> resp =
+        Allure.step(
+            "DELETE /api/v1/tenants/99999",
+            () ->
+                restTemplate.exchange(
+                    url, HttpMethod.DELETE, new HttpEntity<>(headers), String.class));
+
+    Allure.step(
+        "Verify response status is 404 Not Found",
+        () ->
+            assertEquals(
+                404,
+                resp.getStatusCode().value(),
+                "Expected 404 Not Found for non-existent tenant"));
+
+    Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
+  }
+
+  @Test
+  void checkTenantCodeExists_returnsFalseForNonexistentCode() throws Exception {
+    String token = Allure.step("Obtain JWT token", this::obtainToken);
+    String url =
+        "http://localhost:" + port + "/api/v1/tenants/exists/code/NONEXISTENT99999";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.setBearerAuth(token);
+    ResponseEntity<String> resp =
+        Allure.step(
+            "GET /api/v1/tenants/exists/code/NONEXISTENT99999",
+            () ->
+                restTemplate.exchange(
+                    url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+
+    Allure.step(
+        "Verify response status is 200 OK",
+        () ->
+            assertEquals(
+                200, resp.getStatusCode().value(), "Expected 200 OK for tenant code check"));
+
+    Allure.step(
+        "Verify response indicates code does not exist",
+        () -> {
+          JsonNode root = objectMapper.readTree(resp.getBody());
+          assertTrue(root.path("success").asBoolean(), "Response 'success' should be true");
+          assertFalse(root.path("data").asBoolean(), "Tenant code should not exist");
+        });
+
+    Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
+  }
 }

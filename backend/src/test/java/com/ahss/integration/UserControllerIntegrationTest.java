@@ -21,11 +21,6 @@ import io.qameta.allure.Owner;
 @Owner("backend")
 public class UserControllerIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private TestRestTemplate restTemplate;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Test
     void getAllUsers_returnsUsersWhenAuthenticated() throws Exception {
         String token = Allure.step("Obtain JWT token", this::obtainToken);
@@ -218,6 +213,50 @@ public class UserControllerIntegrationTest extends BaseIntegrationTest {
         Allure.step("Verify response body contains username non-existence", () -> {
             assertTrue(root.path("success").asBoolean());
             assertFalse(root.path("data").asBoolean());
+        });
+
+        Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
+    }
+
+
+    @Test
+    void deleteUser_returns404WhenUserNotFound() throws Exception {
+        String token = Allure.step("Obtain JWT token", this::obtainToken);
+        String url = "http://localhost:" + port + "/api/v1/users/99999";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        ResponseEntity<String> resp = Allure.step("DELETE /api/v1/users/99999", () ->
+                restTemplate.exchange(url, HttpMethod.DELETE, new HttpEntity<>(headers), String.class)
+        );
+
+        Allure.step("Verify response status is 404", () ->
+                assertEquals(404, resp.getStatusCode().value())
+        );
+
+        Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
+    }
+
+
+    @Test
+    void getUserByStatus_returnsUsersForActiveStatus() throws Exception {
+        String token = Allure.step("Obtain JWT token", this::obtainToken);
+        String url = "http://localhost:" + port + "/api/v1/users/status/ACTIVE";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        ResponseEntity<String> resp = Allure.step("GET /api/v1/users/status/ACTIVE", () ->
+                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class)
+        );
+
+        Allure.step("Verify response status is 200", () ->
+                assertEquals(200, resp.getStatusCode().value())
+        );
+
+        Allure.step("Verify response contains users", () -> {
+            JsonNode root = objectMapper.readTree(resp.getBody());
+            assertTrue(root.path("success").asBoolean());
+            assertTrue(root.path("data").isArray());
         });
 
         Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, resp.getBody());
