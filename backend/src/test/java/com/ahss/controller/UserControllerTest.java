@@ -789,7 +789,7 @@ class UserControllerTest {
   @Story("Get user by ID returns 200 when found")
   @Severity(SeverityLevel.MINOR)
   void get_user_by_id_found_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(7L);
     dto.setUsername("bob");
     dto.setEmail("bob@example.com");
@@ -819,7 +819,7 @@ class UserControllerTest {
   @Story("Get user by email returns 200 when found")
   @Severity(SeverityLevel.MINOR)
   void get_user_by_email_found_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(8L);
     dto.setUsername("eve");
     dto.setEmail("eve@example.com");
@@ -872,7 +872,7 @@ class UserControllerTest {
   @Story("Assign roles returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void assign_roles_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(5L);
     dto.setUsername("alice");
     dto.setEmail("alice@example.com");
@@ -907,7 +907,7 @@ class UserControllerTest {
   @Story("Remove roles returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void remove_roles_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(5L);
     dto.setUsername("alice");
     dto.setEmail("alice@example.com");
@@ -942,7 +942,7 @@ class UserControllerTest {
   @Story("Assign user groups returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void assign_user_groups_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(6L);
     dto.setUsername("bob");
     dto.setEmail("bob@example.com");
@@ -977,7 +977,7 @@ class UserControllerTest {
   @Story("Remove user groups returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void remove_user_groups_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(6L);
     dto.setUsername("bob");
     dto.setEmail("bob@example.com");
@@ -1012,7 +1012,7 @@ class UserControllerTest {
   @Story("Create user returns 201 when successful")
   @Severity(SeverityLevel.NORMAL)
   void create_user_success_returns_201() throws Exception {
-    CreateUserRequest request = new CreateUserRequest();
+    CreateUserRequest request = Allure.step("Create CreateUserRequest", () -> new CreateUserRequest());
     request.setUsername("newuser");
     request.setEmail("newuser@example.com");
     request.setPassword("Str0ngP@ss!");
@@ -1021,7 +1021,7 @@ class UserControllerTest {
     String json = mapper.writeValueAsString(request);
     Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
 
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(100L);
     dto.setUsername("newuser");
     dto.setEmail("newuser@example.com");
@@ -1052,7 +1052,7 @@ class UserControllerTest {
   @Story("Update user returns 200 when successful")
   @Severity(SeverityLevel.NORMAL)
   void update_user_success_returns_200() throws Exception {
-    UpdateUserRequest request = new UpdateUserRequest();
+    UpdateUserRequest request = Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
@@ -1061,7 +1061,7 @@ class UserControllerTest {
     String json = mapper.writeValueAsString(request);
     Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
 
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(77L);
     dto.setUsername("john");
     dto.setEmail("john@example.com");
@@ -1094,7 +1094,7 @@ class UserControllerTest {
   @Story("Update user returns 400 when service throws IllegalArgumentException")
   @Severity(SeverityLevel.MINOR)
   void update_user_service_exception_returns_400() throws Exception {
-    UpdateUserRequest request = new UpdateUserRequest();
+    UpdateUserRequest request = Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
