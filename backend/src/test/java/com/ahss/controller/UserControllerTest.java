@@ -381,6 +381,35 @@ class UserControllerTest {
   }
 
   @Test
+  @Story("Get inactive users with cutoffDate returns 200 with list")
+  @Severity(SeverityLevel.MINOR)
+  void get_inactive_users_with_cutoff_date_returns_200() throws Exception {
+    com.ahss.dto.UserDto u1 = new com.ahss.dto.UserDto();
+    com.ahss.dto.UserDto u2 = new com.ahss.dto.UserDto();
+    Allure.step(
+        "Stub service to return 2 inactive users",
+        () -> when(userService.getInactiveUsers(any())).thenReturn(java.util.List.of(u1, u2)));
+
+    var result =
+        Allure.step(
+            "GET /api/v1/users/inactive with cutoffDate",
+            () ->
+                mockMvc
+                    .perform(get("/api/v1/users/inactive")
+                        .param("cutoffDate", "2024-01-01T00:00:00"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Inactive users retrieved successfully")))
+                    .andExpect(jsonPath("$.data", org.hamcrest.Matchers.hasSize(2)))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/inactive")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
   @Story("Get user by username returns 404 when missing")
   @Severity(SeverityLevel.MINOR)
   void get_user_by_username_not_found_returns_404() throws Exception {
@@ -620,6 +649,68 @@ class UserControllerTest {
   }
 
   @Test
+  @Story("Change password returns 400 when newPassword is empty")
+  @Severity(SeverityLevel.MINOR)
+  void change_password_empty_returns_400() throws Exception {
+    Map<String, String> payload = java.util.Map.of("newPassword", "   ");
+    String json = mapper.writeValueAsString(payload);
+    Allure.addAttachment("Request Body", MediaType.APPLICATION_JSON_VALUE, json);
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/users/33/change-password with empty newPassword",
+            () ->
+                mockMvc
+                    .perform(
+                        patch("/api/v1/users/33/change-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("New password is required")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/33/change-password")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Change password returns 404 when user not found")
+  @Severity(SeverityLevel.MINOR)
+  void change_password_not_found_returns_404() throws Exception {
+    Map<String, String> payload = java.util.Map.of("newPassword", "NewStr0ngP@ss!");
+    String json = mapper.writeValueAsString(payload);
+    Allure.addAttachment("Request Body", MediaType.APPLICATION_JSON_VALUE, json);
+
+    Allure.step(
+        "Stub service changePassword to throw not found",
+        () -> doThrow(new IllegalArgumentException("User not found with id: 34"))
+            .when(userService)
+            .changePassword(eq(34L), anyString()));
+
+    var result =
+        Allure.step(
+            "PATCH /api/v1/users/34/change-password for non-existent user",
+            () ->
+                mockMvc
+                    .perform(
+                        patch("/api/v1/users/34/change-password")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User not found with id: 34")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/34/change-password")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
   @Story("Lock user returns 200 when successful (no param)")
   @Severity(SeverityLevel.MINOR)
   void lock_user_success_no_param_returns_200() throws Exception {
@@ -789,7 +880,7 @@ class UserControllerTest {
   @Story("Get user by ID returns 200 when found")
   @Severity(SeverityLevel.MINOR)
   void get_user_by_id_found_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(7L);
     dto.setUsername("bob");
     dto.setEmail("bob@example.com");
@@ -819,7 +910,7 @@ class UserControllerTest {
   @Story("Get user by email returns 200 when found")
   @Severity(SeverityLevel.MINOR)
   void get_user_by_email_found_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(8L);
     dto.setUsername("eve");
     dto.setEmail("eve@example.com");
@@ -872,7 +963,7 @@ class UserControllerTest {
   @Story("Assign roles returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void assign_roles_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(5L);
     dto.setUsername("alice");
     dto.setEmail("alice@example.com");
@@ -904,10 +995,41 @@ class UserControllerTest {
   }
 
   @Test
+  @Story("Assign roles returns 400 when service throws exception")
+  @Severity(SeverityLevel.MINOR)
+  void assign_roles_service_exception_returns_400() throws Exception {
+    Allure.step(
+        "Stub service assignRoles to throw exception",
+        () -> when(userService.assignRoles(eq(85L), anyList()))
+            .thenThrow(new IllegalArgumentException("User not found with id: 85")));
+    String json = mapper.writeValueAsString(java.util.List.of(1L, 2L));
+    Allure.addAttachment("Request Body (roleIds)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    var result =
+        Allure.step(
+            "POST /api/v1/users/85/roles",
+            () ->
+                mockMvc
+                    .perform(
+                        post("/api/v1/users/85/roles")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User not found with id: 85")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/85/roles")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
   @Story("Remove roles returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void remove_roles_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(5L);
     dto.setUsername("alice");
     dto.setEmail("alice@example.com");
@@ -939,10 +1061,41 @@ class UserControllerTest {
   }
 
   @Test
+  @Story("Remove roles returns 400 when service throws exception")
+  @Severity(SeverityLevel.MINOR)
+  void remove_roles_service_exception_returns_400() throws Exception {
+    Allure.step(
+        "Stub service removeRoles to throw exception",
+        () -> when(userService.removeRoles(eq(86L), anyList()))
+            .thenThrow(new IllegalArgumentException("Role not found")));
+    String json = mapper.writeValueAsString(java.util.List.of(1L));
+    Allure.addAttachment("Request Body (roleIds)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    var result =
+        Allure.step(
+            "DELETE /api/v1/users/86/roles",
+            () ->
+                mockMvc
+                    .perform(
+                        delete("/api/v1/users/86/roles")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Role not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/86/roles")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
   @Story("Assign user groups returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void assign_user_groups_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(6L);
     dto.setUsername("bob");
     dto.setEmail("bob@example.com");
@@ -974,10 +1127,41 @@ class UserControllerTest {
   }
 
   @Test
+  @Story("Assign user groups returns 400 when service throws exception")
+  @Severity(SeverityLevel.MINOR)
+  void assign_user_groups_service_exception_returns_400() throws Exception {
+    Allure.step(
+        "Stub service assignUserGroups to throw exception",
+        () -> when(userService.assignUserGroups(eq(87L), anyList()))
+            .thenThrow(new IllegalArgumentException("User not found with id: 87")));
+    String json = mapper.writeValueAsString(java.util.List.of(10L));
+    Allure.addAttachment("Request Body (userGroupIds)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    var result =
+        Allure.step(
+            "POST /api/v1/users/87/user-groups",
+            () ->
+                mockMvc
+                    .perform(
+                        post("/api/v1/users/87/user-groups")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User not found with id: 87")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/87/user-groups")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
   @Story("Remove user groups returns 200 with user data")
   @Severity(SeverityLevel.MINOR)
   void remove_user_groups_success_returns_200() throws Exception {
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(6L);
     dto.setUsername("bob");
     dto.setEmail("bob@example.com");
@@ -1009,10 +1193,41 @@ class UserControllerTest {
   }
 
   @Test
+  @Story("Remove user groups returns 400 when service throws exception")
+  @Severity(SeverityLevel.MINOR)
+  void remove_user_groups_service_exception_returns_400() throws Exception {
+    Allure.step(
+        "Stub service removeUserGroups to throw exception",
+        () -> when(userService.removeUserGroups(eq(88L), anyList()))
+            .thenThrow(new IllegalArgumentException("User group not found")));
+    String json = mapper.writeValueAsString(java.util.List.of(10L));
+    Allure.addAttachment("Request Body (userGroupIds)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    var result =
+        Allure.step(
+            "DELETE /api/v1/users/88/user-groups",
+            () ->
+                mockMvc
+                    .perform(
+                        delete("/api/v1/users/88/user-groups")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User group not found")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/88/user-groups")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
   @Story("Create user returns 201 when successful")
   @Severity(SeverityLevel.NORMAL)
   void create_user_success_returns_201() throws Exception {
-    CreateUserRequest request = new CreateUserRequest();
+    CreateUserRequest request = Allure.step("Create CreateUserRequest", () -> new CreateUserRequest());
     request.setUsername("newuser");
     request.setEmail("newuser@example.com");
     request.setPassword("Str0ngP@ss!");
@@ -1021,7 +1236,7 @@ class UserControllerTest {
     String json = mapper.writeValueAsString(request);
     Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
 
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(100L);
     dto.setUsername("newuser");
     dto.setEmail("newuser@example.com");
@@ -1049,10 +1264,133 @@ class UserControllerTest {
   }
 
   @Test
+  @Story("Create user with roles returns 201 when successful")
+  @Severity(SeverityLevel.NORMAL)
+  void create_user_with_roles_success_returns_201() throws Exception {
+    CreateUserRequest request = Allure.step("Create CreateUserRequest with roleIds", () -> new CreateUserRequest());
+    request.setUsername("newuser2");
+    request.setEmail("newuser2@example.com");
+    request.setPassword("Str0ngP@ss!");
+    request.setFirstName("New");
+    request.setLastName("User");
+    request.setRoleIds(java.util.List.of(1L, 2L));
+    String json = mapper.writeValueAsString(request);
+    Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
+    dto.setId(101L);
+    dto.setUsername("newuser2");
+    dto.setEmail("newuser2@example.com");
+    Allure.step(
+        "Stub service createUser -> dto",
+        () -> when(userService.createUser(any())).thenReturn(dto));
+    Allure.step(
+        "Stub service assignRoles -> dto",
+        () -> when(userService.assignRoles(eq(101L), eq(java.util.List.of(1L, 2L)))).thenReturn(dto));
+
+    var result =
+        Allure.step(
+            "POST /api/v1/users with roleIds",
+            () ->
+                mockMvc
+                    .perform(
+                        post("/api/v1/users").contentType(MediaType.APPLICATION_JSON).content(json))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User created successfully")))
+                    .andExpect(jsonPath("$.data.username", is("newuser2")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Create user with user groups returns 201 when successful")
+  @Severity(SeverityLevel.NORMAL)
+  void create_user_with_user_groups_success_returns_201() throws Exception {
+    CreateUserRequest request = Allure.step("Create CreateUserRequest with userGroupIds", () -> new CreateUserRequest());
+    request.setUsername("newuser3");
+    request.setEmail("newuser3@example.com");
+    request.setPassword("Str0ngP@ss!");
+    request.setFirstName("New");
+    request.setLastName("User");
+    request.setUserGroupIds(java.util.List.of(10L, 11L));
+    String json = mapper.writeValueAsString(request);
+    Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
+    dto.setId(102L);
+    dto.setUsername("newuser3");
+    dto.setEmail("newuser3@example.com");
+    Allure.step(
+        "Stub service createUser -> dto",
+        () -> when(userService.createUser(any())).thenReturn(dto));
+    Allure.step(
+        "Stub service assignUserGroups -> dto",
+        () -> when(userService.assignUserGroups(eq(102L), eq(java.util.List.of(10L, 11L)))).thenReturn(dto));
+
+    var result =
+        Allure.step(
+            "POST /api/v1/users with userGroupIds",
+            () ->
+                mockMvc
+                    .perform(
+                        post("/api/v1/users").contentType(MediaType.APPLICATION_JSON).content(json))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User created successfully")))
+                    .andExpect(jsonPath("$.data.username", is("newuser3")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Create user returns 400 when service throws exception")
+  @Severity(SeverityLevel.MINOR)
+  void create_user_service_exception_returns_400() throws Exception {
+    CreateUserRequest request = Allure.step("Create CreateUserRequest", () -> new CreateUserRequest());
+    request.setUsername("duplicate");
+    request.setEmail("duplicate@example.com");
+    request.setPassword("Str0ngP@ss!");
+    request.setFirstName("Duplicate");
+    request.setLastName("User");
+    String json = mapper.writeValueAsString(request);
+    Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    Allure.step(
+        "Stub service createUser to throw exception",
+        () -> when(userService.createUser(any())).thenThrow(new IllegalArgumentException("Username already exists")));
+
+    var result =
+        Allure.step(
+            "POST /api/v1/users with duplicate username",
+            () ->
+                mockMvc
+                    .perform(
+                        post("/api/v1/users").contentType(MediaType.APPLICATION_JSON).content(json))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("Username already exists")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
   @Story("Update user returns 200 when successful")
   @Severity(SeverityLevel.NORMAL)
   void update_user_success_returns_200() throws Exception {
-    UpdateUserRequest request = new UpdateUserRequest();
+    UpdateUserRequest request = Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
@@ -1061,7 +1399,7 @@ class UserControllerTest {
     String json = mapper.writeValueAsString(request);
     Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
 
-    UserDto dto = new UserDto();
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
     dto.setId(77L);
     dto.setUsername("john");
     dto.setEmail("john@example.com");
@@ -1094,7 +1432,7 @@ class UserControllerTest {
   @Story("Update user returns 400 when service throws IllegalArgumentException")
   @Severity(SeverityLevel.MINOR)
   void update_user_service_exception_returns_400() throws Exception {
-    UpdateUserRequest request = new UpdateUserRequest();
+    UpdateUserRequest request = Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
@@ -1126,5 +1464,196 @@ class UserControllerTest {
         "Response Body",
         MediaType.APPLICATION_JSON_VALUE,
         result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Update user with roles returns 200 when successful")
+  @Severity(SeverityLevel.NORMAL)
+  void update_user_with_roles_success_returns_200() throws Exception {
+    UpdateUserRequest request = Allure.step("Create UpdateUserRequest with roleIds", () -> new UpdateUserRequest());
+    request.setUsername("john");
+    request.setEmail("john@example.com");
+    request.setFirstName("John");
+    request.setLastName("Doe");
+    request.setRoleIds(java.util.List.of(3L, 4L));
+    String json = mapper.writeValueAsString(request);
+    Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
+    dto.setId(78L);
+    dto.setUsername("john");
+    dto.setEmail("john@example.com");
+
+    // Mock existing user with current roles
+    UserDto existingUser = Allure.step("Create existing UserDto with roles", () -> new UserDto());
+    existingUser.setId(78L);
+    existingUser.setRoles(java.util.List.of(
+        createRoleDto(1L, "ROLE_OLD1"),
+        createRoleDto(2L, "ROLE_OLD2")
+    ));
+
+    Allure.step(
+        "Stub service updateUser -> dto",
+        () -> when(userService.updateUser(eq(78L), any())).thenReturn(dto));
+    Allure.step(
+        "Stub service getUserById -> existing user",
+        () -> when(userService.getUserById(78L)).thenReturn(Optional.of(existingUser)));
+    Allure.step(
+        "Stub service removeRoles -> void",
+        () -> when(userService.removeRoles(eq(78L), anyList())).thenReturn(dto));
+    Allure.step(
+        "Stub service assignRoles -> dto",
+        () -> when(userService.assignRoles(eq(78L), eq(java.util.List.of(3L, 4L)))).thenReturn(dto));
+
+    var result =
+        Allure.step(
+            "PUT /api/v1/users/78 with roleIds",
+            () ->
+                mockMvc
+                    .perform(
+                        put("/api/v1/users/78")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User updated successfully")))
+                    .andExpect(jsonPath("$.data.username", is("john")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/78")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Update user with empty roles returns 200 and removes all roles")
+  @Severity(SeverityLevel.NORMAL)
+  void update_user_with_empty_roles_success_returns_200() throws Exception {
+    UpdateUserRequest request = Allure.step("Create UpdateUserRequest with empty roleIds", () -> new UpdateUserRequest());
+    request.setUsername("john");
+    request.setEmail("john@example.com");
+    request.setFirstName("John");
+    request.setLastName("Doe");
+    request.setRoleIds(java.util.List.of());
+    String json = mapper.writeValueAsString(request);
+    Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
+    dto.setId(79L);
+    dto.setUsername("john");
+    dto.setEmail("john@example.com");
+
+    // Mock existing user with current roles
+    UserDto existingUser = Allure.step("Create existing UserDto with roles", () -> new UserDto());
+    existingUser.setId(79L);
+    existingUser.setRoles(java.util.List.of(
+        createRoleDto(1L, "ROLE_OLD1")
+    ));
+
+    Allure.step(
+        "Stub service updateUser -> dto",
+        () -> when(userService.updateUser(eq(79L), any())).thenReturn(dto));
+    Allure.step(
+        "Stub service getUserById -> existing user",
+        () -> when(userService.getUserById(79L)).thenReturn(Optional.of(existingUser)));
+    Allure.step(
+        "Stub service removeRoles -> dto",
+        () -> when(userService.removeRoles(eq(79L), anyList())).thenReturn(dto));
+
+    var result =
+        Allure.step(
+            "PUT /api/v1/users/79 with empty roleIds",
+            () ->
+                mockMvc
+                    .perform(
+                        put("/api/v1/users/79")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User updated successfully")))
+                    .andExpect(jsonPath("$.data.username", is("john")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/79")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  @Test
+  @Story("Update user with user groups returns 200 when successful")
+  @Severity(SeverityLevel.NORMAL)
+  void update_user_with_user_groups_success_returns_200() throws Exception {
+    UpdateUserRequest request = Allure.step("Create UpdateUserRequest with userGroupIds", () -> new UpdateUserRequest());
+    request.setUsername("jane");
+    request.setEmail("jane@example.com");
+    request.setFirstName("Jane");
+    request.setLastName("Doe");
+    request.setUserGroupIds(java.util.List.of(20L, 21L));
+    String json = mapper.writeValueAsString(request);
+    Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+
+    UserDto dto = Allure.step("Create UserDto", () -> new UserDto());
+    dto.setId(80L);
+    dto.setUsername("jane");
+    dto.setEmail("jane@example.com");
+
+    // Mock existing user with current user groups
+    UserDto existingUser = Allure.step("Create existing UserDto with user groups", () -> new UserDto());
+    existingUser.setId(80L);
+    existingUser.setUserGroups(java.util.List.of(
+        createUserGroupDto(10L, "GROUP_OLD1"),
+        createUserGroupDto(11L, "GROUP_OLD2")
+    ));
+
+    Allure.step(
+        "Stub service updateUser -> dto",
+        () -> when(userService.updateUser(eq(80L), any())).thenReturn(dto));
+    Allure.step(
+        "Stub service getUserById -> existing user",
+        () -> when(userService.getUserById(80L)).thenReturn(Optional.of(existingUser)));
+    Allure.step(
+        "Stub service removeUserGroups -> void",
+        () -> when(userService.removeUserGroups(eq(80L), anyList())).thenReturn(dto));
+    Allure.step(
+        "Stub service assignUserGroups -> dto",
+        () -> when(userService.assignUserGroups(eq(80L), eq(java.util.List.of(20L, 21L)))).thenReturn(dto));
+
+    var result =
+        Allure.step(
+            "PUT /api/v1/users/80 with userGroupIds",
+            () ->
+                mockMvc
+                    .perform(
+                        put("/api/v1/users/80")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success", is(true)))
+                    .andExpect(jsonPath("$.message", is("User updated successfully")))
+                    .andExpect(jsonPath("$.data.username", is("jane")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/80")))
+                    .andReturn());
+    Allure.addAttachment(
+        "Response Body",
+        MediaType.APPLICATION_JSON_VALUE,
+        result.getResponse().getContentAsString());
+  }
+
+  // Helper methods for creating DTOs
+  private com.ahss.dto.RoleDto createRoleDto(Long id, String name) {
+    com.ahss.dto.RoleDto roleDto = new com.ahss.dto.RoleDto();
+    roleDto.setId(id);
+    roleDto.setName(name);
+    return roleDto;
+  }
+
+  private com.ahss.dto.UserGroupDto createUserGroupDto(Long id, String name) {
+    com.ahss.dto.UserGroupDto groupDto = new com.ahss.dto.UserGroupDto();
+    groupDto.setId(id);
+    groupDto.setName(name);
+    return groupDto;
   }
 }
