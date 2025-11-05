@@ -45,6 +45,8 @@ tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
     systemProperty 'allure.results.directory', "$buildDir/allure-results"
+    // Enable Allure lifecycle calls in helper utilities
+    systemProperty 'allure.suppress', 'false'
 }
 
 jacoco {
@@ -107,11 +109,9 @@ tasks.register('writeCoverageToAllureEnv') {
         resultsDir.mkdirs()
         def envFile = file(new File(resultsDir, 'environment.properties'))
         def lines = counters.collect { k, v -> "Coverage.${k}=${v}%" }
-        // Add both a relative path (works when opening the static report from disk) and a file:// URL
-        def htmlIndex = file("$buildDir/reports/jacoco/test/html/index.html")
-        def relativeLink = "../reports/jacoco/test/html/index.html"
-        lines << "Coverage.Report=${relativeLink}"
-        lines << "Coverage.ReportUrl=file://${htmlIndex.absolutePath}"
+        // After allureGenerate, Jacoco report will be at: build/allure-report/jacoco/index.html
+        lines << "Coverage.Report=coverage.html (opens Jacoco report)"
+        lines << "Coverage.Direct.Path=jacoco/index.html"
         envFile.text = lines.join('\n')
         logger.lifecycle("Wrote coverage summary to ${envFile}")
     }
@@ -133,17 +133,105 @@ tasks.register('unzipAllure', Copy) {
     into "$buildDir/allure-commandline"
 }
 
+// Preserve trend by copying previous report's history into current results
+tasks.register('copyAllureHistory', Copy) {
+    def historyDir = file("$buildDir/allure-report/history")
+    onlyIf { historyDir.exists() }
+    from(historyDir)
+    into("$buildDir/allure-results/history")
+}
+
+tasks.register('copyJacocoToAllure', Copy) {
+    dependsOn 'jacocoTestReport'
+    from("$buildDir/reports/jacoco/test/html")
+    into("$buildDir/allure-report/jacoco")
+    // Only run if Jacoco report exists
+    onlyIf { file("$buildDir/reports/jacoco/test/html").exists() }
+    doLast {
+        // Create a clickable landing page for Jacoco report
+        def landingPage = file("$buildDir/allure-report/coverage.html")
+        landingPage.text = """<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=jacoco/index.html">
+    <title>Redirecting to Coverage Report...</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+        a { color: #4CAF50; text-decoration: none; font-size: 18px; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h2>Redirecting to Jacoco Coverage Report...</h2>
+    <p>If you are not redirected automatically, <a href="jacoco/index.html">click here</a>.</p>
+</body>
+</html>"""
+        logger.lifecycle("Created coverage landing page at ${landingPage}")
+
+        // Inject clickable link into Allure index.html
+        def indexFile = file("$buildDir/allure-report/index.html")
+        if (indexFile.exists()) {
+            def content = indexFile.text
+            // Add a custom style and link banner at the top of the page
+            def customBanner = """
+    <style>
+        .coverage-banner {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .coverage-banner a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .coverage-banner a:hover {
+            text-decoration: underline;
+        }
+        .coverage-icon {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+    <div class="coverage-banner">
+        <a href="coverage.html" target="_blank">
+            <svg class="coverage-icon" viewBox="0 0 24 24" fill="white">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+            </svg>
+            View Coverage Report
+        </a>
+    </div>
+"""
+            // Insert the banner right after <body> tag
+            content = content.replace('<body>', '<body>' + customBanner)
+            indexFile.text = content
+            logger.lifecycle("Injected clickable coverage link into Allure report")
+        }
+    }
+}
+
 tasks.register('allureGenerate', Exec) {
-    dependsOn 'unzipAllure', 'copyAllureCategories', 'writeCoverageToAllureEnv'
+    dependsOn 'unzipAllure', 'copyAllureCategories', 'copyAllureHistory', 'writeCoverageToAllureEnv'
     doFirst {
         def distDir = file("$buildDir/allure-commandline").listFiles().find { it.name.startsWith('allure-') && it.isDirectory() }
         workingDir distDir
         commandLine './bin/allure', 'generate', '--clean', "$buildDir/allure-results", '-o', "$buildDir/allure-report"
     }
+    finalizedBy 'copyJacocoToAllure'
 }
 
 tasks.register('allureServe', Exec) {
-    dependsOn 'unzipAllure', 'copyAllureCategories', 'writeCoverageToAllureEnv'
+    dependsOn 'unzipAllure', 'copyAllureCategories', 'copyAllureHistory', 'writeCoverageToAllureEnv'
     doFirst {
         def distDir = file("$buildDir/allure-commandline").listFiles().find { it.name.startsWith('allure-') && it.isDirectory() }
         workingDir distDir

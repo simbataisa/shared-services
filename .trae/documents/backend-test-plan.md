@@ -28,6 +28,22 @@
 - CI notes: Archive `backend/build/allure-results` as an artifact and publish a report using the Allure CLI or a CI action (e.g., GitHub Pages). Consider separate jobs for unit and integration, then combine results before publishing.
 - Optional: Add AspectJ agent if using `@Step` and `@Attachment` for richer reporting.
 
+### Allure Report Structure
+- **Behaviors Tab**: Shows test organization by Epic → Feature → Story hierarchy using `@Epic`, `@Feature`, and `@Story` annotations. This organizes tests by business functionality and is visible for all tests regardless of pass/fail status.
+- **Suites Tab**: Shows tests organized by package and class structure.
+- **Categories Tab**: Classifies test failures by type (e.g., product defects, test defects, infrastructure issues). Categories are configured in `src/test/resources/categories.json` and **only appear when tests fail, break, or are skipped**. An empty Categories section indicates all tests passed.
+- **Overview**: Displays environment properties including code coverage metrics and links to the Jacoco report.
+
+### Jacoco Coverage Integration
+- Coverage metrics are automatically written to the Allure environment section after test execution.
+- The full Jacoco HTML report is copied to `backend/build/allure-report/jacoco/` during report generation.
+- A clickable landing page is created at `backend/build/allure-report/coverage.html` that auto-redirects to the Jacoco report.
+- Access the coverage report:
+  - Interactive: Run `./gradlew allureServe` and navigate to `http://localhost:<port>/coverage.html`
+  - Static: Open `backend/build/allure-report/coverage.html` in a browser
+  - Direct: Open `backend/build/allure-report/jacoco/index.html`
+- The Environment section shows coverage percentages for INSTRUCTION, LINE, COMPLEXITY, METHOD, CLASS, and BRANCH metrics with a reference to `coverage.html`.
+
 ### Allure Annotations & Usage Guidelines
 - Prefer annotations over runtime label calls to avoid lifecycle errors and keep metadata declarative.
   - Class-level: `@Epic("…")`, `@Feature("…")`, `@Owner("backend")`
@@ -89,6 +105,26 @@
   }
   ```
 - Do not call runtime label helpers (e.g., `labelStory`, `labelSeverity`) inside `@BeforeEach`; annotations should express metadata, and steps/attachments should run inside test methods.
+
+### Allure Categories Configuration
+- Categories classify test failures to help with triage and root cause analysis.
+- Configuration file: `src/test/resources/categories.json` (automatically copied to `build/allure-results` during test execution)
+- Categories defined:
+  - **Ignored tests**: Matches tests with status `skipped`
+  - **Product defects**: Failed tests with "assertion" in error message (e.g., `AssertionError`)
+  - **Test defects**: Broken tests with "runtime" in error message (e.g., `NullPointerException`)
+  - **Infrastructure problems**: Broken tests with "Connection", "Socket", or "Timeout" in error message
+- **Important**: Categories only appear when tests fail, break, or are skipped. An empty Categories section means all tests passed (this is expected and good).
+- Categories answer "What went wrong?" while Behaviors answer "What was tested?"
+
+### Current Test Coverage by Epic
+Based on the latest test run (all passing):
+- **Catalogue**: 36 tests (Module: 13, Product: 13, Tenant: 10)
+- **IAM**: 23 tests (Role Management: 8, User Management: 6, Permission Management: 6, User Group Management: 3)
+- **Payment Lifecycle**: 11 tests (Payment Requests: 11)
+- **Security**: 7 tests (Authentication Filter: 3, JWT: 2, BCrypt: 2)
+- **Authentication**: 6 tests (Login: 6)
+- **Total**: 83 tests organized into 5 Epics and 12 Features with 85 unique Stories
 
 ## Component Isolation Strategy
 - Default to plain JUnit + Mockito for pure business services and converters; avoid Spring context startup unless a bean lifecycle or annotation processor is being exercised.
