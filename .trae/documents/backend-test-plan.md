@@ -183,3 +183,122 @@ Based on the latest test run (all passing):
 - Several service methods are placeholders (`PaymentTransactionServiceImpl.getTransactionCountByPaymentMethod`, `PaymentRefundServiceImpl.getRefundCountByStatus`); tests should document current behaviour and help prioritise implementation work.
 - `PermissionController` exposes activate/deactivate endpoints while `PermissionServiceImpl` throws `UnsupportedOperationException`; decide whether to adjust the controller contract or implement the feature before hardening tests.
 - Confirm availability of shared PostgreSQL containers in CI and whether datasets can be seeded solely through Flyway or require dedicated fixtures.
+
+## Allure Usage in Spring Tests
+
+### Annotations
+- Class-level: `@Epic("…")`, `@Feature("…")`, `@Owner("backend")` to organise the Behaviors view.
+- Method-level: `@Story("…")`, `@Severity(SeverityLevel.CRITICAL|NORMAL|MINOR|TRIVIAL)` to describe test intent and impact.
+- Prefer annotations over runtime label calls; avoid calling label helpers in setup blocks.
+
+### Steps and Attachments
+- Use `Allure.step("Description", () -> { /* action + assertions */ })` around meaningful operations:
+  - Stubbing collaborators (e.g., service mocks).
+  - Executing HTTP requests with `MockMvc`.
+  - Parsing and attaching request/response bodies.
+- Add attachments for readability: `Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, body)`. Attach requests as well when helpful.
+- Toggle suppression per run: `-Dallure.suppress=false` to emit full step/attachment lifecycle locally.
+
+### DTO and Entity Initialisation in Steps
+- Controllers typically exchange DTOs; services return `UserDto`. Initialise only the fields required for a scenario to keep tests focused.
+- Example (request DTO in a step):
+
+```java
+CreateUserRequest req = Allure.step("Build CreateUserRequest DTO", () -> {
+    CreateUserRequest r = new CreateUserRequest();
+    r.setUsername("jdoe");
+    r.setEmail("jdoe@example.com");
+    r.setPassword("Str0ngP@ss!");
+    r.setFirstName("John");
+    r.setLastName("Doe");
+    return r;
+});
+String json = new ObjectMapper().writeValueAsString(req);
+Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+```
+
+- Example (service return DTO in a step):
+
+```java
+com.ahss.dto.UserDto dto = Allure.step("Create service UserDto stub", () -> {
+    com.ahss.dto.UserDto d = new com.ahss.dto.UserDto();
+    d.setId(123L);
+    d.setUsername("jdoe");
+    d.setEmail("jdoe@example.com");
+    return d;
+});
+```
+
+- If a unit/service test requires entities (not controllers), initialise the JPA entity similarly inside a step. For controller slice tests, prefer DTOs to match conversions.
+
+## Spring Test Setup with Beans and Mockito
+
+### Controller Slice (recommended)
+- Use `@WebMvcTest(controllers = UserController.class)` plus `@AutoConfigureMockMvc(addFilters = false)`.
+- Inject `MockMvc` and `ObjectMapper` into the test; mock downstream dependencies with `@MockBean` (or `@MockitoBean` if your setup includes that extension).
+- Keep security filters disabled unless explicitly exercising authentication paths.
+
+### Example Skeleton with Allure and MockMvc
+```java
+@WebMvcTest(controllers = UserController.class)
+@AutoConfigureMockMvc(addFilters = false)
+@Epic("IAM")
+@Feature("User Management")
+@Owner("backend")
+class UserControllerTest {
+
+    @Autowired private MockMvc mockMvc;
+    @MockBean private UserService userService;
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @Test
+    @Story("Create user returns 201 when successful")
+    @Severity(SeverityLevel.NORMAL)
+    void create_user_success_returns_201() throws Exception {
+        // Build DTO inside a step
+        CreateUserRequest req = Allure.step("Build CreateUserRequest DTO", () -> {
+            CreateUserRequest r = new CreateUserRequest();
+            r.setUsername("newuser");
+            r.setEmail("newuser@example.com");
+            r.setPassword("Str0ngP@ss!");
+            r.setFirstName("New");
+            r.setLastName("User");
+            return r;
+        });
+
+        String json = mapper.writeValueAsString(req);
+        Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
+
+        // Stub service return DTO inside a step
+        com.ahss.dto.UserDto dto = Allure.step("Stub service createUser -> dto", () -> {
+            com.ahss.dto.UserDto d = new com.ahss.dto.UserDto();
+            d.setId(100L);
+            d.setUsername("newuser");
+            d.setEmail("newuser@example.com");
+            when(userService.createUser(org.mockito.ArgumentMatchers.any())).thenReturn(d);
+            return d;
+        });
+
+        var result = Allure.step("POST /api/v1/users", () ->
+            mockMvc.perform(post("/api/v1/users")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.username", org.hamcrest.Matchers.is("newuser")))
+                .andReturn()
+        );
+
+        Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE,
+                result.getResponse().getContentAsString());
+    }
+}
+```
+
+### Service/Unit Tests (when Spring isn’t needed)
+- Prefer plain JUnit 5 with `@ExtendWith(MockitoExtension.class)`, but if the test interacts with Spring components, switch to `@SpringBootTest` or a targeted slice.
+- Mock collaborators with Mockito and initialise DTOs/entities inside `Allure.step` blocks to keep behaviour readable.
+
+### General Guidelines
+- Keep each test self-contained, initialise only what’s necessary for its behaviour.
+- Use expressive `@Story` names and small steps to highlight intent.
+- Attach request/response JSON for HTTP tests; attach DTO/entity state for service tests when it aids debugging.

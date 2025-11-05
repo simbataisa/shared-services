@@ -2,6 +2,7 @@ package com.ahss.controller;
 
 import com.ahss.dto.request.CreateUserGroupRequest;
 import com.ahss.dto.request.UpdateUserGroupRequest;
+import com.ahss.dto.response.UserGroupResponse;
 import com.ahss.service.UserGroupService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -109,5 +110,27 @@ class UserGroupControllerTest {
         );
         Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE,
                 result.getResponse().getContentAsString());
+    }
+
+    @Test
+    @Story("Get user group by ID returns 200 when found")
+    @Severity(SeverityLevel.NORMAL)
+    void get_user_group_by_id_found_returns_200() throws Exception {
+        var resp = new UserGroupResponse(50L, "Team X", "desc", 1, 2, com.ahss.entity.UserGroupStatus.ACTIVE);
+        when(userGroupService.getById(50L)).thenReturn(resp);
+
+        var result = Allure.step("GET /api/v1/user-groups/50", () ->
+                mockMvc.perform(get("/api/v1/user-groups/50"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.success", is(true)))
+                        .andExpect(jsonPath("$.message", is("User group retrieved successfully")))
+                        .andExpect(jsonPath("$.path", is("/api/v1/user-groups/50")))
+                        .andExpect(jsonPath("$.data.userGroupId", is(50)))
+                        .andExpect(jsonPath("$.data.name", is("Team X")))
+                        .andExpect(jsonPath("$.data.memberCount", is(1)))
+                        .andExpect(jsonPath("$.data.roleCount", is(2)))
+                        .andReturn()
+        );
+        Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE, result.getResponse().getContentAsString());
     }
 }

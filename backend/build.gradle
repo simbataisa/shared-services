@@ -110,10 +110,51 @@ tasks.register('writeCoverageToAllureEnv') {
         def envFile = file(new File(resultsDir, 'environment.properties'))
         def lines = counters.collect { k, v -> "Coverage.${k}=${v}%" }
         // After allureGenerate, Jacoco report will be at: build/allure-report/jacoco/index.html
-        lines << "Coverage.Report=coverage.html (opens Jacoco report)"
-        lines << "Coverage.Direct.Path=jacoco/index.html"
+        // Note: Allure escapes HTML in environment values, so these won't be clickable
+        // Use the purple "View Coverage Report" button at top-right of the report instead
+        lines << "Coverage.Report.File=coverage.html"
+        lines << "Coverage.Report.Direct=jacoco/index.html"
+        lines << "Coverage.Report.Note=Click the purple button at top-right to view coverage"
         envFile.text = lines.join('\n')
         logger.lifecycle("Wrote coverage summary to ${envFile}")
+    }
+}
+
+// Write Allure executor metadata so the report shows test executor information
+tasks.register('writeAllureExecutor') {
+    dependsOn tasks.named('test')
+    doLast {
+        def resultsDir = file("$buildDir/allure-results")
+        resultsDir.mkdirs()
+        def executorFile = file(new File(resultsDir, 'executor.json'))
+
+        // Build identifiers
+        def timestamp = new Date().format('yyyyMMdd-HHmmss')
+        def buildOrder = System.getenv('ALLURE_BUILD_ORDER') ?: '1'
+        def buildName = System.getenv('ALLURE_BUILD_NAME') ?: "Local Gradle Test ${timestamp}"
+        def buildUrl = System.getenv('ALLURE_BUILD_URL') ?: ''
+        def reportUrl = System.getenv('ALLURE_REPORT_URL') ?: ''
+        def reportName = System.getenv('ALLURE_REPORT_NAME') ?: 'Allure Report'
+        def executorName = System.getenv('ALLURE_EXECUTOR_NAME') ?: 'Local Gradle'
+        def executorType = System.getenv('ALLURE_EXECUTOR_TYPE') ?: 'gradle'
+        def dashboardUrl = System.getenv('ALLURE_DASHBOARD_URL') ?: ''
+
+        def payload = [
+            name      : executorName,
+            type      : executorType,
+            url       : dashboardUrl,
+            buildOrder: buildOrder as Integer,
+            buildName : buildName,
+            buildUrl  : buildUrl,
+            reportUrl : reportUrl,
+            reportName: reportName,
+            buildId   : timestamp
+        ]
+
+        executorFile.text = groovy.json.JsonOutput.prettyPrint(
+                groovy.json.JsonOutput.toJson(payload)
+        )
+        logger.lifecycle("Wrote Allure executor to ${executorFile}")
     }
 }
 
@@ -150,78 +191,84 @@ tasks.register('copyJacocoToAllure', Copy) {
     doLast {
         // Create a clickable landing page for Jacoco report
         def landingPage = file("$buildDir/allure-report/coverage.html")
-        landingPage.text = """<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=jacoco/index.html">
-    <title>Redirecting to Coverage Report...</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-        a { color: #4CAF50; text-decoration: none; font-size: 18px; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <h2>Redirecting to Jacoco Coverage Report...</h2>
-    <p>If you are not redirected automatically, <a href="jacoco/index.html">click here</a>.</p>
-</body>
-</html>"""
-        logger.lifecycle("Created coverage landing page at ${landingPage}")
+        landingPage.text = """
+            <!DOCTYPE html>
+            <html>
+            <head> 
+                <meta charset="UTF-8">
+                <meta http-equiv="refresh" content="0; url=jacoco/index.html">
+                <title>Redirecting to Coverage Report...</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    a { color: #4CAF50; text-decoration: none; font-size: 18px; }
+                    a:hover { text-decoration: underline; }
+                </style>
+            </head>
+            <body>
+                <h2>Redirecting to Jacoco Coverage Report...</h2>
+                <p>If you are not redirected automatically, <a href="jacoco/index.html">click here</a>.</p>
+            </body>
+            </html>"""
+                    logger.lifecycle("Created coverage landing page at ${landingPage}")
 
-        // Inject clickable link into Allure index.html
-        def indexFile = file("$buildDir/allure-report/index.html")
-        if (indexFile.exists()) {
-            def content = indexFile.text
-            // Add a custom style and link banner at the top of the page
-            def customBanner = """
-    <style>
-        .coverage-banner {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 9999;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .coverage-banner a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .coverage-banner a:hover {
-            text-decoration: underline;
-        }
-        .coverage-icon {
-            width: 20px;
-            height: 20px;
-        }
-    </style>
-    <div class="coverage-banner">
-        <a href="coverage.html" target="_blank">
-            <svg class="coverage-icon" viewBox="0 0 24 24" fill="white">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-            </svg>
-            View Coverage Report
-        </a>
-    </div>
-"""
+                    // Inject clickable link into Allure index.html
+                    def indexFile = file("$buildDir/allure-report/index.html")
+                    if (indexFile.exists()) {
+                        def content = indexFile.text
+                        // Add a custom style and link banner at the top of the page
+                        def customBanner = """
+                <style>
+                    #coverage-report-btn {
+                        position: fixed !important;
+                        top: 70px !important;
+                        right: 20px !important;
+                        z-index: 99999 !important;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                        padding: 14px 24px !important;
+                        border-radius: 8px !important;
+                        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2) !important;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+                        transition: all 0.3s ease !important;
+                    }
+                    #coverage-report-btn:hover {
+                        transform: translateY(-2px) !important;
+                        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3) !important;
+                    }
+                    #coverage-report-btn a {
+                        color: white !important;
+                        text-decoration: none !important;
+                        font-weight: 600 !important;
+                        font-size: 15px !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        gap: 10px !important;
+                        white-space: nowrap !important;
+                    }
+                    #coverage-report-btn a:hover {
+                        text-decoration: none !important;
+                    }
+                    #coverage-report-btn svg {
+                        width: 22px !important;
+                        height: 22px !important;
+                        flex-shrink: 0 !important;
+                    }
+                </style>
+                <div id="coverage-report-btn">
+                    <a href="coverage.html" target="_blank">
+                        📊 Coverage Report
+                    </a>
+                </div>
+            """
             // Insert the banner right after <body> tag
             content = content.replace('<body>', '<body>' + customBanner)
             indexFile.text = content
-            logger.lifecycle("Injected clickable coverage link into Allure report")
+            logger.lifecycle("Injected clickable coverage button into Allure report")
         }
     }
 }
 
 tasks.register('allureGenerate', Exec) {
-    dependsOn 'unzipAllure', 'copyAllureCategories', 'copyAllureHistory', 'writeCoverageToAllureEnv'
+    dependsOn 'unzipAllure', 'copyAllureCategories', 'copyAllureHistory', 'writeCoverageToAllureEnv', 'writeAllureExecutor'
     doFirst {
         def distDir = file("$buildDir/allure-commandline").listFiles().find { it.name.startsWith('allure-') && it.isDirectory() }
         workingDir distDir
@@ -231,11 +278,13 @@ tasks.register('allureGenerate', Exec) {
 }
 
 tasks.register('allureServe', Exec) {
-    dependsOn 'unzipAllure', 'copyAllureCategories', 'copyAllureHistory', 'writeCoverageToAllureEnv'
+    // First generate the report with the button, then serve it
+    dependsOn 'allureGenerate'
     doFirst {
         def distDir = file("$buildDir/allure-commandline").listFiles().find { it.name.startsWith('allure-') && it.isDirectory() }
         workingDir distDir
-        commandLine './bin/allure', 'serve', "$buildDir/allure-results"
+        // Use 'open' to serve from the generated report directory instead of temp
+        commandLine './bin/allure', 'open', "$buildDir/allure-report"
     }
 }
 
