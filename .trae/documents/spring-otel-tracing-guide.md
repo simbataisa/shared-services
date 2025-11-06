@@ -107,8 +107,13 @@ cd backend
 ### Containerized Backend with Agent
 Use the Docker Compose backend service that mounts the agent and sends traces to the collector:
 ```bash
-# Build the image once (buildpacks)
-cd backend && ./gradlew bootBuildImage
+# Build the backend image with Jib (Docker CLI available)
+cd backend && ./gradlew dockerBuild
+
+# Fallback: build a tarball when Docker CLI is unavailable
+cd backend && ./gradlew dockerBuildTar
+# Later, load the image (requires Docker CLI):
+docker load -i backend/build/jib-image.tar
 
 # Start collector, jaeger, and backend
 docker-compose --profile observability up -d otel-collector jaeger backend

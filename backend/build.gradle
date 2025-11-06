@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'jacoco'
+    id 'com.google.cloud.tools.jib' version '3.4.3'
 }
 
 group = 'com.ahss'
@@ -316,6 +317,80 @@ tasks.register('bootRunWithAgent', org.springframework.boot.gradle.tasks.run.Boo
     environment 'OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'
     environment 'OTEL_METRICS_EXPORTER', 'none'
     environment 'OTEL_LOGS_EXPORTER', 'none'
+}
+
+// Container image is built via Jib (see dockerBuild task)
+
+// Jib configuration to build Docker image for local Docker daemon
+jib {
+    from {
+        image = 'eclipse-temurin:21-jre'
+        // Select platform dynamically. Default 'arm64' (Apple Silicon), switch to 'amd64' for Windows build task or property.
+        def isWindowsBuildTask = gradle.startParameter.taskNames.any { it == 'dockerBuildWindows' }
+        def jibTargetArch = (project.findProperty('jibTargetArch') ?: System.getenv('JIB_TARGET_ARCH') ?: (isWindowsBuildTask ? 'amd64' : 'arm64'))
+        platforms {
+            platform {
+                architecture = jibTargetArch
+                os = 'linux'
+            }
+        }
+    }
+    to {
+        image = 'shared-services:0.0.1-SNAPSHOT'
+        // tags can be added if desired, e.g., ['latest']
+    }
+    // Use the Spring Boot fat jar produced by build/bootJar
+    containerizingMode = 'packaged'
+    container {
+        // Explicit main class for reliable entrypoint
+        mainClass = 'com.ahss.SharedServicesApplication'
+        // Expose app port for clarity (Compose maps externally)
+        ports = ['8080']
+        // Reasonable JVM defaults; can be tuned
+        jvmFlags = ['-Xms512m', '-Xmx512m']
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+    }
+    // Ensure Jib finds the Docker CLI even if Gradle's PATH is limited
+    dockerClient {
+        // Prefer explicit property or env, then common macOS locations
+        def propExec = System.getProperty('jib.dockerClient.executable')
+        def envExec = System.getenv('DOCKER_CLI')
+        def candidates = [
+            propExec,
+            envExec,
+            '/usr/local/bin/docker',
+            '/opt/homebrew/bin/docker',
+            '/opt/local/bin/docker'
+        ].find { it && file(it).exists() }
+        if (candidates) {
+            executable = candidates
+        }
+    }
+    // Build to local Docker daemon
+    // Note: we will invoke the 'jibDockerBuild' task via a composite task below
+}
+
+// Convenience task to build Windows-targeted image (linux/amd64)
+tasks.register('dockerBuildWindows') {
+    group = 'build'
+    description = 'Build Docker image for Windows Docker Desktop (linux/amd64)'
+    dependsOn 'build', 'jibDockerBuild'
+}
+
+// Composite task to ensure JAR is built before containerizing with Jib
+tasks.register('dockerBuild') {
+    group = 'build'
+    description = 'Builds the Spring Boot Docker image using Jib into local Docker'
+    dependsOn tasks.named('build')
+    dependsOn tasks.named('jibDockerBuild')
+}
+
+// Fallback: build an image tarball when Docker CLI is unavailable
+tasks.register('dockerBuildTar') {
+    group = 'build'
+    description = 'Builds a Docker image tarball using Jib (output: build/jib-image.tar)'
+    dependsOn tasks.named('build')
+    dependsOn tasks.named('jibBuildTar')
 }
 
 tasks.register('allureGenerate', Exec) {
