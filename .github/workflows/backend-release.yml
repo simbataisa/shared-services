@@ -1,4 +1,4 @@
-name: Release
+name: Backend Release
 
 on:
   workflow_dispatch:
@@ -27,21 +27,21 @@ jobs:
         cache: 'gradle'
 
     - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      run: chmod +x backend/gradlew
 
     - name: Update version in build.gradle
       run: |
-        sed -i "s/version = '.*'/version = '${{ inputs.version }}'/" build.gradle
-        cat build.gradle | grep "version ="
+        sed -i "s/version = '.*'/version = '${{ inputs.version }}'/" backend/build.gradle
+        cat backend/build.gradle | grep "version ="
 
     - name: Build release
-      run: ./gradlew clean build -x test
+      run: cd backend && ./gradlew clean build -x test
 
     - name: Run tests
-      run: ./gradlew test
+      run: cd backend && ./gradlew test
 
     - name: Build Docker image
-      run: ./gradlew jibDockerBuild
+      run: cd backend && ./gradlew jibDockerBuild
       env:
         JIB_TARGET_ARCH: amd64
 
@@ -77,7 +77,7 @@ jobs:
           ```
           docker pull ${{ secrets.DOCKER_USERNAME }}/shared-services:${{ inputs.version }}
           ```
-        files: build/libs/*.jar
+        files: backend/build/libs/*.jar
         draft: false
         prerelease: false
       env:
