@@ -27,8 +27,8 @@ replay_pid*
 # Java/Spring Boot Backend
 backend/build/
 backend/.gradle/
-backend/gradlew
-backend/gradlew.bat
+#backend/gradlew
+#backend/gradlew.bat
 backend/out/
 backend/target/
 backend/.idea/
