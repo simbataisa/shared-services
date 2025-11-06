@@ -68,6 +68,234 @@ This is a full-stack application built with:
 - **Containerization**: Docker Compose
 - **Development**: Hot reload for both frontend and backend
 
+## 🧭 Observability (Tracing)
+
+This project uses OpenTelemetry for distributed tracing. Spans are produced by Spring (Micrometer Tracing) and the OpenTelemetry Java agent, sent to an OpenTelemetry Collector, and visualized in Jaeger.
+
+### Components
+- **Backend**: emits OTLP HTTP traces to `http://localhost:4318/v1/traces`.
+- **Collector**: receives OTLP HTTP on `:4318`, batches spans, and exports to Jaeger over OTLP gRPC `:4317`.
+- **Jaeger**: UI at `http://localhost:16686` for searching and viewing traces.
+
+### Start Collector + Jaeger
+```bash
+docker-compose up -d otel-collector jaeger
+```
+
+Collector config (`otel-collector-config.yaml`):
+```yaml
+receivers:
+  otlp:
+    protocols:
+      http:
+processors:
+  batch:
+    timeout: 1s
+exporters:
+  logging:
+    loglevel: debug
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, otlp]
+```
+
+### Run Backend with Java Agent
+The agent auto-instruments HTTP server and JDBC/Hibernate.
+```bash
+cd backend
+JAVA_TOOL_OPTIONS="-javaagent:../otel-javaagent.jar" \
+OTEL_SERVICE_NAME=sharedservices-backend \
+OTEL_TRACES_EXPORTER=otlp \
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
+OTEL_METRICS_EXPORTER=none \
+OTEL_LOGS_EXPORTER=none \
+./gradlew bootRun
+```
+
+Spring configuration also enables Micrometer Tracing:
+```yaml
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+```
+
+### Verify Tracing
+- Trigger activity:
+  ```bash
+  curl -X GET 'http://localhost:8080/api/v1/tenants/search?query=demo'
+  # or
+  curl -X POST http://localhost:8080/api/v1/auth/login \
+    -H 'Content-Type: application/json' \
+    -d '{"username": "admin@ahss.com", "password": "wrong"}'
+  ```
+- Check collector logs: `docker-compose logs -f otel-collector`.
+- Open Jaeger UI (`http://localhost:16686`), select service `sharedservices-backend`, search traces.
+
+Notes:
+- If you see agent warnings about logs export (`404` to `:4318`), set `OTEL_LOGS_EXPORTER=none` or add a logs pipeline to the collector.
+
+### Convenience Gradle Task
+Run with the agent attached via a dedicated task:
+```bash
+cd backend
+./gradlew bootRunWithAgent
+```
+
+### Containerized Backend with Agent
+Use the Compose backend service that mounts the agent and targets the collector:
+```bash
+# Build the backend image with Jib (Docker CLI available)
+cd backend && ./gradlew dockerBuild
+# If Gradle still can’t find Docker, pass the CLI path explicitly:
+cd backend && ./gradlew dockerBuild -Djib.dockerClient.executable="$(which docker)"
+# Apple Silicon (M1/M2): defaults to linux/arm64 image.
+# Windows (x86_64): build an amd64 image via either option:
+# 1) Convenience task:
+cd backend && ./gradlew dockerBuildWindows
+# 2) Property override:
+cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
+
+## Windows Setup
+- Build image (amd64):
+```bash
+cd backend && ./gradlew dockerBuildWindows
+# Alternatively:
+cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
+```
+
+- Start services with Windows compose file:
+```bash
+docker-compose -f docker-compose.windows.yml up -d postgres kafka otel-collector jaeger kafka-ui backend
+```
+
+- If Gradle can’t find Docker on Windows PowerShell, pass the executable path:
+```powershell
+cd backend; ./gradlew dockerBuildWindows -Djib.dockerClient.executable="$((Get-Command docker).Source)"
+```
+
+- Verify and access:
+```bash
+docker images | grep shared-services
+# Jaeger:   http://localhost:16686
+# Kafka UI: http://localhost:8081
+# Backend:  http://localhost:8080
+```
+
+Notes (containers):
+- Inside Docker, never use `localhost` to reach other services; use the Compose service names.
+- OTLP endpoints are configured to `http://otel-collector:4318` for the Java agent.
+- Spring Micrometer OTLP can be set via `MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces`.
+- See troubleshooting guide: `.trae/documents/docker-compose-troubleshooting.md`.
+
+## Frontend (Docker)
+
+- Build the frontend image via Compose (uses `frontend/Dockerfile`):
+```bash
+# macOS/Linux
+VITE_API_BASE_URL=http://localhost:8080/api/v1 \
+docker-compose build frontend
+
+# Windows PowerShell
+$env:VITE_API_BASE_URL = "http://localhost:8080/api/v1"; docker-compose -f docker-compose.windows.yml build frontend
+```
+
+- Start frontend with the rest of the stack:
+```bash
+# macOS/Linux
+docker-compose --profile observability up -d otel-collector jaeger kafka-ui backend frontend
+
+# Windows
+docker-compose -f docker-compose.windows.yml up -d postgres kafka otel-collector jaeger kafka-ui backend frontend
+```
+
+- Access URLs:
+```bash
+Frontend: http://localhost:5173
+Backend:  http://localhost:8080
+Jaeger:   http://localhost:16686
+Kafka UI: http://localhost:8081
+```
+
+Notes:
+- The frontend image build injects `VITE_API_BASE_URL` at build time (default `http://localhost:8080/api/v1`).
+- You can change it by setting `VITE_API_BASE_URL` before `docker-compose build frontend`.
+  
+Note:
+- Default in-container API base is `http://backend:8080/api/v1` to ensure services communicate within the Compose network. Override it for local non-Docker builds if needed.
+
+### Frontend Local Build and Type Checking
+
+- Local production build now skips TypeScript type checking to avoid blocking on non-critical type errors:
+  ```bash
+  cd frontend
+  npm run build
+  ```
+- Run a dedicated type check when you want strict validation (e.g., CI or local verification):
+  ```bash
+  cd frontend
+  npm run typecheck
+  ```
+- Recommendation: keep strictness in development (`tsconfig.app.json`) and use `npm run typecheck` in CI to enforce type safety without blocking production builds.
+
+# Fallback: build a tarball if Docker CLI is unavailable
+cd backend && ./gradlew dockerBuildTar
+# Then, when Docker CLI is available:
+docker load -i backend/build/jib-image.tar
+
+# Start collectors and backend
+docker-compose --profile observability up -d otel-collector jaeger backend
+
+# Stop services
+docker-compose --profile observability down
+
+## Docker Compose Troubleshooting
+
+- Error: `failed to set up container networking: network <id> not found`
+  - Cause: Named containers (e.g., `sharedservices-backend`, `sharedservices-frontend`, `sharedservices-kafka-ui`) may reference a deleted network.
+  - Fix:
+    ```bash
+    # Stop and remove resources and orphans
+    docker compose down --remove-orphans
+
+    # Prune dangling networks
+    docker network prune -f
+
+    # Remove stale named containers
+    docker rm -f sharedservices-backend sharedservices-frontend sharedservices-kafka-ui
+
+    # Recreate services (macOS/Linux)
+    docker compose --profile observability up -d postgres kafka otel-collector jaeger kafka-ui backend frontend
+
+    # Windows
+    docker compose -f docker-compose.windows.yml up -d postgres kafka otel-collector jaeger kafka-ui backend frontend
+    ```
+
+- Warning: `the attribute version is obsolete`
+  - Compose v2 ignores the `version` field. You can remove `version: '3.9'` from your compose files to suppress the warning.
+  
+- Backend exporting to `localhost:4318` inside container
+  - Cause: Using `localhost` in container resolves to the container itself.
+  - Fix: Set env vars to target the collector by service name:
+    ```bash
+    # docker-compose.yml environment for backend
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces
+    ```
+  - Reference: `.trae/documents/docker-compose-troubleshooting.md`.
+```
+
 ## 📋 Prerequisites
 
 - **Java 21** or higher

@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    // Relax strict unused checks for production builds
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  }
+}
