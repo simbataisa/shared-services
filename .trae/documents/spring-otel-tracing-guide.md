@@ -89,12 +89,33 @@ OTEL_SERVICE_NAME=sharedservices-backend \
 OTEL_TRACES_EXPORTER=otlp \
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
 OTEL_METRICS_EXPORTER=none \
+OTEL_LOGS_EXPORTER=none \
 ./gradlew bootRun
 ```
 
 Notes:
 - The agent is attached via `JAVA_TOOL_OPTIONS` so it works with `bootRun` without additional Gradle wiring.
-- If you see warnings about logs export (HTTP `404` to `:4318`), they are harmless here because the collector pipeline only handles traces.
+- If you see warnings about logs export (HTTP `404` to `:4318`), set `OTEL_LOGS_EXPORTER=none` or add a logs pipeline to the collector.
+
+### Convenience Gradle Task
+Run with a dedicated task that attaches the agent automatically:
+```bash
+cd backend
+./gradlew bootRunWithAgent
+```
+
+### Containerized Backend with Agent
+Use the Docker Compose backend service that mounts the agent and sends traces to the collector:
+```bash
+# Build the image once (buildpacks)
+cd backend && ./gradlew bootBuildImage
+
+# Start collector, jaeger, and backend
+docker-compose --profile observability up -d otel-collector jaeger backend
+
+# Stop services
+docker-compose --profile observability down
+```
 
 ## What Gets Instrumented
 - HTTP server: incoming requests mapped to controller spans.

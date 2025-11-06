@@ -299,6 +299,23 @@ tasks.named('bootRun') {
     environment 'OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'
     // Optional: reduce noise by disabling metrics from the agent
     environment 'OTEL_METRICS_EXPORTER', 'none'
+    // Optional: disable logs export to avoid 404 warnings when collector logs pipeline is not configured
+    environment 'OTEL_LOGS_EXPORTER', 'none'
+}
+
+// Convenience task to run with the OpenTelemetry Java agent attached
+tasks.register('bootRunWithAgent', org.springframework.boot.gradle.tasks.run.BootRun) {
+    group = 'application'
+    description = 'Run the application with OpenTelemetry Java agent attached'
+    // Explicitly set main class to avoid detection issues
+    mainClass = 'com.ahss.SharedServicesApplication'
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs "-javaagent:${file("${rootDir}/../otel-javaagent.jar")}"
+    environment 'OTEL_SERVICE_NAME', 'sharedservices-backend'
+    environment 'OTEL_TRACES_EXPORTER', 'otlp'
+    environment 'OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4318'
+    environment 'OTEL_METRICS_EXPORTER', 'none'
+    environment 'OTEL_LOGS_EXPORTER', 'none'
 }
 
 tasks.register('allureGenerate', Exec) {

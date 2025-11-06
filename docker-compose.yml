@@ -67,6 +67,33 @@ services:
     networks:
       - sharedservices-network
 
+  backend:
+    image: shared-services:0.0.1-SNAPSHOT
+    container_name: sharedservices-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sharedservices
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      OTEL_SERVICE_NAME: sharedservices-backend
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+      JAVA_TOOL_OPTIONS: -javaagent:/otel/otel-javaagent.jar
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./otel-javaagent.jar:/otel/otel-javaagent.jar:ro
+    depends_on:
+      - postgres
+      - kafka
+      - otel-collector
+    networks:
+      - sharedservices-network
+    profiles:
+      - observability
+
 volumes:
   pgdata:
 

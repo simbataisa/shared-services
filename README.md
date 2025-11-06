@@ -115,6 +115,7 @@ OTEL_SERVICE_NAME=sharedservices-backend \
 OTEL_TRACES_EXPORTER=otlp \
 OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
 OTEL_METRICS_EXPORTER=none \
+OTEL_LOGS_EXPORTER=none \
 ./gradlew bootRun
 ```
 
@@ -143,7 +144,27 @@ management:
 - Open Jaeger UI (`http://localhost:16686`), select service `sharedservices-backend`, search traces.
 
 Notes:
-- If you see agent warnings about logs export (`404` to `:4318`), they are benign in this setup because the collector pipeline is configured only for traces.
+- If you see agent warnings about logs export (`404` to `:4318`), set `OTEL_LOGS_EXPORTER=none` or add a logs pipeline to the collector.
+
+### Convenience Gradle Task
+Run with the agent attached via a dedicated task:
+```bash
+cd backend
+./gradlew bootRunWithAgent
+```
+
+### Containerized Backend with Agent
+Use the Compose backend service that mounts the agent and targets the collector:
+```bash
+# Build the backend image (once)
+cd backend && ./gradlew bootBuildImage
+
+# Start collectors and backend
+docker-compose --profile observability up -d otel-collector jaeger backend
+
+# Stop services
+docker-compose --profile observability down
+```
 
 ## 📋 Prerequisites
 
