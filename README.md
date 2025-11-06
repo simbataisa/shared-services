@@ -68,6 +68,83 @@ This is a full-stack application built with:
 - **Containerization**: Docker Compose
 - **Development**: Hot reload for both frontend and backend
 
+## 🧭 Observability (Tracing)
+
+This project uses OpenTelemetry for distributed tracing. Spans are produced by Spring (Micrometer Tracing) and the OpenTelemetry Java agent, sent to an OpenTelemetry Collector, and visualized in Jaeger.
+
+### Components
+- **Backend**: emits OTLP HTTP traces to `http://localhost:4318/v1/traces`.
+- **Collector**: receives OTLP HTTP on `:4318`, batches spans, and exports to Jaeger over OTLP gRPC `:4317`.
+- **Jaeger**: UI at `http://localhost:16686` for searching and viewing traces.
+
+### Start Collector + Jaeger
+```bash
+docker-compose up -d otel-collector jaeger
+```
+
+Collector config (`otel-collector-config.yaml`):
+```yaml
+receivers:
+  otlp:
+    protocols:
+      http:
+processors:
+  batch:
+    timeout: 1s
+exporters:
+  logging:
+    loglevel: debug
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, otlp]
+```
+
+### Run Backend with Java Agent
+The agent auto-instruments HTTP server and JDBC/Hibernate.
+```bash
+cd backend
+JAVA_TOOL_OPTIONS="-javaagent:../otel-javaagent.jar" \
+OTEL_SERVICE_NAME=sharedservices-backend \
+OTEL_TRACES_EXPORTER=otlp \
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 \
+OTEL_METRICS_EXPORTER=none \
+./gradlew bootRun
+```
+
+Spring configuration also enables Micrometer Tracing:
+```yaml
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+```
+
+### Verify Tracing
+- Trigger activity:
+  ```bash
+  curl -X GET 'http://localhost:8080/api/v1/tenants/search?query=demo'
+  # or
+  curl -X POST http://localhost:8080/api/v1/auth/login \
+    -H 'Content-Type: application/json' \
+    -d '{"username": "admin@ahss.com", "password": "wrong"}'
+  ```
+- Check collector logs: `docker-compose logs -f otel-collector`.
+- Open Jaeger UI (`http://localhost:16686`), select service `sharedservices-backend`, search traces.
+
+Notes:
+- If you see agent warnings about logs export (`404` to `:4318`), they are benign in this setup because the collector pipeline is configured only for traces.
+
 ## 📋 Prerequisites
 
 - **Java 21** or higher
