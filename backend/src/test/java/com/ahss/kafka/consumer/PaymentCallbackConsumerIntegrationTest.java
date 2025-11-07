@@ -1,6 +1,5 @@
-package com.ahss.kafka;
+package com.ahss.kafka.consumer;
 
-import com.ahss.kafka.consumer.PaymentCallbackConsumer;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.ahss.saga.PaymentSagaOrchestrator;
@@ -60,5 +59,16 @@ class PaymentCallbackConsumerIntegrationTest {
         ArgumentCaptor<PaymentCallbackEvent> captor = ArgumentCaptor.forClass(PaymentCallbackEvent.class);
         Mockito.verify(orchestrator, timeout(5000)).handle(captor.capture());
         Allure.addAttachment("Received Callback Event", "application/json", objectMapper.writeValueAsString(captor.getValue()));
+    }
+
+    @Test
+    @DisplayName("Invalid JSON does not invoke orchestrator")
+    @Story("Payment Callback Consumer")
+    void invalid_json_is_ignored() {
+        String malformed = "{not-json}";
+        Allure.addAttachment("Malformed Callback Payload", "text/plain", malformed);
+        Allure.step("Invoke PaymentCallbackConsumer.onMessage with malformed payload",
+                () -> consumer.onMessage(malformed));
+        Mockito.verify(orchestrator, timeout(500).times(0)).handle(any());
     }
 }

@@ -1,7 +1,6 @@
-package com.ahss.kafka;
+package com.ahss.kafka.producer;
 
 import com.ahss.kafka.event.PaymentDomainEvent;
-import com.ahss.kafka.producer.PaymentEventProducer;
 import io.qameta.allure.Allure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
@@ -37,7 +36,7 @@ class PaymentEventProducerIntegrationTest {
 
   @Test
   @DisplayName("Sends domain event to payment-events topic")
-  @Story("Payment Event Producer")
+  @Story("sends domain event to payment-events topic")
   void sends_domain_event_to_payment_events_topic() {
     // Build a domain event
     String correlationId = "corr-123";
