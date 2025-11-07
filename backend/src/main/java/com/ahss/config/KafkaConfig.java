@@ -16,7 +16,6 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.kafka.config.TopicBuilder;
 
@@ -32,7 +31,8 @@ public class KafkaConfig {
     @Bean
     @ConditionalOnMissingBean
     public ProducerFactory<Object, Object> producerFactory(KafkaProperties kafkaProperties) {
-        // Merge Spring Boot Kafka producer properties, then ensure OTEL interceptor is present
+        // Merge Spring Boot Kafka producer properties, then ensure OTEL interceptor is
+        // present
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildProducerProperties());
         String interceptorClass = OtelKafkaProducerInterceptor.class.getName();
         Object existing = props.get(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG);
@@ -73,8 +73,7 @@ public class KafkaConfig {
     @Bean
     @ConditionalOnMissingBean
     public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
-            ConsumerFactory<String, String> consumerFactory
-    ) {
+            ConsumerFactory<String, String> consumerFactory) {
         ConcurrentKafkaListenerContainerFactory<String, String> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.setConcurrency(3);
@@ -84,15 +83,13 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic paymentCallbacksTopic(
-            @Value("${app.kafka.topics.payment-callbacks:payment-callbacks}") String name
-    ) {
+            @Value("${app.kafka.topics.payment-callbacks:payment-callbacks}") String name) {
         return TopicBuilder.name(name).partitions(3).replicas(1).build();
     }
 
     @Bean
     public NewTopic paymentEventsTopic(
-            @Value("${app.kafka.topics.payment-events:payment-events}") String name
-    ) {
+            @Value("${app.kafka.topics.payment-events:payment-events}") String name) {
         return TopicBuilder.name(name).partitions(3).replicas(1).build();
     }
 }

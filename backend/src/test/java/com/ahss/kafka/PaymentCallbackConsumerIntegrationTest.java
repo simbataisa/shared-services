@@ -7,9 +7,14 @@ import com.ahss.saga.PaymentSagaOrchestrator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.qameta.allure.Allure;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -21,6 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.timeout;
 
 @SpringBootTest
+@Epic("Saga")
+@Feature("Payment Callback Consumer")
 class PaymentCallbackConsumerIntegrationTest {
 
     @MockBean
@@ -33,6 +40,8 @@ class PaymentCallbackConsumerIntegrationTest {
     private PaymentCallbackConsumer consumer;
 
     @Test
+    @DisplayName("Consumes callback event and invokes orchestrator")
+    @Story("Payment Callback Consumer")
     void consumes_callback_event_and_invokes_orchestrator() throws Exception {
         // Build a callback event and serialize as JSON string
         PaymentCallbackEvent event = Allure.step("Create PaymentCallbackEvent", PaymentCallbackEvent::new);
@@ -42,11 +51,14 @@ class PaymentCallbackConsumerIntegrationTest {
         event.setGatewayName("TestGateway");
         event.setReceivedAt(LocalDateTime.now());
         String json = objectMapper.writeValueAsString(event);
+        Allure.addAttachment("Sent Callback Event", "application/json", json);
 
         // Invoke the consumer handler directly (bypassing Kafka for this test)
         Allure.step("Invoke PaymentCallbackConsumer.onMessage", () -> consumer.onMessage(json));
 
         // Verify the orchestrator eventually handles the event
-        Mockito.verify(orchestrator, timeout(5000)).handle(any(PaymentCallbackEvent.class));
+        ArgumentCaptor<PaymentCallbackEvent> captor = ArgumentCaptor.forClass(PaymentCallbackEvent.class);
+        Mockito.verify(orchestrator, timeout(5000)).handle(captor.capture());
+        Allure.addAttachment("Received Callback Event", "application/json", objectMapper.writeValueAsString(captor.getValue()));
     }
 }
