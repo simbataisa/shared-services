@@ -125,7 +125,7 @@ jobs:
       run: chmod +x backend/gradlew
 
     - name: Generate Allure report
-      run: cd backend && ./gradlew allureGenerate
+      run: cd backend && ./gradlew clean allureGenerate
       env:
         ALLURE_BUILD_ORDER: ${{ github.run_number }}
         ALLURE_BUILD_NAME: "Build #${{ github.run_number }}"

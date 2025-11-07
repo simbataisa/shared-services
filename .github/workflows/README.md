@@ -12,9 +12,11 @@ This directory contains GitHub Actions workflows for the Shared Services project
 - **Purpose**: Quick feedback on builds and tests
 - **Jobs**:
   - Build and test with Gradle
+  - Generate Allure test reports
   - Upload JAR artifacts
   - Upload test reports
   - Upload coverage reports
+  - Upload Allure reports
 
 **When to use**: Runs automatically on every push and PR for quick validation.
 
@@ -191,6 +193,7 @@ Workflows generate artifacts that are available for download after runs:
 | backend-build | `jar-file`                | 7 days    | Built JAR files         |
 | backend-build | `test-report`             | 7 days    | HTML test reports       |
 | backend-build | `coverage-report`         | 7 days    | JaCoCo coverage HTML    |
+| backend-build | `allure-report`           | 7 days    | Allure HTML report      |
 | backend-ci    | `build-libs`              | 7 days    | Built JAR files         |
 | backend-ci    | `jacoco-report`           | 30 days   | JaCoCo coverage HTML    |
 | backend-ci    | `test-results`            | 30 days   | JUnit test results      |
