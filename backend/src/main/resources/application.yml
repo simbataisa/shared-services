@@ -44,6 +44,14 @@ spring:
     template:
       observation-enabled: true
 
+app:
+  kafka:
+    consumer:
+      group: payment-orchestrator
+    topics:
+      payment-callbacks: payment-callbacks
+      payment-events: payment-events
+
 # CORS Configuration
 cors:
   allowed-origins:
