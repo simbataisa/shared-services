@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.ssl.DefaultSslBundleRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -31,24 +32,27 @@ public class KafkaConfig {
     @Bean
     @ConditionalOnMissingBean
     public ProducerFactory<Object, Object> producerFactory(KafkaProperties kafkaProperties) {
-        // Merge Spring Boot Kafka producer properties, then ensure OTEL interceptor is
-        // present
-        Map<String, Object> props = new HashMap<>(kafkaProperties.buildProducerProperties());
+    // Merge Spring Boot Kafka producer properties, then ensure OTEL interceptor is
+    // present
+    Map<String, Object> props =
+        new HashMap<>(kafkaProperties.buildProducerProperties(new DefaultSslBundleRegistry()));
         String interceptorClass = OtelKafkaProducerInterceptor.class.getName();
         Object existing = props.get(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG);
-        if (existing == null) {
-            props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, List.of(interceptorClass));
-        } else if (existing instanceof List) {
-            List<?> list = (List<?>) existing;
-            if (!list.contains(interceptorClass)) {
-                List<Object> newList = new ArrayList<>(list);
-                newList.add(interceptorClass);
-                props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, newList);
+        switch (existing) {
+            case null -> props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, List.of(interceptorClass));
+            case List<?> list -> {
+                if (!list.contains(interceptorClass)) {
+                    List<Object> newList = new ArrayList<>(list);
+                    newList.add(interceptorClass);
+                    props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, newList);
+                }
             }
-        } else if (existing instanceof String) {
-            String s = (String) existing;
-            if (!s.contains(interceptorClass)) {
-                props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, s + "," + interceptorClass);
+            case String s -> {
+                if (!s.contains(interceptorClass)) {
+                    props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, s + "," + interceptorClass);
+                }
+            }
+            default -> {
             }
         }
         return new DefaultKafkaProducerFactory<>(props);
