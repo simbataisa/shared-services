@@ -1,14 +1,9 @@
 package com.ahss.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Allure;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import io.qameta.allure.Epic;
@@ -27,22 +22,18 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
-    ResponseEntity<String> resp =
-        Allure.step(
-            "Send GET request to list payment requests",
-            () ->
-                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+    ResponseEntity<String> resp = Allure.step(
+        "Send GET request to list payment requests",
+        () -> restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
-    Allure.step("Verify response status is 200", () ->
-            assertEquals(200, resp.getStatusCode().value())
-    );
+    Allure.step("Verify response status is 200", () -> assertEquals(200, resp.getStatusCode().value()));
 
     Allure.step("Verify response body contains payment requests", () -> {
-        JsonNode root = objectMapper.readTree(resp.getBody());
-        assertTrue(root.path("success").asBoolean());
-        JsonNode data = root.path("data");
-        assertTrue(data.has("content"));
-        assertTrue(data.path("content").isArray());
+      JsonNode root = objectMapper.readTree(resp.getBody());
+      assertTrue(root.path("success").asBoolean());
+      JsonNode data = root.path("data");
+      assertTrue(data.has("content"));
+      assertTrue(data.path("content").isArray());
     });
   }
 
@@ -53,22 +44,18 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
-    ResponseEntity<String> resp =
-        Allure.step(
-            "Send GET request to list payment transactions",
-            () ->
-                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+    ResponseEntity<String> resp = Allure.step(
+        "Send GET request to list payment transactions",
+        () -> restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
-    Allure.step("Verify response status is 200", () ->
-            assertEquals(200, resp.getStatusCode().value())
-    );
+    Allure.step("Verify response status is 200", () -> assertEquals(200, resp.getStatusCode().value()));
 
     Allure.step("Verify response body contains payment transactions", () -> {
-        JsonNode root = objectMapper.readTree(resp.getBody());
-        assertTrue(root.path("success").asBoolean());
-        JsonNode data = root.path("data");
-        assertTrue(data.has("content"));
-        assertTrue(data.path("content").isArray());
+      JsonNode root = objectMapper.readTree(resp.getBody());
+      assertTrue(root.path("success").asBoolean());
+      JsonNode data = root.path("data");
+      assertTrue(data.has("content"));
+      assertTrue(data.path("content").isArray());
     });
   }
 
@@ -79,22 +66,18 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
-    ResponseEntity<String> resp =
-        Allure.step(
-            "Send GET request to list payment refunds",
-            () ->
-                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+    ResponseEntity<String> resp = Allure.step(
+        "Send GET request to list payment refunds",
+        () -> restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
-    Allure.step("Verify response status is 200", () ->
-            assertEquals(200, resp.getStatusCode().value())
-    );
+    Allure.step("Verify response status is 200", () -> assertEquals(200, resp.getStatusCode().value()));
 
     Allure.step("Verify response body contains payment refunds", () -> {
-        JsonNode root = objectMapper.readTree(resp.getBody());
-        assertTrue(root.path("success").asBoolean());
-        JsonNode data = root.path("data");
-        assertTrue(data.has("content"));
-        assertTrue(data.path("content").isArray());
+      JsonNode root = objectMapper.readTree(resp.getBody());
+      assertTrue(root.path("success").asBoolean());
+      JsonNode data = root.path("data");
+      assertTrue(data.has("content"));
+      assertTrue(data.path("content").isArray());
     });
   }
 
@@ -105,22 +88,18 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
-    ResponseEntity<String> resp =
-        Allure.step(
-            "Send GET request to list payment audit logs",
-            () ->
-                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+    ResponseEntity<String> resp = Allure.step(
+        "Send GET request to list payment audit logs",
+        () -> restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
-    Allure.step("Verify response status is 200", () ->
-            assertEquals(200, resp.getStatusCode().value())
-    );
+    Allure.step("Verify response status is 200", () -> assertEquals(200, resp.getStatusCode().value()));
 
     Allure.step("Verify response body contains payment audit logs", () -> {
-        JsonNode root = objectMapper.readTree(resp.getBody());
-        assertTrue(root.path("success").asBoolean());
-        JsonNode data = root.path("data");
-        assertTrue(data.has("content"));
-        assertTrue(data.path("content").isArray());
+      JsonNode root = objectMapper.readTree(resp.getBody());
+      assertTrue(root.path("success").asBoolean());
+      JsonNode data = root.path("data");
+      assertTrue(data.has("content"));
+      assertTrue(data.path("content").isArray());
     });
   }
 
@@ -131,24 +110,21 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
-    ResponseEntity<String> resp =
-        Allure.step(
-            "Send GET request to get payment request statistics",
-            () ->
-                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+    ResponseEntity<String> resp = Allure.step(
+        "Send GET request to get payment request statistics",
+        () -> restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
-    Allure.step("Verify response status is 200 or 500", () ->
-            assertTrue(resp.getStatusCode().value() == 200 || resp.getStatusCode().value() == 500)
-    );
+    Allure.step("Verify response status is 200 or 500",
+        () -> assertTrue(resp.getStatusCode().value() == 200 || resp.getStatusCode().value() == 500));
 
     Allure.step("Verify response body contains payment request statistics", () -> {
-        if (resp.getStatusCode().value() == 200) {
-          JsonNode root = objectMapper.readTree(resp.getBody());
-          assertTrue(root.path("success").asBoolean());
-          JsonNode data = root.path("data");
-          assertTrue(data.has("totalRequests"));
-          assertTrue(data.has("pendingRequests"));
-        }
+      if (resp.getStatusCode().value() == 200) {
+        JsonNode root = objectMapper.readTree(resp.getBody());
+        assertTrue(root.path("success").asBoolean());
+        JsonNode data = root.path("data");
+        assertTrue(data.has("totalRequests"));
+        assertTrue(data.has("pendingRequests"));
+      }
     });
   }
 
@@ -159,22 +135,18 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
-    ResponseEntity<String> resp =
-        Allure.step(
-            "Send GET request to get payment transaction statistics",
-            () ->
-                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+    ResponseEntity<String> resp = Allure.step(
+        "Send GET request to get payment transaction statistics",
+        () -> restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
-    Allure.step("Verify response status is 200", () ->
-            assertEquals(200, resp.getStatusCode().value())
-    );
+    Allure.step("Verify response status is 200", () -> assertEquals(200, resp.getStatusCode().value()));
 
     Allure.step("Verify response body contains payment transaction statistics", () -> {
-        JsonNode root = objectMapper.readTree(resp.getBody());
-        assertTrue(root.path("success").asBoolean());
-        JsonNode data = root.path("data");
-        assertTrue(data.has("totalTransactions"));
-        assertTrue(data.has("pendingTransactions"));
+      JsonNode root = objectMapper.readTree(resp.getBody());
+      assertTrue(root.path("success").asBoolean());
+      JsonNode data = root.path("data");
+      assertTrue(data.has("totalTransactions"));
+      assertTrue(data.has("pendingTransactions"));
     });
   }
 
@@ -185,24 +157,21 @@ public class PaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     HttpHeaders headers = new HttpHeaders();
     headers.setBearerAuth(token);
-    ResponseEntity<String> resp =
-        Allure.step(
-            "Send GET request to get payment refund statistics",
-            () ->
-                restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
+    ResponseEntity<String> resp = Allure.step(
+        "Send GET request to get payment refund statistics",
+        () -> restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
-    Allure.step("Verify response status is 200 or 500", () ->
-            assertTrue(resp.getStatusCode().value() == 200 || resp.getStatusCode().value() == 500)
-    );
+    Allure.step("Verify response status is 200 or 500",
+        () -> assertTrue(resp.getStatusCode().value() == 200 || resp.getStatusCode().value() == 500));
 
     Allure.step("Verify response body contains payment refund statistics", () -> {
-        if (resp.getStatusCode().value() == 200) {
-          JsonNode root = objectMapper.readTree(resp.getBody());
-          assertTrue(root.path("success").asBoolean());
-          JsonNode data = root.path("data");
-          assertTrue(data.has("totalRefunds"));
-          assertTrue(data.has("pendingRefunds"));
-        }
+      if (resp.getStatusCode().value() == 200) {
+        JsonNode root = objectMapper.readTree(resp.getBody());
+        assertTrue(root.path("success").asBoolean());
+        JsonNode data = root.path("data");
+        assertTrue(data.has("totalRefunds"));
+        assertTrue(data.has("pendingRefunds"));
+      }
     });
   }
 

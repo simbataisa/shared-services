@@ -276,6 +276,30 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
     }
 
     @Override
+    public PaymentRequestDto updateStatus(UUID id, PaymentRequestStatus newStatus, String reason) {
+        PaymentRequest paymentRequest = paymentRequestRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + id));
+
+        String oldStatus = paymentRequest.getStatus() != null ? paymentRequest.getStatus().toString() : null;
+        paymentRequest.setStatus(newStatus);
+        PaymentRequest updatedRequest = paymentRequestRepository.save(paymentRequest);
+
+        auditLogService.logPaymentRequestAction(
+            id,
+            "STATUS_UPDATED",
+            oldStatus,
+            newStatus.toString(),
+            reason != null ? reason : "Status updated by orchestrator",
+            null,
+            null,
+            null,
+            null
+        );
+
+        return convertToDto(updatedRequest);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public boolean existsByRequestCode(String requestCode) {
         return paymentRequestRepository.existsByRequestCode(requestCode);

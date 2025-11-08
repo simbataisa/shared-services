@@ -54,6 +54,8 @@ public interface PaymentRequestService {
 
     PaymentRequestDto markAsPaid(UUID id, LocalDateTime paidAt);
 
+    PaymentRequestDto updateStatus(UUID id, PaymentRequestStatus newStatus, String reason);
+
     boolean existsByRequestCode(String requestCode);
 
     boolean existsByPaymentToken(String paymentToken);
