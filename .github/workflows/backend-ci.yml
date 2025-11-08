@@ -59,8 +59,11 @@ jobs:
     - name: Run tests with Testcontainers
       run: cd backend && ./gradlew test jacocoTestReport
       env:
-        # Testcontainers uses the Docker daemon provided by GitHub Actions
+        # Testcontainers configuration for GitHub Actions
         TESTCONTAINERS_RYUK_DISABLED: false
+        TESTCONTAINERS_CHECKS_DISABLE: false
+        # Docker is available on ubuntu-latest runners
+        DOCKER_HOST: unix:///var/run/docker.sock
 
     - name: Generate JaCoCo Badge
       id: jacoco

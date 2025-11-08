@@ -1,0 +1,50 @@
+# Test configuration - overrides main application.yml for test profile
+# Uses Testcontainers JDBC URL which automatically starts PostgreSQL container
+
+spring:
+  datasource:
+    # Testcontainers JDBC URL - automatically starts PostgreSQL 16
+    # The 'TC_DAEMON=true' keeps container running for test duration
+    url: jdbc:tc:postgresql:16-alpine:///sharedservices?TC_DAEMON=false
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: postgres
+    password: postgres
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  kafka:
+    # Will be overridden by @EmbeddedKafka
+    bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
+
+# Disable tracing for tests
+management:
+  tracing:
+    enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: false
+
+# Test-specific logging
+logging:
+  level:
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.postgresql: WARN
+    com.ahss: INFO
+    org.testcontainers: INFO
+    org.springframework.kafka: WARN

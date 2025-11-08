@@ -11,6 +11,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -19,8 +21,17 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+        "spring.flyway.enabled=true",
+        "management.tracing.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=validate"
+    }
+)
+@ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@EmbeddedKafka(partitions = 1, topics = {"payment-callbacks", "payment-events"})
 public abstract class BaseIntegrationTest {
 
     @LocalServerPort
@@ -43,11 +54,19 @@ public abstract class BaseIntegrationTest {
 
     @DynamicPropertySource
     static void registerProps(DynamicPropertyRegistry registry) {
+        // PostgreSQL configuration
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.flyway.enabled", () -> true);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+
+        // Kafka configuration (handled by @EmbeddedKafka)
+        // spring.kafka.bootstrap-servers is auto-configured by @EmbeddedKafka
+
+        // Disable OpenTelemetry/Jaeger for tests
+        registry.add("management.tracing.enabled", () -> false);
+        registry.add("management.metrics.export.prometheus.enabled", () -> false);
     }
 
     protected String obtainToken() throws Exception {

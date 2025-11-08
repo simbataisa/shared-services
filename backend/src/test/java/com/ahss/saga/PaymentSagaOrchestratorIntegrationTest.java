@@ -38,6 +38,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @Epic("Saga")
 @Feature("Payment Saga Orchestrator")
 class PaymentSagaOrchestratorIntegrationTest {
@@ -56,7 +57,7 @@ class PaymentSagaOrchestratorIntegrationTest {
   @Story("Payment Saga Orchestrator")
   void handles_request_approved_and_updates_status() {
     UUID requestId = UUID.randomUUID();
-    PaymentRequestDto dto = Allure.step("Create PaymentRequestDto", () -> new PaymentRequestDto());
+    PaymentRequestDto dto = Allure.step("Create PaymentRequestDto", PaymentRequestDto::new);
     dto.setId(requestId);
     Allure.step(
         "Mock PaymentRequestService.updateStatus",
@@ -66,7 +67,7 @@ class PaymentSagaOrchestratorIntegrationTest {
                 .thenReturn(dto));
 
     PaymentCallbackEvent event =
-        Allure.step("Create PaymentCallbackEvent", () -> new PaymentCallbackEvent());
+        Allure.step("Create PaymentCallbackEvent", PaymentCallbackEvent::new);
     event.setType(PaymentCallbackType.REQUEST_APPROVED);
     event.setCorrelationId("corr-req-1");
     event.setPaymentRequestId(requestId);
@@ -122,7 +123,7 @@ class PaymentSagaOrchestratorIntegrationTest {
     UUID requestId = UUID.randomUUID();
 
     PaymentRefundDto refundDto =
-        Allure.step("Create PaymentRefundDto", () -> new PaymentRefundDto());
+        Allure.step("Create PaymentRefundDto", PaymentRefundDto::new);
     refundDto.setId(refundId);
     refundDto.setPaymentTransactionId(txId);
     refundDto.setRefundAmount(new BigDecimal("50.00"));
@@ -133,7 +134,7 @@ class PaymentSagaOrchestratorIntegrationTest {
                 .thenReturn(Optional.of(refundDto)));
 
     PaymentTransactionDto txDto =
-        Allure.step("Create PaymentTransactionDto", () -> new PaymentTransactionDto());
+        Allure.step("Create PaymentTransactionDto", PaymentTransactionDto::new);
     txDto.setId(txId);
     txDto.setAmount(new BigDecimal("100.00"));
     txDto.setPaymentRequestId(requestId);
@@ -142,7 +143,7 @@ class PaymentSagaOrchestratorIntegrationTest {
         () -> when(transactionService.getTransactionById(eq(txId))).thenReturn(Optional.of(txDto)));
 
     PaymentCallbackEvent event =
-        Allure.step("Create PaymentCallbackEvent", () -> new PaymentCallbackEvent());
+        Allure.step("Create PaymentCallbackEvent", PaymentCallbackEvent::new);
     event.setType(PaymentCallbackType.REFUND_SUCCESS);
     event.setCorrelationId("corr-ref-1");
     event.setExternalRefundId("ext-ref-1");
@@ -200,7 +201,7 @@ class PaymentSagaOrchestratorIntegrationTest {
     UUID requestId = UUID.randomUUID();
 
     PaymentTransactionDto txDto =
-        Allure.step("Create PaymentTransactionDto", () -> new PaymentTransactionDto());
+        Allure.step("Create PaymentTransactionDto", PaymentTransactionDto::new);
     txDto.setId(txId);
     txDto.setPaymentRequestId(requestId);
 
@@ -212,7 +213,7 @@ class PaymentSagaOrchestratorIntegrationTest {
 
     LocalDateTime receivedAt = LocalDateTime.now();
     PaymentCallbackEvent event =
-        Allure.step("Create PaymentCallbackEvent", () -> new PaymentCallbackEvent());
+        Allure.step("Create PaymentCallbackEvent", PaymentCallbackEvent::new);
     event.setType(PaymentCallbackType.PAYMENT_SUCCESS);
     event.setCorrelationId("corr-pay-1");
     event.setExternalTransactionId("ext-tx-1");
@@ -349,7 +350,7 @@ class PaymentSagaOrchestratorIntegrationTest {
   void handles_refund_failed_and_logs_failure() throws Exception {
     UUID refundId = UUID.randomUUID();
 
-    PaymentRefundDto refundDto = Allure.step("Create refund DTO", () -> new PaymentRefundDto());
+    PaymentRefundDto refundDto = Allure.step("Create refund DTO", PaymentRefundDto::new);
     refundDto.setId(refundId);
     Allure.step(
         "Mock refund service",
@@ -358,7 +359,7 @@ class PaymentSagaOrchestratorIntegrationTest {
                 .thenReturn(Optional.of(refundDto)));
 
     PaymentCallbackEvent event =
-        Allure.step("Create refund failed event", () -> new PaymentCallbackEvent());
+        Allure.step("Create refund failed event", PaymentCallbackEvent::new);
     Allure.step(
         "Set event properties",
         () -> {
@@ -412,7 +413,7 @@ class PaymentSagaOrchestratorIntegrationTest {
     UUID refundId = UUID.randomUUID();
     UUID requestId = UUID.randomUUID();
 
-    PaymentRefundDto refundDto = Allure.step("Create refund DTO", () -> new PaymentRefundDto());
+    PaymentRefundDto refundDto = Allure.step("Create refund DTO", PaymentRefundDto::new);
     Allure.step(
         "Set refund properties",
         () -> {
@@ -427,7 +428,7 @@ class PaymentSagaOrchestratorIntegrationTest {
                 .thenReturn(Optional.of(refundDto)));
 
     PaymentTransactionDto txDto =
-        Allure.step("Create transaction DTO", () -> new PaymentTransactionDto());
+        Allure.step("Create transaction DTO", PaymentTransactionDto::new);
     Allure.step(
         "Set transaction properties",
         () -> {
@@ -440,7 +441,7 @@ class PaymentSagaOrchestratorIntegrationTest {
         () -> when(transactionService.getTransactionById(eq(txId))).thenReturn(Optional.of(txDto)));
 
     PaymentCallbackEvent event =
-        Allure.step("Create refund success event", () -> new PaymentCallbackEvent());
+        Allure.step("Create refund success event", PaymentCallbackEvent::new);
     Allure.step(
         "Set event properties",
         () -> {
@@ -543,7 +544,7 @@ class PaymentSagaOrchestratorIntegrationTest {
   void handles_request_approved_via_token_resolution() throws Exception {
     UUID requestId = Allure.step("Generate random request ID", () -> UUID.randomUUID());
     PaymentRequestDto dto =
-        Allure.step("Create payment request DTO", () -> new PaymentRequestDto());
+        Allure.step("Create payment request DTO", PaymentRequestDto::new);
     Allure.step("Set request properties", () -> dto.setId(requestId));
     Allure.step(
         "Mock request service to return request for token",
@@ -558,7 +559,7 @@ class PaymentSagaOrchestratorIntegrationTest {
                 .thenReturn(dto));
 
     PaymentCallbackEvent event =
-        Allure.step("Create request approved event", () -> new PaymentCallbackEvent());
+        Allure.step("Create request approved event", PaymentCallbackEvent::new);
     Allure.step(
         "Set event properties",
         () -> {

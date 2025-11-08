@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = SharedServicesApplication.class)
+@org.springframework.test.context.ActiveProfiles("test")
 @Epic("Saga")
 @Feature("Payment Callback Consumer")
 public class PaymentCallbackConsumerPayPalIntegrationTest {
@@ -69,7 +70,7 @@ public class PaymentCallbackConsumerPayPalIntegrationTest {
     UUID txId = UUID.randomUUID();
     UUID reqId = UUID.randomUUID();
     PaymentTransactionDto txDto =
-        Allure.step("Create PaymentTransactionDto", () -> new PaymentTransactionDto());
+        Allure.step("Create PaymentTransactionDto", PaymentTransactionDto::new);
     txDto.setId(txId);
     txDto.setPaymentRequestId(reqId);
     Allure.step(
