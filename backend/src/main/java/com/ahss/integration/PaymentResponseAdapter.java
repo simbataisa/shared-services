@@ -3,6 +3,7 @@ package com.ahss.integration;
 import com.ahss.dto.response.PaymentResponseDto;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
+import com.ahss.integration.mapper.PaymentChannelIntegrationEventTypeMapper;
 
 import java.time.LocalDateTime;
 
@@ -40,19 +41,6 @@ public final class PaymentResponseAdapter {
         if (!resp.isSuccess()) {
             return PaymentCallbackType.PAYMENT_FAILED;
         }
-        String status = resp.getStatus();
-        if (status == null) {
-            return PaymentCallbackType.PAYMENT_SUCCESS;
-        }
-        switch (status) {
-            case "AUTHORIZED":
-            case "CAPTURED":
-            case "TOKENIZED":
-                return PaymentCallbackType.PAYMENT_SUCCESS;
-            case "REFUNDED":
-                return PaymentCallbackType.REFUND_SUCCESS;
-            default:
-                return PaymentCallbackType.PAYMENT_SUCCESS;
-        }
+        return PaymentChannelIntegrationEventTypeMapper.mapGenericStatus(resp.getStatus());
     }
 }

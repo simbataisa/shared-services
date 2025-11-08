@@ -1,6 +1,6 @@
 package com.ahss.integration.paypal;
 
-import com.ahss.integration.webhook.WebhookEventTypeMapper;
+import com.ahss.integration.mapper.PaymentChannelIntegrationEventTypeMapper;
 import com.ahss.integration.MessageParser;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
@@ -44,7 +44,7 @@ public class PayPalMessageParser implements MessageParser {
         evt.setCurrency(currency);
         evt.setGatewayResponse(toMap(root));
 
-        PaymentCallbackType mapped = WebhookEventTypeMapper.mapPayPal(eventType);
+        PaymentCallbackType mapped = PaymentChannelIntegrationEventTypeMapper.mapPayPal(eventType);
         if (mapped != null) {
             evt.setType(mapped);
         } else {

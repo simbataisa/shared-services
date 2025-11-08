@@ -1,4 +1,4 @@
-package com.ahss.integration.webhook;
+package com.ahss.integration.mapper;
 
 import com.ahss.integration.paypal.PayPalWebhookEventType;
 import com.ahss.integration.stripe.StripeWebhookEventType;
@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Shared mapper for webhook event types across gateways using EnumMap.
  */
-public final class WebhookEventTypeMapper {
+public final class PaymentChannelIntegrationEventTypeMapper {
 
     private static final Map<PayPalWebhookEventType, PaymentCallbackType> PAYPAL_MAP =
             new EnumMap<>(PayPalWebhookEventType.class);
@@ -42,7 +42,7 @@ public final class WebhookEventTypeMapper {
         STRIPE_MAP.put(StripeWebhookEventType.REFUND_UPDATED, PaymentCallbackType.REFUND_FAILED);
     }
 
-    private WebhookEventTypeMapper() {}
+    private PaymentChannelIntegrationEventTypeMapper() {}
 
     public static PaymentCallbackType mapPayPal(String eventType) {
         PayPalWebhookEventType t = PayPalWebhookEventType.fromValue(eventType);
@@ -54,5 +54,23 @@ public final class WebhookEventTypeMapper {
         StripeWebhookEventType t = StripeWebhookEventType.fromValue(eventType);
         if (t == null) return PaymentCallbackType.PAYMENT_SUCCESS; // keep controller default
         return STRIPE_MAP.getOrDefault(t, PaymentCallbackType.PAYMENT_SUCCESS);
+    }
+
+    /**
+     * Maps generic outbound status strings to callback types,
+     * reusing centralized mapping instead of duplicating logic.
+     */
+    public static PaymentCallbackType mapGenericStatus(String status) {
+        if (status == null) return PaymentCallbackType.PAYMENT_SUCCESS;
+        switch (status) {
+            case "AUTHORIZED":
+            case "CAPTURED":
+            case "TOKENIZED":
+                return PaymentCallbackType.PAYMENT_SUCCESS;
+            case "REFUNDED":
+                return PaymentCallbackType.REFUND_SUCCESS;
+            default:
+                return PaymentCallbackType.PAYMENT_SUCCESS;
+        }
     }
 }

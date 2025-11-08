@@ -1,6 +1,6 @@
 package com.ahss.integration.stripe;
 
-import com.ahss.integration.webhook.WebhookEventTypeMapper;
+import com.ahss.integration.mapper.PaymentChannelIntegrationEventTypeMapper;
 import com.ahss.integration.MessageParser;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
@@ -43,7 +43,7 @@ public class StripeMessageParser implements MessageParser {
         evt.setCurrency(currency);
         evt.setGatewayResponse(toMap(root));
 
-        PaymentCallbackType mapped = WebhookEventTypeMapper.mapStripe(stripeType);
+        PaymentCallbackType mapped = PaymentChannelIntegrationEventTypeMapper.mapStripe(stripeType);
         if (mapped != null) {
             evt.setType(mapped);
         } else {

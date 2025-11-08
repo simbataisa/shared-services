@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 
 @Epic("Payment Channel Integration")
 @Feature("Bank Transfer Integration")
-class BankTransferWebhookControllerTest extends BaseIntegrationTest {
+    class BankTransferWebhookControllerTest extends BaseIntegrationTest {
 
     @MockBean
     private PaymentCallbackProducer producer;
