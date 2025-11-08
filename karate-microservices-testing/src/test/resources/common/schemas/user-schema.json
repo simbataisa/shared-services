@@ -1,0 +1,10 @@
+{
+  "id": "#number",
+  "name": "#string",
+  "email": "#string",
+  "createdAt": "#string",
+  "metadata": {
+    "version": "#string",
+    "source": "#string"
+  }
+}

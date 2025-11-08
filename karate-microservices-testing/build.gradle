@@ -1,0 +1,63 @@
+plugins {
+  id 'java'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'org.slf4j:slf4j-api:2.0.12'
+
+  testImplementation 'com.intuit.karate:karate-junit5:1.4.0'
+  testImplementation 'ch.qos.logback:logback-classic:1.4.14'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+}
+
+test {
+  useJUnitPlatform()
+  // Allow passing env/threads via -D or Gradle properties
+  systemProperty 'karate.env', System.getProperty('karate.env', System.getProperty('env', 'qa'))
+  systemProperty 'threads', System.getProperty('threads', '5')
+  testLogging {
+    events 'passed', 'skipped', 'failed'
+  }
+}
+
+tasks.register('testSmoke', Test) {
+  useJUnitPlatform()
+  systemProperty 'karate.env', System.getProperty('karate.env', 'qa')
+  systemProperty 'threads', System.getProperty('threads', '5')
+  systemProperty 'karate.options', '--tags @smoke'
+  testLogging { events 'passed', 'skipped', 'failed' }
+}
+
+tasks.register('testContract', Test) {
+  useJUnitPlatform()
+  systemProperty 'karate.env', System.getProperty('karate.env', 'qa')
+  systemProperty 'karate.options', '--tags @contract'
+  testLogging { events 'passed', 'skipped', 'failed' }
+}
+
+tasks.register('testPerf', Test) {
+  useJUnitPlatform()
+  // Only run PerformanceTestRunner
+  filter { includeTestsMatching '*PerformanceTestRunner' }
+  systemProperty 'karate.env', System.getProperty('karate.env', 'qa')
+  systemProperty 'threads', System.getProperty('threads', '10')
+  testLogging { events 'passed', 'skipped', 'failed' }
+}
+
+tasks.register('mockStart', Test) {
+  useJUnitPlatform()
+  // Only run MockRunner, and keep it alive long enough for CI/local
+  filter { includeTestsMatching '*MockRunner' }
+  systemProperty 'mock.block.ms', System.getProperty('mock.block.ms', '600000')
+  testLogging { events 'passed', 'skipped', 'failed' }
+}

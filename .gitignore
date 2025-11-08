@@ -45,6 +45,16 @@ backend/*.db
 backend/*.mv.db
 backend/*.trace.db
 
+# Karate Microservices Testing
+karate-microservices-testing/build/
+karate-microservices-testing/.gradle/
+karate-microservices-testing/out/
+karate-microservices-testing/target/
+karate-microservices-testing/.idea/
+karate-microservices-testing/*.iml
+karate-microservices-testing/*.ipr
+karate-microservices-testing/*.iws  
+
 # Frontend/Node.js
 frontend/node_modules/
 frontend/dist/
