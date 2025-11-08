@@ -55,6 +55,8 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.springframework.kafka:spring-kafka-test:3.2.4'
+    // WireMock integration with Spring Boot tests
+    testImplementation 'org.springframework.cloud:spring-cloud-contract-wiremock:4.1.3'
     // Spring Boot integration with Testcontainers
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     // Testcontainers for PostgreSQL and JUnit 5 integration

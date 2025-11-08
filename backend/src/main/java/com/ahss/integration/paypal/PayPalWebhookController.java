@@ -1,10 +1,11 @@
-package com.ahss.integration.webhook;
+package com.ahss.integration.paypal;
 
 import com.ahss.dto.response.ApiResponse;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.ahss.kafka.producer.PaymentCallbackProducer;
-import com.ahss.integration.webhook.WebhookEventTypeMapper;
+import com.ahss.integration.mapper.PaymentChannelIntegrationEventTypeMapper;
+import com.ahss.integration.webhook.BaseWebhookController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +47,7 @@ public class PayPalWebhookController extends BaseWebhookController {
     protected String extractEventType(JsonNode root) { return text(root.get("event_type")); }
 
     @Override
-    protected PaymentCallbackType mapEventType(String eventType) { return WebhookEventTypeMapper.mapPayPal(eventType); }
+    protected PaymentCallbackType mapEventType(String eventType) { return PaymentChannelIntegrationEventTypeMapper.mapPayPal(eventType); }
 
     @Override
     protected void populateEvent(PaymentCallbackEvent event, JsonNode root) {

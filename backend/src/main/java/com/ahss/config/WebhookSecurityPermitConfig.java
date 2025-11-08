@@ -12,6 +12,7 @@ public class WebhookSecurityPermitConfig {
         return (web) -> web.ignoring()
                 .requestMatchers(
                         "/api/integrations/webhooks/stripe",
-                        "/api/integrations/webhooks/paypal");
+                        "/api/integrations/webhooks/paypal",
+                        "/api/integrations/webhooks/bank-transfer");
     }
 }

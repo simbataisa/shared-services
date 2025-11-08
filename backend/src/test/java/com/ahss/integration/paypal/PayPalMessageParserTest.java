@@ -1,4 +1,4 @@
-package com.ahss.integration.webhook.parser;
+package com.ahss.integration.paypal;
 
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
@@ -16,12 +16,12 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Epic("Integration")
-@Feature("PayPal Webhook Message Parser")
-class PayPalWebhookMessageParserTest {
+@Epic("Payment Channel Integration")
+@Feature("PayPal Integration")
+class PayPalMessageParserTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final PayPalWebhookMessageParser parser = new PayPalWebhookMessageParser();
+    private final PayPalMessageParser parser = new PayPalMessageParser();
 
     @Test
     @DisplayName("supports() returns true for PayPal-shaped payload")

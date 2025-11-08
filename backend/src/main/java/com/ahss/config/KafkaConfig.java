@@ -32,10 +32,10 @@ public class KafkaConfig {
     @Bean
     @ConditionalOnMissingBean
     public ProducerFactory<Object, Object> producerFactory(KafkaProperties kafkaProperties) {
-    // Merge Spring Boot Kafka producer properties, then ensure OTEL interceptor is
-    // present
-    Map<String, Object> props =
-        new HashMap<>(kafkaProperties.buildProducerProperties(new DefaultSslBundleRegistry()));
+        // Merge Spring Boot Kafka producer properties, then ensure OTEL interceptor is
+        // present
+        Map<String, Object> props = new HashMap<>(
+                kafkaProperties.buildProducerProperties(new DefaultSslBundleRegistry()));
         String interceptorClass = OtelKafkaProducerInterceptor.class.getName();
         Object existing = props.get(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG);
         switch (existing) {
@@ -67,7 +67,8 @@ public class KafkaConfig {
     @Bean
     @ConditionalOnMissingBean
     public ConsumerFactory<String, String> consumerFactory(KafkaProperties kafkaProperties) {
-        Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
+        Map<String, Object> props = new HashMap<>(
+                kafkaProperties.buildConsumerProperties(new DefaultSslBundleRegistry()));
         // Ensure String deserializers for simple JSON string payloads
         props.putIfAbsent(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

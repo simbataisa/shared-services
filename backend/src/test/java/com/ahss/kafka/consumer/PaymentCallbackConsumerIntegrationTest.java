@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.timeout;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @Epic("Saga")
 @Feature("Payment Callback Consumer")
 class PaymentCallbackConsumerIntegrationTest {

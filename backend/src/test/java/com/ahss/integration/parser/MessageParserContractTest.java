@@ -1,5 +1,6 @@
-package com.ahss.integration.webhook.parser;
+package com.ahss.integration.parser;
 
+import com.ahss.integration.MessageParser;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,13 +13,13 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
-@Epic("Integration")
-@Feature("Webhook Message Parser")
-class WebhookMessageParserContractTest {
+@Epic("Payment Channel Integration")
+@Feature("Message Parser")
+class MessageParserContractTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    static class TestParser implements WebhookMessageParser {
+    static class TestParser implements MessageParser {
         @Override
         public boolean supports(JsonNode root) {
             return root.has("ok");
@@ -42,7 +43,7 @@ class WebhookMessageParserContractTest {
         String json = "{ \"ok\": true, \"corr\": \"c1\", \"txid\": \"t1\" }";
         JsonNode root = objectMapper.readTree(json);
 
-        WebhookMessageParser parser = new TestParser();
+        MessageParser parser = new TestParser();
         assertTrue(parser.supports(root));
         PaymentCallbackEvent evt = parser.parse(root);
         assertEquals(PaymentCallbackType.PAYMENT_SUCCESS, evt.getType());

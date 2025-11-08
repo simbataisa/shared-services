@@ -1,6 +1,7 @@
-package com.ahss.integration.webhook.parser;
+package com.ahss.integration.stripe;
 
-import com.ahss.integration.webhook.WebhookEventTypeMapper;
+import com.ahss.integration.mapper.PaymentChannelIntegrationEventTypeMapper;
+import com.ahss.integration.MessageParser;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,38 +13,37 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Parser for PayPal webhook payloads.
+ * Parser for Stripe webhook payloads.
  */
-public class PayPalWebhookMessageParser implements WebhookMessageParser {
+public class StripeMessageParser implements MessageParser {
 
     @Override
     public boolean supports(JsonNode root) {
-        return root.has("event_type") && root.has("resource");
+        return root.has("type") && root.has("data");
     }
 
     @Override
     public PaymentCallbackEvent parse(JsonNode root) {
-        String eventType = text(root, "event_type");
-        JsonNode resource = root.path("resource");
+        String stripeType = text(root, "type");
+        JsonNode object = root.path("data").path("object");
         String correlationId = text(root, "id");
-        String currency = text(resource.path("amount"), "currency_code");
-        String externalTxId = text(resource, "id");
+        String currency = text(object, "currency");
+        String externalTxId = text(object, "id");
+
+        Long amountInMinor = longVal(object, "amount_received");
+        if (amountInMinor == null)
+            amountInMinor = longVal(object, "amount");
 
         PaymentCallbackEvent evt = new PaymentCallbackEvent();
         evt.setCorrelationId(correlationId);
-        evt.setGatewayName("PayPal");
+        evt.setGatewayName("Stripe");
         evt.setExternalTransactionId(externalTxId);
-
-        java.math.BigDecimal amount = null;
-        String valueStr = text(resource.path("amount"), "value");
-        if (valueStr != null) {
-            try { amount = new java.math.BigDecimal(valueStr); } catch (Exception ignored) {}
-        }
-        if (amount != null) evt.setAmount(amount);
+        if (amountInMinor != null)
+            evt.setAmount(java.math.BigDecimal.valueOf(amountInMinor).movePointLeft(2));
         evt.setCurrency(currency);
         evt.setGatewayResponse(toMap(root));
 
-        PaymentCallbackType mapped = WebhookEventTypeMapper.mapPayPal(eventType);
+        PaymentCallbackType mapped = PaymentChannelIntegrationEventTypeMapper.mapStripe(stripeType);
         if (mapped != null) {
             evt.setType(mapped);
         } else {
@@ -51,26 +51,35 @@ public class PayPalWebhookMessageParser implements WebhookMessageParser {
         }
 
         if (PaymentCallbackType.PAYMENT_FAILED.equals(evt.getType())) {
-            evt.setErrorCode(text(resource, "status"));
-            evt.setErrorMessage(text(resource, "reason_code"));
+            String errCode = text(object.path("last_payment_error"), "code");
+            String errMsg = text(object.path("last_payment_error"), "message");
+            evt.setErrorCode(errCode);
+            evt.setErrorMessage(errMsg);
         } else if (PaymentCallbackType.REFUND_SUCCESS.equals(evt.getType())) {
-            evt.setExternalRefundId(text(resource, "id"));
+            String refundId = text(object.path("refunds").path("data").path(0), "id");
+            evt.setExternalRefundId(refundId);
         }
 
-        String isoTime = text(resource, "create_time");
-        if (isoTime != null) {
-            try {
-                evt.setReceivedAt(LocalDateTime.ofInstant(Instant.parse(isoTime), ZoneOffset.UTC));
-            } catch (Exception ignored) {}
+        Long createdEpoch = longVal(root, "created");
+        if (createdEpoch != null) {
+            evt.setReceivedAt(LocalDateTime.ofInstant(Instant.ofEpochSecond(createdEpoch), ZoneOffset.UTC));
         }
 
         return evt;
     }
 
     private String text(JsonNode node, String field) {
-        if (node == null || field == null) return null;
+        if (node == null || field == null)
+            return null;
         JsonNode v = node.get(field);
         return v == null || v.isNull() ? null : v.asText();
+    }
+
+    private Long longVal(JsonNode node, String field) {
+        if (node == null || field == null)
+            return null;
+        JsonNode v = node.get(field);
+        return v == null || v.isNull() ? null : v.asLong();
     }
 
     private Map<String, Object> toMap(JsonNode node) {
@@ -84,7 +93,8 @@ public class PayPalWebhookMessageParser implements WebhookMessageParser {
     }
 
     private Object jsonNodeToJava(JsonNode node) {
-        if (node == null || node.isNull()) return null;
+        if (node == null || node.isNull())
+            return null;
         if (node.isObject()) {
             Map<String, Object> child = new HashMap<>();
             Iterator<Map.Entry<String, JsonNode>> it = node.fields();
@@ -96,11 +106,14 @@ public class PayPalWebhookMessageParser implements WebhookMessageParser {
         }
         if (node.isArray()) {
             java.util.List<Object> list = new java.util.ArrayList<>();
-            for (JsonNode n : node) list.add(jsonNodeToJava(n));
+            for (JsonNode n : node)
+                list.add(jsonNodeToJava(n));
             return list;
         }
-        if (node.isNumber()) return node.numberValue();
-        if (node.isBoolean()) return node.asBoolean();
+        if (node.isNumber())
+            return node.numberValue();
+        if (node.isBoolean())
+            return node.asBoolean();
         return node.asText();
     }
 }

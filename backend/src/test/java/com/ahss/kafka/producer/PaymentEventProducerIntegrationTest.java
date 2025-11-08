@@ -25,7 +25,7 @@ import static org.mockito.Mockito.verify;
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, properties = {
     "app.kafka.topics.payment-events=payment-events"
 })
-
+@org.springframework.test.context.ActiveProfiles("test")
 @Epic("Saga")
 @Feature("Payment Event Producer")
 class PaymentEventProducerIntegrationTest {

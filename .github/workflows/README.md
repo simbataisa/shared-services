@@ -6,19 +6,19 @@ This directory contains GitHub Actions workflows for the Shared Services project
 
 ### 1. Backend Build (`backend-build.yml`)
 
-**Simple build and test workflow for backend service**
+**Quick build validation workflow (no integration tests)**
 
-- **Triggers**: All branches, all PRs
-- **Purpose**: Quick feedback on builds and tests
+- **Triggers**: Pull requests only (all branches)
+- **Purpose**: Fast feedback on compilation and basic unit tests
 - **Jobs**:
-  - Build and test with Gradle
-  - Generate Allure test reports
+  - Build without running tests (`./gradlew clean build -x test`)
+  - Optionally run quick unit tests (non-Testcontainers tests)
   - Upload JAR artifacts
-  - Upload test reports
-  - Upload coverage reports
-  - Upload Allure reports
+  - Upload test reports if available
 
-**When to use**: Runs automatically on every push and PR for quick validation.
+**When to use**: Runs automatically on PRs for quick validation. Skips integration tests that require Docker/Testcontainers to keep builds fast.
+
+**Note**: This workflow intentionally skips integration tests. Full test suite runs in `backend-ci.yml`.
 
 ---
 
@@ -31,20 +31,29 @@ This directory contains GitHub Actions workflows for the Shared Services project
   - PRs to: `main`, `develop`
 - **Jobs**:
   1. **build** - Compile code and create JAR artifacts
-  2. **test** - Run tests with Testcontainers, generate JaCoCo coverage, upload to Codecov
+  2. **test** - Run **ALL tests including integration tests** with Testcontainers, generate JaCoCo coverage, upload to Codecov
   3. **allure-report** - Generate and publish Allure test reports to GitHub Pages
   4. **code-quality** - Run SonarCloud analysis
   5. **docker-build** - Build and push Docker images (main/develop only)
   6. **dependency-check** - Scan dependencies for vulnerabilities
 
-**Required Secrets**:
+**Test Infrastructure**:
+- **PostgreSQL**: Uses Testcontainers to spin up PostgreSQL 16 containers
+- **Kafka**: Uses `@EmbeddedKafka` from Spring Kafka Test (in-memory broker)
+- **Tracing**: OpenTelemetry/Jaeger disabled for tests (`management.tracing.enabled=false`)
+- **Docker**: GitHub Actions `ubuntu-latest` runners have Docker pre-installed
+- **Environment variables**:
+  - `TESTCONTAINERS_RYUK_DISABLED=false` - Enable resource cleanup
+  - `TESTCONTAINERS_CHECKS_DISABLE=false` - Enable Docker checks
+  - `DOCKER_HOST=unix:///var/run/docker.sock` - Docker socket path
 
+**Required Secrets**:
 - `CODECOV_TOKEN` - For uploading coverage to Codecov (optional)
 - `SONAR_TOKEN` - For SonarCloud integration (optional)
 - `DOCKER_USERNAME` - For Docker Hub push (optional)
 - `DOCKER_PASSWORD` - For Docker Hub push (optional)
 
-**When to use**: Automatically runs on feature branches and PRs for comprehensive validation.
+**When to use**: Automatically runs on feature branches and PRs for comprehensive validation including integration tests.
 
 ---
 
@@ -190,10 +199,8 @@ Workflows generate artifacts that are available for download after runs:
 
 | Workflow      | Artifact                  | Retention | Description             |
 | ------------- | ------------------------- | --------- | ----------------------- |
-| backend-build | `jar-file`                | 7 days    | Built JAR files         |
-| backend-build | `test-report`             | 7 days    | HTML test reports       |
-| backend-build | `coverage-report`         | 7 days    | JaCoCo coverage HTML    |
-| backend-build | `allure-report`           | 7 days    | Allure HTML report      |
+| backend-build | `jar-file`                | 7 days    | Built JAR files (no tests) |
+| backend-build | `test-report`             | 7 days    | Unit test reports (if available) |
 | backend-ci    | `build-libs`              | 7 days    | Built JAR files         |
 | backend-ci    | `jacoco-report`           | 30 days   | JaCoCo coverage HTML    |
 | backend-ci    | `test-results`            | 30 days   | JUnit test results      |
@@ -217,6 +224,31 @@ Workflows generate artifacts that are available for download after runs:
 - Check the `on:` section matches your branch/event
 - For PRs: workflow must exist in the base branch
 - For new workflows: may need to push a new commit to trigger
+
+### Integration tests failing with connection errors
+
+**For PostgreSQL/Testcontainers failures:**
+- Ensure Docker is available (GitHub Actions `ubuntu-latest` has it pre-installed)
+- Check Testcontainers configuration in workflow
+- Verify `DOCKER_HOST` environment variable is set
+- For local development, ensure Docker Desktop is running
+- Integration tests require:
+  - Docker daemon running
+  - Sufficient resources (memory, disk space)
+  - Network access for pulling PostgreSQL images
+
+**For Kafka connection failures:**
+- Tests use `@EmbeddedKafka` (in-memory broker) - no external Kafka needed
+- Check that `spring-kafka-test` dependency is present
+- Ensure `@EmbeddedKafka` annotation is on `BaseIntegrationTest`
+
+**For Jaeger/OpenTelemetry failures:**
+- Tracing is disabled in tests via `management.tracing.enabled=false`
+- No external Jaeger instance required
+- If still seeing issues, add to `@DynamicPropertySource`:
+  ```java
+  registry.add("management.tracing.enabled", () -> false);
+  ```
 
 ### Gradle permission denied
 
