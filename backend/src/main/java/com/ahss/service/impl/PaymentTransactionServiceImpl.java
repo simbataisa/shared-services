@@ -1,14 +1,22 @@
 package com.ahss.service.impl;
 
 import com.ahss.dto.request.ProcessPaymentDto;
+import com.ahss.dto.response.PaymentRequestDto;
+import com.ahss.dto.response.PaymentResponseDto;
 import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.entity.PaymentTransaction;
 import com.ahss.enums.PaymentTransactionStatus;
 import com.ahss.enums.PaymentTransactionType;
 import com.ahss.enums.PaymentMethodType;
+import com.ahss.integration.PaymentIntegrator;
+import com.ahss.integration.PaymentIntegratorFactory;
+import com.ahss.integration.PaymentResponseAdapter;
+import com.ahss.kafka.event.PaymentCallbackEvent;
+import com.ahss.kafka.producer.PaymentCallbackProducer;
 import com.ahss.repository.PaymentTransactionRepository;
 import com.ahss.service.PaymentTransactionService;
 import com.ahss.service.PaymentAuditLogService;
+import com.ahss.service.PaymentRequestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,15 +42,62 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     @Autowired
     private PaymentAuditLogService auditLogService;
 
+    @Autowired
+    private PaymentRequestService paymentRequestService;
+
+    @Autowired
+    private PaymentIntegratorFactory integratorFactory;
+
+    @Autowired
+    private PaymentCallbackProducer paymentCallbackProducer;
+
     @Override
     public PaymentTransactionDto processPayment(ProcessPaymentDto processDto) {
-        // Implementation would process the payment
-        // For now, just create a basic transaction
+        // Resolve the payment request by token
+        PaymentRequestDto paymentRequest = paymentRequestService
+                .getPaymentRequestByToken(processDto.getPaymentToken())
+                .orElseThrow(() -> new RuntimeException("Payment request not found for token: " + processDto.getPaymentToken()));
+
+        // Create a new transaction seeded from request and process details
         PaymentTransaction transaction = new PaymentTransaction();
-        transaction.setTransactionCode("TXN-" + System.currentTimeMillis());
-        transaction.setTransactionStatus(PaymentTransactionStatus.PENDING);
+        transaction.setPaymentRequestId(paymentRequest.getId());
+        transaction.setTransactionType(PaymentTransactionType.PAYMENT);
+        transaction.setTransactionStatus(PaymentTransactionStatus.PROCESSING);
+        transaction.setAmount(paymentRequest.getAmount());
+        transaction.setCurrency(paymentRequest.getCurrency());
+        transaction.setPaymentMethod(processDto.getPaymentMethod());
+        transaction.setPaymentMethodDetails(processDto.getPaymentMethodDetails());
+        transaction.setGatewayName(processDto.getGatewayName());
+        transaction.setMetadata(processDto.getMetadata());
+
+        // Persist transaction before calling external gateway to obtain IDs
         PaymentTransaction savedTransaction = paymentTransactionRepository.save(transaction);
-        return convertToDto(savedTransaction);
+        PaymentTransactionDto transactionDto = convertToDto(savedTransaction);
+
+        // Route to the appropriate integrator and initiate payment
+        PaymentIntegrator integrator = integratorFactory.getIntegrator(processDto.getPaymentMethod());
+        PaymentResponseDto response = integrator.initiatePayment(paymentRequest, transactionDto);
+
+        // Update transaction with response details
+        savedTransaction.setExternalTransactionId(response.getExternalTransactionId());
+        savedTransaction.setGatewayResponse(response.getGatewayResponse());
+        savedTransaction.setProcessedAt(response.getProcessedAt());
+        savedTransaction.setGatewayName(response.getGatewayName());
+        if (!response.isSuccess()) {
+            savedTransaction.setTransactionStatus(PaymentTransactionStatus.FAILED);
+            savedTransaction.setErrorCode(response.getErrorCode());
+            savedTransaction.setErrorMessage(response.getErrorMessage());
+        } else {
+            savedTransaction.setTransactionStatus(PaymentTransactionStatus.SUCCESS);
+        }
+
+        PaymentTransaction updated = paymentTransactionRepository.save(savedTransaction);
+
+        // Publish callback event for downstream consumers
+        PaymentCallbackEvent event = PaymentResponseAdapter.toCallbackEvent(response);
+        paymentCallbackProducer.send(event);
+
+        return convertToDto(updated);
     }
 
     @Override

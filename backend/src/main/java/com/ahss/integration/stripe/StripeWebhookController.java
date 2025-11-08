@@ -1,10 +1,11 @@
-package com.ahss.integration.webhook;
+package com.ahss.integration.stripe;
 
 import com.ahss.dto.response.ApiResponse;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.ahss.kafka.producer.PaymentCallbackProducer;
 import com.ahss.integration.webhook.WebhookEventTypeMapper;
+import com.ahss.integration.webhook.BaseWebhookController;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;

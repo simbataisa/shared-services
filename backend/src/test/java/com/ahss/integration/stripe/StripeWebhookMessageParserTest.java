@@ -1,4 +1,4 @@
-package com.ahss.integration.webhook.parser;
+package com.ahss.integration.stripe;
 
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
@@ -20,7 +20,7 @@ import io.qameta.allure.Story;
 class StripeWebhookMessageParserTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final StripeWebhookMessageParser parser = new StripeWebhookMessageParser();
+    private final StripeMessageParser parser = new StripeMessageParser();
 
     @Test
     @DisplayName("supports() returns true for Stripe-shaped payload")

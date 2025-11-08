@@ -1,6 +1,7 @@
-package com.ahss.integration.webhook.parser;
+package com.ahss.integration.paypal;
 
 import com.ahss.integration.webhook.WebhookEventTypeMapper;
+import com.ahss.integration.MessageParser;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,37 +13,38 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Parser for Stripe webhook payloads.
+ * Parser for PayPal webhook payloads.
  */
-public class StripeWebhookMessageParser implements WebhookMessageParser {
+public class PayPalMessageParser implements MessageParser {
 
     @Override
     public boolean supports(JsonNode root) {
-        return root.has("type") && root.has("data");
+        return root.has("event_type") && root.has("resource");
     }
 
     @Override
     public PaymentCallbackEvent parse(JsonNode root) {
-        String stripeType = text(root, "type");
-        JsonNode object = root.path("data").path("object");
+        String eventType = text(root, "event_type");
+        JsonNode resource = root.path("resource");
         String correlationId = text(root, "id");
-        String currency = text(object, "currency");
-        String externalTxId = text(object, "id");
-
-        Long amountInMinor = longVal(object, "amount_received");
-        if (amountInMinor == null)
-            amountInMinor = longVal(object, "amount");
+        String currency = text(resource.path("amount"), "currency_code");
+        String externalTxId = text(resource, "id");
 
         PaymentCallbackEvent evt = new PaymentCallbackEvent();
         evt.setCorrelationId(correlationId);
-        evt.setGatewayName("Stripe");
+        evt.setGatewayName("PayPal");
         evt.setExternalTransactionId(externalTxId);
-        if (amountInMinor != null)
-            evt.setAmount(java.math.BigDecimal.valueOf(amountInMinor).movePointLeft(2));
+
+        java.math.BigDecimal amount = null;
+        String valueStr = text(resource.path("amount"), "value");
+        if (valueStr != null) {
+            try { amount = new java.math.BigDecimal(valueStr); } catch (Exception ignored) {}
+        }
+        if (amount != null) evt.setAmount(amount);
         evt.setCurrency(currency);
         evt.setGatewayResponse(toMap(root));
 
-        PaymentCallbackType mapped = WebhookEventTypeMapper.mapStripe(stripeType);
+        PaymentCallbackType mapped = WebhookEventTypeMapper.mapPayPal(eventType);
         if (mapped != null) {
             evt.setType(mapped);
         } else {
@@ -50,35 +52,26 @@ public class StripeWebhookMessageParser implements WebhookMessageParser {
         }
 
         if (PaymentCallbackType.PAYMENT_FAILED.equals(evt.getType())) {
-            String errCode = text(object.path("last_payment_error"), "code");
-            String errMsg = text(object.path("last_payment_error"), "message");
-            evt.setErrorCode(errCode);
-            evt.setErrorMessage(errMsg);
+            evt.setErrorCode(text(resource, "status"));
+            evt.setErrorMessage(text(resource, "reason_code"));
         } else if (PaymentCallbackType.REFUND_SUCCESS.equals(evt.getType())) {
-            String refundId = text(object.path("refunds").path("data").path(0), "id");
-            evt.setExternalRefundId(refundId);
+            evt.setExternalRefundId(text(resource, "id"));
         }
 
-        Long createdEpoch = longVal(root, "created");
-        if (createdEpoch != null) {
-            evt.setReceivedAt(LocalDateTime.ofInstant(Instant.ofEpochSecond(createdEpoch), ZoneOffset.UTC));
+        String isoTime = text(resource, "create_time");
+        if (isoTime != null) {
+            try {
+                evt.setReceivedAt(LocalDateTime.ofInstant(Instant.parse(isoTime), ZoneOffset.UTC));
+            } catch (Exception ignored) {}
         }
 
         return evt;
     }
 
     private String text(JsonNode node, String field) {
-        if (node == null || field == null)
-            return null;
+        if (node == null || field == null) return null;
         JsonNode v = node.get(field);
         return v == null || v.isNull() ? null : v.asText();
-    }
-
-    private Long longVal(JsonNode node, String field) {
-        if (node == null || field == null)
-            return null;
-        JsonNode v = node.get(field);
-        return v == null || v.isNull() ? null : v.asLong();
     }
 
     private Map<String, Object> toMap(JsonNode node) {
@@ -92,8 +85,7 @@ public class StripeWebhookMessageParser implements WebhookMessageParser {
     }
 
     private Object jsonNodeToJava(JsonNode node) {
-        if (node == null || node.isNull())
-            return null;
+        if (node == null || node.isNull()) return null;
         if (node.isObject()) {
             Map<String, Object> child = new HashMap<>();
             Iterator<Map.Entry<String, JsonNode>> it = node.fields();
@@ -105,14 +97,11 @@ public class StripeWebhookMessageParser implements WebhookMessageParser {
         }
         if (node.isArray()) {
             java.util.List<Object> list = new java.util.ArrayList<>();
-            for (JsonNode n : node)
-                list.add(jsonNodeToJava(n));
+            for (JsonNode n : node) list.add(jsonNodeToJava(n));
             return list;
         }
-        if (node.isNumber())
-            return node.numberValue();
-        if (node.isBoolean())
-            return node.asBoolean();
+        if (node.isNumber()) return node.numberValue();
+        if (node.isBoolean()) return node.asBoolean();
         return node.asText();
     }
 }

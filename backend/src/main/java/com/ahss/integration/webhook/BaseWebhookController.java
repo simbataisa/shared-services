@@ -4,6 +4,7 @@ import com.ahss.dto.response.ApiResponse;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.ahss.kafka.producer.PaymentCallbackProducer;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
@@ -11,14 +12,14 @@ import org.springframework.http.ResponseEntity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.UUID;
 
 /**
- * Base controller providing shared helpers for webhook handling across payment channels.
+ * Base controller providing shared helpers for webhook handling across payment
+ * channels.
  * Subclasses define request mappings and channel-specific parsing logic.
  */
-abstract class BaseWebhookController {
+public abstract class BaseWebhookController {
 
     protected final ObjectMapper objectMapper;
     protected final PaymentCallbackProducer callbackProducer;
@@ -34,7 +35,11 @@ abstract class BaseWebhookController {
 
     protected UUID parseUuid(JsonNode node) {
         String val = text(node);
-        try { return val != null ? UUID.fromString(val) : null; } catch (Exception e) { return null; }
+        try {
+            return val != null ? UUID.fromString(val) : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     protected BigDecimal minorUnitsToMajor(long amountMinor) {
@@ -42,7 +47,7 @@ abstract class BaseWebhookController {
     }
 
     protected Map<String, Object> toMap(JsonNode root) {
-        return objectMapper.convertValue(root, Map.class);
+        return objectMapper.convertValue(root, new TypeReference<Map<String, Object>>() {});
     }
 
     protected void attachGatewayResponse(PaymentCallbackEvent event, JsonNode root) {
@@ -63,9 +68,13 @@ abstract class BaseWebhookController {
 
     // Abstract hooks for channel-specific behavior
     protected abstract String gatewayName();
+
     protected abstract String extractEventType(JsonNode root);
+
     protected abstract PaymentCallbackType mapEventType(String eventType);
+
     protected abstract void populateEvent(PaymentCallbackEvent event, JsonNode root);
+
     protected abstract Map<String, Object> metadata(JsonNode root, Map<String, String> headers);
 
     // Common processing pipeline for webhook handlers
@@ -73,8 +82,7 @@ abstract class BaseWebhookController {
             String body,
             Map<String, String> headers,
             String path,
-            String successMessage
-    ) {
+            String successMessage) {
         try {
             JsonNode root = objectMapper.readTree(body);
             String eventType = extractEventType(root);

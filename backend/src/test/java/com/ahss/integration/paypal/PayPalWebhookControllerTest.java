@@ -1,4 +1,4 @@
-package com.ahss.integration.webhook;
+package com.ahss.integration.paypal;
 
 import com.ahss.dto.response.ApiResponse;
 import com.ahss.integration.BaseIntegrationTest;

@@ -1,4 +1,4 @@
-package com.ahss.integration.webhook.parser;
+package com.ahss.integration.paypal;
 
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PayPalWebhookMessageParserTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final PayPalWebhookMessageParser parser = new PayPalWebhookMessageParser();
+    private final PayPalMessageParser parser = new PayPalMessageParser();
 
     @Test
     @DisplayName("supports() returns true for PayPal-shaped payload")
