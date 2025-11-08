@@ -1,5 +1,7 @@
-package com.ahss.integration;
+package com.ahss.integration.parser;
 
+import com.ahss.integration.MessageParser;
+import com.ahss.integration.MessageParserFactory;
 import com.ahss.integration.paypal.PayPalMessageParser;
 import com.ahss.integration.stripe.StripeMessageParser;
 import com.ahss.integration.bank.BankTransferMessageParser;
@@ -13,8 +15,8 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
-@Epic("Integration")
-@Feature("Message Parser Factory")
+@Epic("Payment Channel Integration")
+@Feature("Message Parser")
 class MessageParserFactoryTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

@@ -1,5 +1,6 @@
-package com.ahss.integration;
+package com.ahss.integration.parser;
 
+import com.ahss.integration.MessageParser;
 import com.ahss.kafka.event.PaymentCallbackEvent;
 import com.ahss.kafka.event.PaymentCallbackType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,8 +13,8 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
-@Epic("Integration")
-@Feature("Webhook Message Parser")
+@Epic("Payment Channel Integration")
+@Feature("Message Parser")
 class MessageParserContractTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

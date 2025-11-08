@@ -2,6 +2,8 @@ package com.ahss.integration.bank;
 
 import com.ahss.dto.response.PaymentRequestDto;
 import com.ahss.dto.response.PaymentTransactionDto;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,17 +25,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import com.ahss.integration.bank.BankTransferIntegrator;
 
-@SpringBootTest(
-        classes = BankTransferIntegratorWireMockIT.ProxyRestTemplateConfig.class,
-        webEnvironment = SpringBootTest.WebEnvironment.NONE,
-        properties = {
-                "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
-                "bank.paymentApiUrl=http://localhost:${wiremock.server.port}/v1/transfers"
-        }
-)
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+@SpringBootTest(classes = BankTransferIntegratorWireMockIT.ProxyRestTemplateConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
+        "bank.paymentApiUrl=http://localhost:${wiremock.server.port}/v1/transfers"
+})
 @AutoConfigureWireMock(port = 0)
 @ActiveProfiles("test")
-@Import({BankTransferIntegratorWireMockIT.ProxyRestTemplateConfig.class, BankTransferIntegrator.class})
+@Import({ BankTransferIntegratorWireMockIT.ProxyRestTemplateConfig.class, BankTransferIntegrator.class })
+@Epic("Payment Channel Integration")
+@Feature("Bank Transfer Integration")
 class BankTransferIntegratorWireMockIT {
 
     @Autowired
@@ -63,6 +67,8 @@ class BankTransferIntegratorWireMockIT {
     }
 
     @Test
+    @DisplayName("initiatePayment() returns initiated response for valid request via WireMock")
+    @Story("Initiate Payment for BANK_TRANSFER")
     void initiatePayment_returnsInitiatedResponse_viaWireMock() {
         stubFor(post(urlPathEqualTo("/v1/transfers"))
                 .willReturn(aResponse()

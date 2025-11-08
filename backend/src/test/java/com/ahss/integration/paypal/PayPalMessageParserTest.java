@@ -16,9 +16,9 @@ import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Epic("Integration")
-@Feature("PayPal Webhook Message Parser")
-class PayPalWebhookMessageParserTest {
+@Epic("Payment Channel Integration")
+@Feature("PayPal Integration")
+class PayPalMessageParserTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final PayPalMessageParser parser = new PayPalMessageParser();

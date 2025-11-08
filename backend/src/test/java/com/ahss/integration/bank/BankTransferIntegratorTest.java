@@ -4,6 +4,12 @@ import com.ahss.dto.response.PaymentRequestDto;
 import com.ahss.dto.response.PaymentResponseDto;
 import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.enums.PaymentMethodType;
+
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,11 +18,17 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@Epic("Payment Channel Integration")
+@Feature("Bank Transfer Integration")
 class BankTransferIntegratorTest {
 
     @Test
+    @DisplayName("supports() returns true for BANK_TRANSFER and false for other methods")
+    @Story("Supports BANK_TRANSFER and false for other methods")
     void supports_onlyBankTransfer() {
         RestTemplate rt = mock(RestTemplate.class);
         BankTransferIntegrator integrator = new BankTransferIntegrator(rt);
@@ -26,6 +38,8 @@ class BankTransferIntegratorTest {
     }
 
     @Test
+    @DisplayName("initiatePayment() returns initiated response for valid request")
+    @Story("Initiate Payment for BANK_TRANSFER")
     void initiatePayment_returnsInitiatedResponse() {
         RestTemplate rt = mock(RestTemplate.class);
         BankTransferIntegrator integrator = new BankTransferIntegrator(rt);
@@ -54,6 +68,8 @@ class BankTransferIntegratorTest {
     }
 
     @Test
+    @DisplayName("processRefund() returns refund completed response for valid request")
+    @Story("Process Refund for BANK_TRANSFER")
     void processRefund_returnsRefundCompletedResponse() {
         RestTemplate rt = mock(RestTemplate.class);
         BankTransferIntegrator integrator = new BankTransferIntegrator(rt);
@@ -83,6 +99,8 @@ class BankTransferIntegratorTest {
     }
 
     @Test
+    @DisplayName("tokenizeCard() throws UnsupportedOperationException")
+    @Story("Tokenize Card for BANK_TRANSFER")
     void tokenizeCard_throwsUnsupportedOperation() {
         RestTemplate rt = mock(RestTemplate.class);
         BankTransferIntegrator integrator = new BankTransferIntegrator(rt);

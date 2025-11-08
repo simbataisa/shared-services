@@ -2,6 +2,12 @@ package com.ahss.integration.paypal;
 
 import com.ahss.dto.response.PaymentRequestDto;
 import com.ahss.dto.response.PaymentTransactionDto;
+
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +38,8 @@ import static org.junit.jupiter.api.Assertions.*;
         "paypal.refundApiUrl=http://example.com/v2/payments/captures/{capture_id}/refund"
 })
 @ActiveProfiles("test")
+@Epic("Payment Channel Integration")
+@Feature("PayPal Integration")
 class PayPalIntegratorWireMockIT {
 
     @Autowired
@@ -63,13 +71,14 @@ class PayPalIntegratorWireMockIT {
         PayPalIntegrator payPalIntegrator(
                 RestTemplate restTemplate,
                 @Value("${paypal.paymentApiUrl:https://api-m.paypal.com/v2/checkout/orders}") String paymentApiUrl,
-                @Value("${paypal.refundApiUrl:https://api-m.paypal.com/v2/payments/captures/{capture_id}/refund}") String refundApiUrl
-        ) {
+                @Value("${paypal.refundApiUrl:https://api-m.paypal.com/v2/payments/captures/{capture_id}/refund}") String refundApiUrl) {
             return new PayPalIntegrator(restTemplate, paymentApiUrl, refundApiUrl);
         }
     }
 
     @Test
+    @DisplayName("initiatePayment() returns created response for valid request")
+    @Story("Initiates payment for valid request")
     void initiatePayment_returnsCreatedResponse_viaWireMock() {
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
         server.expect(requestTo("http://example.com/v2/checkout/orders"))
@@ -99,6 +108,8 @@ class PayPalIntegratorWireMockIT {
     }
 
     @Test
+    @DisplayName("processRefund() returns refunded response for valid request")
+    @Story("Processes refund for valid request")
     void processRefund_returnsRefundedResponse_viaWireMock() {
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
         // Match the expanded path

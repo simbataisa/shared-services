@@ -3,6 +3,12 @@ package com.ahss.integration.stripe;
 import com.ahss.dto.response.PaymentRequestDto;
 import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.integration.stripe.StripeIntegrator;
+
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,18 +30,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.ahss.SharedServicesApplication;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
-@SpringBootTest(
-        classes = StripeIntegratorWireMockIT.ProxyRestTemplateConfig.class,
-        webEnvironment = SpringBootTest.WebEnvironment.NONE,
-        properties = {
-                "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
-                "stripe.paymentApiUrl=http://localhost:${wiremock.server.port}/v1/charges",
-                "stripe.tokenizationApiUrl=http://localhost:${wiremock.server.port}/v1/tokens"
-        }
-)
+@SpringBootTest(classes = StripeIntegratorWireMockIT.ProxyRestTemplateConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
+        "stripe.paymentApiUrl=http://localhost:${wiremock.server.port}/v1/charges",
+        "stripe.tokenizationApiUrl=http://localhost:${wiremock.server.port}/v1/tokens"
+})
 @AutoConfigureWireMock(port = 0)
 @ActiveProfiles("test")
-@Import({StripeIntegratorWireMockIT.ProxyRestTemplateConfig.class, StripeIntegrator.class})
+@Import({ StripeIntegratorWireMockIT.ProxyRestTemplateConfig.class, StripeIntegrator.class })
+@Epic("Payment Channel Integration")
+@Feature("Stripe Integration")
 class StripeIntegratorWireMockIT {
 
     @Autowired
@@ -65,6 +69,8 @@ class StripeIntegratorWireMockIT {
     }
 
     @Test
+    @DisplayName("initiatePayment_returnsAuthorizedResponse_viaWireMock")
+    @Story("Initiate Payment")
     void initiatePayment_returnsAuthorizedResponse_viaWireMock() {
         stubFor(post(urlPathEqualTo("/v1/charges"))
                 .willReturn(aResponse()
@@ -94,6 +100,8 @@ class StripeIntegratorWireMockIT {
     }
 
     @Test
+    @DisplayName("tokenizeCard_returnsTokenizedResponse_viaWireMock")
+    @Story("Tokenize Card")
     void tokenizeCard_returnsTokenizedResponse_viaWireMock() {
         stubFor(post(urlPathEqualTo("/v1/tokens"))
                 .willReturn(aResponse()

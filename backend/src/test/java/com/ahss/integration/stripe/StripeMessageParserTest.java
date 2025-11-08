@@ -15,9 +15,9 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
-@Epic("Integration")
-@Feature("Stripe Webhook Message Parser")
-class StripeWebhookMessageParserTest {
+@Epic("Payment Channel Integration")
+@Feature("Stripe Integration")
+class StripeMessageParserTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final StripeMessageParser parser = new StripeMessageParser();
@@ -36,7 +36,7 @@ class StripeWebhookMessageParserTest {
     }
 
     @Test
-    @DisplayName("supports() returns false for non-Stripe payload") 
+    @DisplayName("supports() returns false for non-Stripe payload")
     @Story("Supports non-Stripe-shaped payload")
     void supports_false_for_non_stripe() throws Exception {
         String json = "{ \"event_type\": \"PAYMENT.SALE.COMPLETED\", \"resource\": {} }";
