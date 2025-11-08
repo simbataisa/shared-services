@@ -238,13 +238,86 @@ PaymentCallbackEvent parse(JsonNode root);  // Parses payload to canonical event
 - `PayPalWebhookEventType.fromValue(String)` - Factory method for safe parsing
 - `BankTransferWebhookEventType.fromValue(String).toCallbackType()` - Direct conversion method
 
+## Payment Integrators (Outbound Operations)
+
+### `PaymentIntegrator` Interface
+
+**Location**: `com.ahss.integration.PaymentIntegrator`
+
+**Methods**:
+```java
+boolean supports(PaymentMethodType type);
+PaymentResponseDto initiatePayment(PaymentRequestDto, PaymentTransactionDto);
+PaymentResponseDto processRefund(PaymentTransactionDto, BigDecimal refundAmount);
+PaymentResponseDto tokenizeCard(Object cardDetails);
+```
+
+**Purpose**: Abstraction for outbound payment operations (initiate, refund, tokenize) to external payment gateways
+
+### `PaymentIntegratorFactory`
+
+**Location**: `com.ahss.integration.PaymentIntegratorFactory`
+
+**Implementation**: Spring `@Component` with constructor injection of `List<PaymentIntegrator>`
+
+**Method**: `PaymentIntegrator getIntegrator(PaymentMethodType type)`
+- Uses Stream API to filter integrators by `supports(type)`
+- Throws `NoSuchElementException` if no integrator found
+- Spring auto-discovers all `PaymentIntegrator` beans and injects as list
+
+### `StripeIntegrator`
+
+**Location**: `com.ahss.integration.stripe.StripeIntegrator`
+
+**Supported Types**: `CREDIT_CARD`, `DEBIT_CARD`
+
+**Configuration**:
+- `@Value("${stripe.tokenizationApiUrl}")` - Default: `https://api.stripe.com/v1/tokens`
+- `@Value("${stripe.paymentApiUrl}")` - Default: `https://api.stripe.com/v1/charges`
+- Uses `RestTemplate` for HTTP communication
+
+**Operations**:
+- `initiatePayment()`: Converts internal DTOs to Stripe API format, posts to charges endpoint
+- `processRefund()`: Handles Stripe refund API calls
+- `tokenizeCard()`: Tokenizes card details via Stripe tokens API
+
+### `PayPalIntegrator`, `BankTransferIntegrator`
+
+Similar structure with gateway-specific API URLs and request/response conversions
+
+### `PaymentResponseAdapter`
+
+**Location**: `com.ahss.integration.PaymentResponseAdapter`
+
+**Purpose**: Converts outbound `PaymentResponseDto` (from integrators) to canonical `PaymentCallbackEvent` (consumed by orchestrator)
+
+**Method**: `PaymentCallbackEvent toCallbackEvent(PaymentResponseDto resp)`
+
+**Conversion Logic**:
+1. Maps `resp.isSuccess()` → `PAYMENT_FAILED` if false
+2. Uses `PaymentChannelIntegrationEventTypeMapper.mapGenericStatus(resp.getStatus())` for success types
+3. Copies fields: `paymentRequestId`, `paymentTransactionId`, `externalTransactionId`, etc.
+4. Sets `receivedAt` to `LocalDateTime.now()`
+5. Preserves `gatewayResponse`, `errorCode`, `errorMessage`, `metadata`
+
+**Use Case**: Allows outbound integrator responses to flow through the same orchestration pipeline as inbound webhooks
+
 ## Kafka Consumers
 
-- `PaymentCallbackConsumer` (`com.ahss.kafka.consumer`)
-  - Reads messages from `app.kafka.topics.payment-callbacks`.
-  - Current behavior: parses message JSON, detects gateway by shape, builds `PaymentCallbackEvent` and passes to `PaymentSagaOrchestrator.handle(event)`.
-  - Ongoing refactor: delegate parsing to `WebhookMessageParserFactory.forPayload(root)` → selected `WebhookMessageParser.parse(...)`, then orchestrate.
-  - Base utilities provided by `BaseJsonKafkaConsumer` (JSON read helpers).
+### `PaymentCallbackConsumer`
+
+**Location**: `com.ahss.kafka.consumer.PaymentCallbackConsumer`
+
+**Topic**: Configured via `app.kafka.topics.payment-callbacks`
+
+**Behavior**:
+- Reads JSON messages from Kafka topic
+- Detects gateway by payload structure using `MessageParserFactory.forPayload(JsonNode)`
+- Selected parser's `parse()` method creates canonical `PaymentCallbackEvent`
+- Passes event to `PaymentSagaOrchestrator.handle(event)` for processing
+- Inherits JSON utilities from `BaseJsonKafkaConsumer`
+
+**Error Handling**: Catches exceptions; production systems should forward to Dead Letter Topic (DLT)
 
 ## Kafka Producers
 
