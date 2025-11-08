@@ -54,15 +54,20 @@ public abstract class BaseIntegrationTest {
 
     @DynamicPropertySource
     static void registerProps(DynamicPropertyRegistry registry) {
-        // PostgreSQL configuration
+        // PostgreSQL configuration via Testcontainers
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+
+        // Flyway and JPA
         registry.add("spring.flyway.enabled", () -> true);
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
 
         // Kafka configuration (handled by @EmbeddedKafka)
         // spring.kafka.bootstrap-servers is auto-configured by @EmbeddedKafka
+        registry.add("app.kafka.topics.payment-callbacks", () -> "payment-callbacks");
+        registry.add("app.kafka.topics.payment-events", () -> "payment-events");
 
         // Disable OpenTelemetry/Jaeger for tests
         registry.add("management.tracing.enabled", () -> false);
