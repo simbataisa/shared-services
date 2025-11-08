@@ -30,13 +30,15 @@ public class StripeWebhookMessageParser implements WebhookMessageParser {
         String externalTxId = text(object, "id");
 
         Long amountInMinor = longVal(object, "amount_received");
-        if (amountInMinor == null) amountInMinor = longVal(object, "amount");
+        if (amountInMinor == null)
+            amountInMinor = longVal(object, "amount");
 
         PaymentCallbackEvent evt = new PaymentCallbackEvent();
         evt.setCorrelationId(correlationId);
         evt.setGatewayName("Stripe");
         evt.setExternalTransactionId(externalTxId);
-        if (amountInMinor != null) evt.setAmount(java.math.BigDecimal.valueOf(amountInMinor).movePointLeft(2));
+        if (amountInMinor != null)
+            evt.setAmount(java.math.BigDecimal.valueOf(amountInMinor).movePointLeft(2));
         evt.setCurrency(currency);
         evt.setGatewayResponse(toMap(root));
 
@@ -66,13 +68,15 @@ public class StripeWebhookMessageParser implements WebhookMessageParser {
     }
 
     private String text(JsonNode node, String field) {
-        if (node == null || field == null) return null;
+        if (node == null || field == null)
+            return null;
         JsonNode v = node.get(field);
         return v == null || v.isNull() ? null : v.asText();
     }
 
     private Long longVal(JsonNode node, String field) {
-        if (node == null || field == null) return null;
+        if (node == null || field == null)
+            return null;
         JsonNode v = node.get(field);
         return v == null || v.isNull() ? null : v.asLong();
     }
@@ -88,7 +92,8 @@ public class StripeWebhookMessageParser implements WebhookMessageParser {
     }
 
     private Object jsonNodeToJava(JsonNode node) {
-        if (node == null || node.isNull()) return null;
+        if (node == null || node.isNull())
+            return null;
         if (node.isObject()) {
             Map<String, Object> child = new HashMap<>();
             Iterator<Map.Entry<String, JsonNode>> it = node.fields();
@@ -100,11 +105,14 @@ public class StripeWebhookMessageParser implements WebhookMessageParser {
         }
         if (node.isArray()) {
             java.util.List<Object> list = new java.util.ArrayList<>();
-            for (JsonNode n : node) list.add(jsonNodeToJava(n));
+            for (JsonNode n : node)
+                list.add(jsonNodeToJava(n));
             return list;
         }
-        if (node.isNumber()) return node.numberValue();
-        if (node.isBoolean()) return node.asBoolean();
+        if (node.isNumber())
+            return node.numberValue();
+        if (node.isBoolean())
+            return node.asBoolean();
         return node.asText();
     }
 }
