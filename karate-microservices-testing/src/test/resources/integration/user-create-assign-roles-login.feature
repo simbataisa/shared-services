@@ -1,15 +1,5 @@
 Feature: E2E — Create user, assign role, then login
 
-    Background Info
-    - Purpose: Validate end-to-end flow for user creation, role assignment,
-       user login with created credentials, and access verification.
-    - Preconditions: `baseUrl` and admin login are available; common headers
-       function exists; environment configured via `karate-config.js`.
-    - Inputs (derived): unique run id (UUID), admin token, computed headers.
-    - Dependencies: helpers `create-user.feature`, `create-role.feature`,
-       `assign-role.feature`, `verify-user-access.feature`; `common/auth/login.feature`;
-       `common/headers/common-headers.js`.
-
   Background: 
     # Base URL and auth setup using shared utilities
     * def base = karate.get('baseUrl') || java.lang.System.getenv('BASE_URL') || 'http://localhost:8080'
