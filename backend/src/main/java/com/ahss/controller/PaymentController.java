@@ -408,12 +408,12 @@ public class PaymentController {
         try {
             Map<String, Object> stats = Map.of(
                 "totalRequests", paymentRequestService.countByStatus(PaymentRequestStatus.PENDING) +
-                               paymentRequestService.countByStatus(PaymentRequestStatus.APPROVED) +
-                               paymentRequestService.countByStatus(PaymentRequestStatus.REJECTED) +
+                               paymentRequestService.countByStatus(PaymentRequestStatus.COMPLETED) +
+                               paymentRequestService.countByStatus(PaymentRequestStatus.FAILED) +
                                paymentRequestService.countByStatus(PaymentRequestStatus.CANCELLED),
                 "pendingRequests", paymentRequestService.countByStatus(PaymentRequestStatus.PENDING),
-                "approvedRequests", paymentRequestService.countByStatus(PaymentRequestStatus.APPROVED),
-                "rejectedRequests", paymentRequestService.countByStatus(PaymentRequestStatus.REJECTED),
+                "completedRequests", paymentRequestService.countByStatus(PaymentRequestStatus.COMPLETED),
+                "failedRequests", paymentRequestService.countByStatus(PaymentRequestStatus.FAILED),
                 "cancelledRequests", paymentRequestService.countByStatus(PaymentRequestStatus.CANCELLED)
             );
             return ResponseEntity.ok(ApiResponse.ok(stats, "Payment request statistics retrieved successfully", "/api/v1/payments/stats/requests"));

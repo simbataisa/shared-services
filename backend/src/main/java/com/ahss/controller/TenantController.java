@@ -127,7 +127,7 @@ public class TenantController {
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true,
             content = @io.swagger.v3.oas.annotations.media.Content(mediaType = "application/json",
                 examples = @io.swagger.v3.oas.annotations.media.ExampleObject(name = "CreateTenant",
-                    value = "{\n  \"name\": \"ACME Corp\",\n  \"code\": \"ACME\",\n  \"type\": \"ENTERPRISE\",\n  \"status\": \"ACTIVE\"\n}"))))
+                    value = "{\n  \"name\": \"ACME Corp\",\n  \"code\": \"ACME\",\n  \"type\": \"BUSINESS_IN\",\n  \"status\": \"ACTIVE\"\n}"))))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Tenant created successfully"),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request payload")

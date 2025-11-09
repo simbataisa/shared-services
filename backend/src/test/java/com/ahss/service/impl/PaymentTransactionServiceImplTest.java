@@ -7,7 +7,6 @@ import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.entity.PaymentTransaction;
 import com.ahss.enums.PaymentMethodType;
 import com.ahss.enums.PaymentTransactionStatus;
-import com.ahss.enums.PaymentTransactionType;
 import com.ahss.integration.PaymentIntegrator;
 import com.ahss.integration.PaymentIntegratorFactory;
 import com.ahss.kafka.producer.PaymentCallbackProducer;

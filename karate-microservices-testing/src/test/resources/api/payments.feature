@@ -4,7 +4,7 @@ Feature: Payments API
     * def base = karate.get('baseUrl') || java.lang.System.getenv('BASE_URL') || 'http://localhost:8080'
     * url base
     * def login = callonce read('classpath:common/auth/login.feature')
-    * def auth = { token: login.token }
+    * def auth = { token: #(login.token) }
     * configure headers = read('classpath:common/headers/common-headers.js')
 
   Scenario: List payment requests

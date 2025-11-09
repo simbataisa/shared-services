@@ -4,8 +4,8 @@ Feature: Authentication - Login
     # Base URL for the backend auth API
     * def baseUrl = karate.get('authBaseUrl') || java.lang.System.getenv('AUTH_BASE_URL') || 'http://localhost:8080/api/v1/auth'
     # Allow credentials to be overridden when this feature is 'call'ed
-    * def username = karate.get('username') || 'admin@ahss.com'
-    * def password = karate.get('password') || 'admin123'
+    * def username = karate.get('username') || 'superadmin@ahss.com'
+    * def password = karate.get('password') || 'superadmin123'
   
     @name=getAccessToken
   Scenario: Valid admin login returns JWT token

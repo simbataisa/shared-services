@@ -62,7 +62,8 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setPaymentRequestId(paymentRequest.getId());
         transaction.setTransactionType(PaymentTransactionType.PAYMENT);
-        transaction.setTransactionStatus(PaymentTransactionStatus.PROCESSING);
+        // Start transaction in a DB-supported initial state
+        transaction.setTransactionStatus(PaymentTransactionStatus.PENDING);
         transaction.setAmount(paymentRequest.getAmount());
         transaction.setCurrency(paymentRequest.getCurrency());
         transaction.setPaymentMethod(processDto.getPaymentMethod());
