@@ -4,7 +4,7 @@ import com.intuit.karate.junit5.Karate;
 import com.intuit.karate.Runner;
 import java.util.stream.Stream;
 
-class ApiTestRunner {
+class ApiRunnerTest {
 
   @Karate.Test
   Karate runApi() {

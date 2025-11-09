@@ -31,27 +31,41 @@ karate-microservices-testing/
 │   ├── test/
 │   │   ├── java/
 │   │   │   ├── TestRunner.java
-│   │   │   ├── PerformanceTestRunner.java
 │   │   │   └── helpers/
 │   │   │       ├── KafkaHelper.java
 │   │   │       ├── ContractVerifier.java
 │   │   │       └── CustomValidators.java
+│   │   │
+│   │   ├── scala/                              # Gatling performance tests
+│   │   │   └── performance/
+│   │   │       ├── simulations/
+│   │   │       │   ├── UserServiceSimulation.scala
+│   │   │       │   ├── OrderServiceSimulation.scala
+│   │   │       │   ├── PaymentServiceSimulation.scala
+│   │   │       │   └── EndToEndFlowSimulation.scala
+│   │   │       └── scenarios/
+│   │   │           ├── UserScenarios.scala
+│   │   │           └── OrderScenarios.scala
+│   │   │
 │   │   └── resources/
 │   │       ├── karate-config.js
 │   │       ├── logback-test.xml
+│   │       ├── gatling.conf                    # Gatling configuration
+│   │       │
 │   │       ├── common/
 │   │       │   ├── auth/
 │   │       │   │   ├── oauth2.feature
 │   │       │   │   └── jwt-token.feature
-│   │       │   ├── headers/common-headers.js
+│   │       │   ├── headers/
+│   │       │   │   └── common-headers.js
 │   │       │   ├── schemas/
-│   │       │   │   ├── user-schema.json
 │   │       │   │   ├── error-schema.json
 │   │       │   │   └── pagination-schema.json
 │   │       │   └── utils/
 │   │       │       ├── data-generator.js
 │   │       │       ├── validators.js
 │   │       │       └── retry-logic.feature
+│   │       │
 │   │       ├── services/
 │   │       │   ├── user-service/
 │   │       │   │   ├── api/
@@ -59,29 +73,44 @@ karate-microservices-testing/
 │   │       │   │   │   ├── user-profile.feature
 │   │       │   │   │   └── users-negative.feature
 │   │       │   │   ├── contracts/
-│   │       │   │   │   ├── consumer/user-service-consumer.feature
-│   │       │   │   │   └── provider/user-service-provider.feature
-│   │       │   │   ├── performance/user-load-test.feature
-│   │       │   │   ├── async/user-events.feature
-│   │       │   │   ├── mocks/user-service-mock.feature
-│   │       │   │   └── config/user-service-config.js
-│   │       │   └── order-service/ (mirror structure)
+│   │       │   │   │   ├── consumer/
+│   │       │   │   │   │   └── user-service-consumer.feature
+│   │       │   │   │   └── provider/
+│   │       │   │   │       └── user-service-provider.feature
+│   │       │   │   ├── performance/             # Karate features for perf testing
+│   │       │   │   │   ├── create-user-perf.feature
+│   │       │   │   │   ├── get-user-perf.feature
+│   │       │   │   │   └── update-user-perf.feature
+│   │       │   │   ├── async/
+│   │       │   │   │   └── user-events.feature
+│   │       │   │   ├── mocks/
+│   │       │   │   │   └── user-service-mock.feature
+│   │       │   │   └── config/
+│   │       │   │       └── user-service-config.js
+│   │       │   │
+│   │       │   ├── order-service/
+│   │       │   │   └── [same structure]
+│   │       │   │
+│   │       │   └── payment-service/
+│   │       │       └── [same structure]
+│   │       │
 │   │       ├── integration/
 │   │       │   ├── user-order-flow.feature
 │   │       │   └── end-to-end-checkout.feature
+│   │       │
 │   │       ├── mocks/
 │   │       │   ├── mock-server.feature
 │   │       │   └── mock-responses/
-│   │       │       ├── user-responses.json
-│   │       │       └── order-responses.json
+│   │       │
 │   │       └── data/
 │   │           ├── test-data.json
 │   │           ├── test-users.csv
-│   │           └── contracts/pact-definitions/
-│   └── main/java/ (only if Java helpers needed)
+│   │           ├── feeders/                    # Data feeders for Gatling
+│   │           │   ├── users.csv
+│   │           │   └── orders.json
+│   │           └── contracts/
+│   │
 ├── pom.xml
-├── Makefile
-├── .env.example
 └── README.md
 ```
 

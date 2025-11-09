@@ -7,7 +7,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import java.util.stream.Stream;
 
-class TestRunner {
+class IntegrationRunnerTest {
   private static MockServer mockServer;
 
   @BeforeAll

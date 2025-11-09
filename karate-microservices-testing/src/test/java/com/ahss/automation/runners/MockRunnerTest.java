@@ -3,7 +3,7 @@ package com.ahss.automation.runners;
 import com.intuit.karate.core.MockServer;
 import org.junit.jupiter.api.Test;
 
-public class MockRunner {
+public class MockRunnerTest {
 
   @Test
   void startMockServer() throws Exception {
