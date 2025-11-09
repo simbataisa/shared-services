@@ -186,3 +186,55 @@ From the repository root, you can also use:
 - JWT login and dynamic headers are wired via `login.feature` and `common-headers.js`; failures like `403` often indicate missing or invalid tokens.
 - Use `--tags ~@ignore` to exclude ignored scenarios if not already set.
 - For Gatling, pass `-Dkarate.options` and injection properties (e.g., `-Dinjection`, `-DusersPerSec`, `-DdurationSeconds`) to shape load; use `gatlingRun -PgatlingSimulationClass=<FQN>` to avoid interactive prompts.
+
+## Helper Patterns: Conditional Login and Headers
+
+- Prefer passing `auth` and `headers` from the caller; helpers should avoid logging in when credentials are already supplied.
+- In helpers, use a one-liner conditional with `karate.callSingle` for login only when `auth` is absent; then derive `headers` from `common-headers.js`.
+- Avoid multi-line `if` blocks for step definitions (e.g., `if (...) def ...`) — Karate supports JS expressions and one-liners in steps.
+
+Example helper `Background` snippet:
+
+```gherkin
+Background:
+  # Caller may supply auth and/or headers
+  * def providedAuth = karate.get('auth')
+  * def providedHeaders = karate.get('headers')
+
+  # Conditional login only when auth is not provided
+  * def loginRes = (!providedAuth) ? karate.callSingle(() => read('classpath:common/auth/login.feature')) : null
+  * def auth = providedAuth ? providedAuth : { token: loginRes.token, username: loginRes.username }
+
+  # Prefer evaluated headers object; fall back to common headers derived from auth
+  * def headers = providedHeaders ? providedHeaders : read('classpath:common/headers/common-headers.js')(auth)
+```
+
+Caller usage (evaluated headers):
+
+```gherkin
+* def auth = { token: myToken, username: 'qa.user@example.com' }
+* def headers = read('classpath:common/headers/common-headers.js')(auth)
+* def res = call read('classpath:helpers/create-user.feature') { auth: auth, headers: headers, user: someUserPayload }
+```
+
+## Verify User Access Helper
+
+- Helpers that verify access should always accept `username` and `password`, perform login using `login.feature`, and then proceed using the returned token.
+- Example:
+
+```gherkin
+Background:
+  * def loginRes = karate.callSingle(() => read('classpath:common/auth/login.feature'), { username: username, password: password })
+  * def token = loginRes.token
+```
+
+## Running a Specific Integration Flow
+
+- Run the end-to-end flow that creates a user, assigns roles, and verifies login:
+  - `./gradlew test --tests "*CustomRunnerTest" -Dkarate.options="classpath:integration/user-create-assign-roles-login.feature" -Dkarate.env=qa`
+
+## Troubleshooting
+
+- `403` on create-user: ensure `Authorization` header is present; prefer evaluated `headers` object from `common-headers.js`.
+- `SyntaxError` for `if ... def ...`: replace with one-liner JS expressions (ternary) and `karate.callSingle` for conditional calls.
+- `400` Role already exists: use unique role names in tests, e.g. `* def roleName = 'qa-role-' + java.util.UUID.randomUUID()`.

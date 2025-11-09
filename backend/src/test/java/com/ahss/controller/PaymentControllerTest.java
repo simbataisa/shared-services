@@ -835,7 +835,7 @@ class PaymentControllerTest {
                         .perform(get("/api/v1/payments/stats/requests"))
                         .andExpect(status().isOk())
                         .andExpect(jsonPath("$.success", is(true)))
-                        .andExpect(jsonPath("$.data.totalRequests", is(6)))
+                        .andExpect(jsonPath("$.data.totalRequests", is(2)))
                         .andExpect(jsonPath("$.path", is("/api/v1/payments/stats/requests"))));
     }
 

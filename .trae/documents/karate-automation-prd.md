@@ -413,6 +413,48 @@ Scenario: Create user -> create order -> verify order status
   And match response.status == 'CREATED'
 ```
 
+## Helper Patterns: Conditional Login and Headers
+
+- Helpers should honor caller-provided `auth` and `headers` to avoid unnecessary logins and reduce cross-test interference.
+- Use one-liner JS expressions with `karate.callSingle` for conditional login; derive default `headers` from `common-headers.js` using the effective `auth`.
+
+Example helper `Background`:
+
+```gherkin
+Background:
+  * def providedAuth = karate.get('auth')
+  * def providedHeaders = karate.get('headers')
+  * def loginRes = (!providedAuth) ? karate.callSingle(() => read('classpath:common/auth/login.feature')) : null
+  * def auth = providedAuth ? providedAuth : { token: loginRes.token, username: loginRes.username }
+  * def headers = providedHeaders ? providedHeaders : read('classpath:common/headers/common-headers.js')(auth)
+```
+
+Caller usage (evaluated headers):
+
+```gherkin
+* def auth = { token: myToken, username: 'qa.user@example.com' }
+* def headers = read('classpath:common/headers/common-headers.js')(auth)
+* def res = call read('classpath:helpers/create-user.feature') { auth: auth, headers: headers, user: someUserPayload }
+```
+
+## Verify User Access Helper
+
+- Verification helpers should always accept `username` and `password`, perform login via `login.feature`, and then proceed using the returned `token`.
+
+```gherkin
+Background:
+  * def loginRes = karate.callSingle(() => read('classpath:common/auth/login.feature'), { username: username, password: password })
+  * def token = loginRes.token
+```
+
+## Troubleshooting
+
+- `403` errors typically indicate missing/invalid `Authorization` headers; prefer evaluated `headers` via `common-headers.js`.
+- Avoid multi-line `if` blocks for step definitions (e.g., `if (...) def ...`); use one-liner JS expressions and the ternary operator with `karate.callSingle`.
+- Resource name collisions (e.g., roles): generate unique names with a UUID suffix, e.g. `* def roleName = 'qa-role-' + java.util.UUID.randomUUID()`.
+- Run a specific E2E feature:
+  - `./gradlew test --tests "*CustomRunnerTest" -Dkarate.options="classpath:integration/user-create-assign-roles-login.feature" -Dkarate.env=qa`
+
 ## 9) Diagrams as Code
 
 ### 9.1 Mermaid — Test Architecture

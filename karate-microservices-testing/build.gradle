@@ -22,14 +22,14 @@ dependencies {
   testImplementation 'ch.qos.logback:logback-classic:1.4.14'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 
-  // Ensure Karate-Gatling is available for compiling tests in src/test/scala
+  // Ensure Karate-Gatling is available for compiling tests
   testImplementation 'io.karatelabs:karate-gatling:1.5.2.RC6'
-  // Explicitly align Gatling core libs to 3.11.5 on the test classpath
+  // Align Gatling core libs to 3.11.5 on the test classpath
   testImplementation 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
 
   // Gatling + Karate for performance tests
   gatlingImplementation 'io.karatelabs:karate-gatling:1.5.2.RC6'
-  // Explicitly align Gatling core libs to 3.11.5 on the gatling source-set
+  // Align Gatling core libs to 3.11.5 on the gatling source-set
   gatlingImplementation 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
 }
 
