@@ -15,6 +15,17 @@ Feature: Helpers - Create Payment Request
 
     @name=createPaymentRequest
   Scenario: Create payment request with provided payload
+    # Gather overrides (if any) so the JSON template evaluates in this scope
+    * def title = karate.get('title', null)
+    * def amount = karate.get('amount', null)
+    * def currency = karate.get('currency', null)
+    * def payerName = karate.get('payerName', null)
+    * def payerEmail = karate.get('payerEmail', null)
+    * def allowedPaymentMethods = karate.get('allowedPaymentMethods', ['CREDIT_CARD'])
+    * def preSelectedPaymentMethod = karate.get('preSelectedPaymentMethod', 'CREDIT_CARD')
+    * def paymentGateway = karate.get('paymentGateway', 'STRIPE')
+    * def tenantId = karate.get('tenantId', 1)
+    * def metadata = karate.get('metadata', { source: 'karate-e2e' })
     * def body = read('classpath:integration/helpers/data/request/create-payment-request.json')
     Given path '/api/v1/payments/requests'
     And request body

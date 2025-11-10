@@ -81,6 +81,15 @@ Scenario: pathMatches('/auth/oauth/token') && methodIs('post')
   * def response = { access_token: uuid(), token_type: 'bearer', expires_in: 3600 }
   * def responseStatus = 200
 
+# Auth login
+Scenario: pathMatches('/api/v1/auth/login') && methodIs('post')
+  * print 'Mock server: handling POST /api/v1/auth/login'
+  * def token = 'mock_' + java.util.UUID.randomUUID()
+  * def ts = new java.util.Date().toString()
+  * print 'Generated mock token:', token, 'ts:', ts
+  * def response = { success: true, message: 'Login successful', data: { token: '#(token)' }, timestamp: '#(ts)', path: '/api/v1/auth/login' }
+  * def responseStatus = 200
+
 # Delegate to user-service mock
 Scenario: pathMatches('/users') && methodIs('post')
   * def now = new java.util.Date().toString()

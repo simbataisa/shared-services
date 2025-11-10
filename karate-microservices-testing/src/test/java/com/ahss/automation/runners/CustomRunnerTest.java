@@ -1,12 +1,95 @@
 package com.ahss.automation.runners;
 
 import com.intuit.karate.Runner;
+import com.intuit.karate.core.Feature;
+import com.intuit.karate.core.MockHandler;
+import com.intuit.karate.http.HttpServer;
 import com.intuit.karate.junit5.Karate;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-class CustomRunnerTest {
+public class CustomRunnerTest {
+
+  private static final Logger log = LoggerFactory.getLogger(CustomRunnerTest.class);
+  private static HttpServer mockServer;
+  private static boolean mockServerEnabled;
+  private static int mockServerPort;
+
+  @BeforeAll
+  public static void startMockServer() {
+    // Check if mock server should be started
+    mockServerEnabled = Boolean.parseBoolean(
+        System.getProperty("mock.server.enabled",
+        System.getenv().getOrDefault("MOCK_SERVER_ENABLED", "false"))
+    );
+
+    if (!mockServerEnabled) {
+      log.info("Mock server is disabled. Set mock.server.enabled=true or MOCK_SERVER_ENABLED=true to enable it.");
+      return;
+    }
+
+    mockServerPort = Integer.parseInt(
+        System.getProperty("mock.port",
+        System.getenv().getOrDefault("MOCK_PORT", "8090"))
+    );
+
+    log.info("=================================================");
+    log.info("Starting Karate Mock Server");
+    log.info("=================================================");
+    log.info("Mock Server Port: {}", mockServerPort);
+
+    try {
+      File featureFile = new File("src/test/resources/mocks/mock-server.feature");
+      if (!featureFile.exists()) {
+        log.error("Mock server feature file not found: {}", featureFile.getAbsolutePath());
+        return;
+      }
+
+      Feature feature = Feature.read(featureFile);
+      MockHandler handler = new MockHandler(feature);
+
+      mockServer = HttpServer
+          .handler(handler)
+          .http(mockServerPort)
+          .build();
+
+      log.info("✓ Mock server started successfully");
+      log.info("  URL: http://localhost:{}", mockServer.getPort());
+      log.info("=================================================");
+      log.info("Available Mock Endpoints:");
+      log.info("  Stripe (prefix: /stripe):");
+      log.info("    - POST http://localhost:{}/stripe/v1/tokens", mockServer.getPort());
+      log.info("    - POST http://localhost:{}/stripe/v1/charges", mockServer.getPort());
+      log.info("  PayPal (prefix: /paypal):");
+      log.info("    - POST http://localhost:{}/paypal/v1/oauth2/token", mockServer.getPort());
+      log.info("    - POST http://localhost:{}/paypal/v2/checkout/orders", mockServer.getPort());
+      log.info("  Bank Transfer (prefix: /bank-transfer):");
+      log.info("    - POST http://localhost:{}/bank-transfer/api/v1/transfers", mockServer.getPort());
+      log.info("=================================================");
+
+    } catch (Exception e) {
+      log.error("Failed to start mock server", e);
+      throw new RuntimeException("Failed to start mock server", e);
+    }
+  }
+
+  @AfterAll
+  public static void stopMockServer() {
+    if (mockServer != null) {
+      log.info("=================================================");
+      log.info("Stopping mock server...");
+      mockServer.stop();
+      log.info("✓ Mock server stopped");
+      log.info("=================================================");
+    }
+  }
 
   @Karate.Test
   Karate runApi() {

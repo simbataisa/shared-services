@@ -40,6 +40,10 @@ test {
   systemProperty 'threads', System.getProperty('threads', '5')
   // Propagate karate.options from JVM args to the forked test JVM so runners can see it
   systemProperty 'karate.options', System.getProperty('karate.options', '')
+  // Mock server properties for CustomRunnerTest
+  systemProperty 'mock.server.enabled', System.getProperty('mock.server.enabled', 'false')
+  systemProperty 'mock.port', System.getProperty('mock.port', '8090')
+  systemProperty 'mock.block.ms', System.getProperty('mock.block.ms', '600000')
   testLogging {
     events 'passed', 'skipped', 'failed'
   }

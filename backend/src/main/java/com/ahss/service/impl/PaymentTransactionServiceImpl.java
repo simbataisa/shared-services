@@ -50,7 +50,9 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     private final PaymentCallbackProducer paymentCallbackProducer;
 
-    public PaymentTransactionServiceImpl(PaymentTransactionRepository paymentTransactionRepository, PaymentAuditLogService auditLogService, PaymentRequestService paymentRequestService, PaymentIntegratorFactory integratorFactory, PaymentCallbackProducer paymentCallbackProducer) {
+    public PaymentTransactionServiceImpl(PaymentTransactionRepository paymentTransactionRepository,
+            PaymentAuditLogService auditLogService, PaymentRequestService paymentRequestService,
+            PaymentIntegratorFactory integratorFactory, PaymentCallbackProducer paymentCallbackProducer) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.auditLogService = auditLogService;
         this.paymentRequestService = paymentRequestService;
@@ -63,7 +65,8 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         // Resolve the payment request by token
         PaymentRequestDto paymentRequest = paymentRequestService
                 .getPaymentRequestByToken(processDto.getPaymentToken())
-                .orElseThrow(() -> new RuntimeException("Payment request not found for token: " + processDto.getPaymentToken()));
+                .orElseThrow(() -> new RuntimeException(
+                        "Payment request not found for token: " + processDto.getPaymentToken()));
 
         // Create a new transaction seeded from request and process details
         PaymentTransaction transaction = getPaymentTransaction(processDto, paymentRequest);
@@ -74,6 +77,7 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
         // Route to the appropriate integrator and initiate payment
         log.info("Payment transaction saved successfully");
+        log.info("Get payment integrator for {}", processDto.getPaymentMethod());
         PaymentIntegrator integrator = integratorFactory.getIntegrator(processDto.getPaymentMethod());
         log.info("Payment integrator: {}", integrator);
         log.info("Initiating payment for transaction: {}", transactionDto);
@@ -101,7 +105,8 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         return convertToDto(updated);
     }
 
-    private static PaymentTransaction getPaymentTransaction(ProcessPaymentDto processDto, PaymentRequestDto paymentRequest) {
+    private static PaymentTransaction getPaymentTransaction(ProcessPaymentDto processDto,
+            PaymentRequestDto paymentRequest) {
         PaymentTransaction transaction = new PaymentTransaction();
         transaction.setPaymentRequestId(paymentRequest.getId());
         transaction.setTransactionType(PaymentTransactionType.PAYMENT);
@@ -167,7 +172,8 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentTransactionDto> getTransactionsByPaymentMethod(PaymentMethodType paymentMethod, Pageable pageable) {
+    public Page<PaymentTransactionDto> getTransactionsByPaymentMethod(PaymentMethodType paymentMethod,
+            Pageable pageable) {
         List<PaymentTransaction> transactions = paymentTransactionRepository.findByPaymentMethod(paymentMethod);
         return convertListToPage(transactions, pageable);
     }
@@ -181,21 +187,25 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentTransactionDto> getTransactionsCreatedBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+    public Page<PaymentTransactionDto> getTransactionsCreatedBetween(LocalDateTime startDate, LocalDateTime endDate,
+            Pageable pageable) {
         List<PaymentTransaction> transactions = paymentTransactionRepository.findByCreatedAtBetween(startDate, endDate);
         return convertListToPage(transactions, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentTransactionDto> getTransactionsProcessedBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        List<PaymentTransaction> transactions = paymentTransactionRepository.findByProcessedAtBetween(startDate, endDate);
+    public Page<PaymentTransactionDto> getTransactionsProcessedBetween(LocalDateTime startDate, LocalDateTime endDate,
+            Pageable pageable) {
+        List<PaymentTransaction> transactions = paymentTransactionRepository.findByProcessedAtBetween(startDate,
+                endDate);
         return convertListToPage(transactions, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentTransactionDto> getTransactionsByAmountRange(BigDecimal minAmount, BigDecimal maxAmount, Pageable pageable) {
+    public Page<PaymentTransactionDto> getTransactionsByAmountRange(BigDecimal minAmount, BigDecimal maxAmount,
+            Pageable pageable) {
         List<PaymentTransaction> transactions = paymentTransactionRepository.findByAmountBetween(minAmount, maxAmount);
         return convertListToPage(transactions, pageable);
     }
@@ -251,7 +261,8 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     }
 
     @Override
-    public PaymentTransactionDto markAsProcessed(UUID id, String externalTransactionId, Map<String, Object> gatewayResponse) {
+    public PaymentTransactionDto markAsProcessed(UUID id, String externalTransactionId,
+            Map<String, Object> gatewayResponse) {
         PaymentTransaction transaction = paymentTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
@@ -283,7 +294,8 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
                 .orElseThrow(() -> new RuntimeException("Payment transaction not found with id: " + id));
 
         if (!transaction.canBeRetried()) {
-            throw new RuntimeException("Transaction cannot be retried. Either it's not in a retryable state or has exceeded maximum retry attempts.");
+            throw new RuntimeException(
+                    "Transaction cannot be retried. Either it's not in a retryable state or has exceeded maximum retry attempts.");
         }
 
         String oldStatus = transaction.getTransactionStatus().toString();
@@ -376,14 +388,14 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         List<PaymentTransactionDto> dtos = transactions.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
-        
+
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), dtos.size());
-        
+
         if (start > dtos.size()) {
             return new PageImpl<>(List.of(), pageable, dtos.size());
         }
-        
+
         return new PageImpl<>(dtos.subList(start, end), pageable, dtos.size());
     }
 

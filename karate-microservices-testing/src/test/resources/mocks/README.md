@@ -25,17 +25,43 @@ mocks/
 
 ### 1. Start the Mock Server
 
+You have three options to start the mock server:
+
+#### Option A: Using Standalone Runner (Recommended for Development)
+
 From the karate-microservices-testing directory:
 
 ```bash
-# Using Java directly
 java -cp "build/libs/*:build/resources/test" com.ahss.karate.mocks.MockServerRunner
-
-# Using Gradle (if you add a mockServer task)
-./gradlew mockServer
 ```
 
-The server will start on `http://localhost:8090`
+#### Option B: Using MockRunnerTest (For Short-Duration Testing)
+
+```bash
+./gradlew test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=600000
+```
+
+#### Option C: Automatic with CustomRunnerTest (Recommended for Integration Tests)
+
+The CustomRunnerTest can automatically start and stop the mock server when running integration tests:
+
+```bash
+# Enable mock server with integration tests
+./gradlew test --tests "*CustomRunnerTest" \
+  -Dkarate.env=qa \
+  -Dmock.server.enabled=true
+
+# With custom port
+./gradlew test --tests "*CustomRunnerTest" \
+  -Dkarate.env=qa \
+  -Dmock.server.enabled=true \
+  -Dmock.port=8090
+
+# Using environment variables
+MOCK_SERVER_ENABLED=true MOCK_PORT=8090 ./gradlew test --tests "*CustomRunnerTest"
+```
+
+The server will start on `http://localhost:8090` (or the port you specify)
 
 ### 2. Start Backend with Integration Profile
 
