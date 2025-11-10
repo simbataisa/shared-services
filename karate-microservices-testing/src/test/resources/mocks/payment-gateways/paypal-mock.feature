@@ -25,7 +25,19 @@ Scenario: pathMatches('/paypal/v2/checkout/orders') && methodIs('post')
   * def currency = amount.currency_code || 'USD'
   * def value = amount.value
 
-  * def orderData = { id: orderId, status: 'CREATED', intent: request.intent || 'CAPTURE', purchase_units: [{ reference_id: request.purchase_units[0].reference_id || 'default', amount: { currency_code: currency, value: value } }], create_time: now, links: [{ href: 'https://api.sandbox.paypal.com/v2/checkout/orders/' + orderId, rel: 'self', method: 'GET' }, { href: 'https://www.sandbox.paypal.com/checkoutnow?token=' + orderId, rel: 'approve', method: 'GET' }, { href: 'https://api.sandbox.paypal.com/v2/checkout/orders/' + orderId + '/capture', rel: 'capture', method: 'POST' }] }
+  # Build response object step by step
+  * def orderData = {}
+  * set orderData.id = orderId
+  * set orderData.status = 'CREATED'
+  * set orderData.intent = request.intent || 'CAPTURE'
+  * set orderData.purchase_units = []
+  * set orderData.purchase_units[0] = { reference_id: '#(request.purchase_units[0].reference_id || "default")', amount: { currency_code: '#(currency)', value: '#(value)' } }
+  * set orderData.create_time = now
+  * set orderData.links = []
+  * set orderData.links[0] = { href: '#("https://api.sandbox.paypal.com/v2/checkout/orders/" + orderId)', rel: 'self', method: 'GET' }
+  * set orderData.links[1] = { href: '#("https://www.sandbox.paypal.com/checkoutnow?token=" + orderId)', rel: 'approve', method: 'GET' }
+  * set orderData.links[2] = { href: '#("https://api.sandbox.paypal.com/v2/checkout/orders/" + orderId + "/capture")', rel: 'capture', method: 'POST' }
+
   * eval orders[orderId] = orderData
   * def response = orderData
   * def responseStatus = 201

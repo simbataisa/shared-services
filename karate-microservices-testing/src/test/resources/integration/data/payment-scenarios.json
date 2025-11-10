@@ -1,0 +1,130 @@
+[
+  {
+    "testCase": "stripe_credit_card_visa",
+    "paymentMethod": "CREDIT_CARD",
+    "gateway": "Stripe",
+    "allowedPaymentMethods": ["CREDIT_CARD", "STRIPE"],
+    "paymentMethodDetails": {
+      "stripeToken": "tok_visa"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Stripe credit card payment with valid Visa token"
+  },
+  {
+    "testCase": "stripe_credit_card_mastercard",
+    "paymentMethod": "CREDIT_CARD",
+    "gateway": "Stripe",
+    "allowedPaymentMethods": ["CREDIT_CARD", "STRIPE"],
+    "paymentMethodDetails": {
+      "stripeToken": "tok_mastercard"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Stripe credit card payment with valid Mastercard token"
+  },
+  {
+    "testCase": "stripe_debit_card",
+    "paymentMethod": "DEBIT_CARD",
+    "gateway": "Stripe",
+    "allowedPaymentMethods": ["DEBIT_CARD", "STRIPE"],
+    "paymentMethodDetails": {
+      "stripeToken": "tok_visa_debit"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Stripe debit card payment with valid token"
+  },
+  {
+    "testCase": "paypal_credit_card",
+    "paymentMethod": "CREDIT_CARD",
+    "gateway": "PayPal",
+    "allowedPaymentMethods": ["CREDIT_CARD", "PAYPAL"],
+    "paymentMethodDetails": {
+      "paypalOrderId": "ORDER123"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "PayPal credit card payment with order ID"
+  },
+  {
+    "testCase": "paypal_digital_wallet",
+    "paymentMethod": "DIGITAL_WALLET",
+    "gateway": "PayPal",
+    "allowedPaymentMethods": ["DIGITAL_WALLET", "PAYPAL"],
+    "paymentMethodDetails": {
+      "paypalOrderId": "ORDER456",
+      "walletType": "PAYPAL"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "PayPal digital wallet payment"
+  },
+  {
+    "testCase": "bank_transfer_checking",
+    "paymentMethod": "BANK_TRANSFER",
+    "gateway": "BankTransfer",
+    "allowedPaymentMethods": ["BANK_TRANSFER"],
+    "paymentMethodDetails": {
+      "accountNumber": "1234567890",
+      "routingNumber": "987654321",
+      "accountHolderName": "John Doe",
+      "accountType": "CHECKING"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Bank transfer payment with checking account"
+  },
+  {
+    "testCase": "bank_transfer_savings",
+    "paymentMethod": "BANK_TRANSFER",
+    "gateway": "BankTransfer",
+    "allowedPaymentMethods": ["BANK_TRANSFER"],
+    "paymentMethodDetails": {
+      "accountNumber": "9876543210",
+      "routingNumber": "123456789",
+      "accountHolderName": "Jane Smith",
+      "accountType": "SAVINGS"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Bank transfer payment with savings account"
+  },
+  {
+    "testCase": "stripe_only_payment",
+    "paymentMethod": "STRIPE",
+    "gateway": "Stripe",
+    "allowedPaymentMethods": ["STRIPE"],
+    "paymentMethodDetails": {
+      "stripeToken": "tok_amex"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Direct Stripe payment method (gateway-specific)"
+  },
+  {
+    "testCase": "paypal_only_payment",
+    "paymentMethod": "PAYPAL",
+    "gateway": "PayPal",
+    "allowedPaymentMethods": ["PAYPAL"],
+    "paymentMethodDetails": {
+      "paypalOrderId": "ORDER789"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Direct PayPal payment method (gateway-specific)"
+  },
+  {
+    "testCase": "multi_method_credit_card_stripe",
+    "paymentMethod": "CREDIT_CARD",
+    "gateway": "Stripe",
+    "allowedPaymentMethods": ["CREDIT_CARD", "DEBIT_CARD", "STRIPE", "PAYPAL"],
+    "paymentMethodDetails": {
+      "stripeToken": "tok_visa"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Payment with multiple allowed methods - user chooses credit card via Stripe"
+  },
+  {
+    "testCase": "multi_method_debit_card_stripe",
+    "paymentMethod": "DEBIT_CARD",
+    "gateway": "Stripe",
+    "allowedPaymentMethods": ["CREDIT_CARD", "DEBIT_CARD", "BANK_TRANSFER"],
+    "paymentMethodDetails": {
+      "stripeToken": "tok_mastercard_debit"
+    },
+    "expectedStatus": "COMPLETED",
+    "description": "Payment with multiple allowed methods - user chooses debit card"
+  }
+]

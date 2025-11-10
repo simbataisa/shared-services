@@ -5,6 +5,7 @@ import com.ahss.dto.response.PaymentResponseDto;
 import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.enums.PaymentMethodType;
 import com.ahss.integration.PaymentIntegrator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate; // Assuming RestTemplate for HTTP requests
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
  * Handles conversion of internal payment format to bank transfer specific format,
  * assembles the request, and sends it to the bank transfer API.
  */
+@Slf4j
 @Component
 public class BankTransferIntegrator implements PaymentIntegrator {
 
@@ -36,18 +38,24 @@ public class BankTransferIntegrator implements PaymentIntegrator {
     }
 
     @Override
+    public String getGatewayName() {
+        return "BankTransfer";
+    }
+
+    @Override
     public boolean supports(PaymentMethodType type) {
         return type == PaymentMethodType.BANK_TRANSFER;
     }
 
     @Override
     public PaymentResponseDto initiatePayment(PaymentRequestDto request, PaymentTransactionDto transaction) {
+        log.info("Initiating Bank Transfer payment for transaction: {}", transaction);
         // Convert internal format to external bank transfer format
         BankTransferRequest externalRequest = convertToBankTransferRequest(request, transaction);
-
+        log.info("Bank Transfer request: {}", externalRequest);
         // Send HTTP request to bank transfer API
         BankTransferResponse externalResponse = restTemplate.postForObject(bankTransferApiUrl, externalRequest, BankTransferResponse.class);
-
+        log.info("Bank Transfer response: {}", externalResponse);
         // Convert external response to internal PaymentResponseDto
         return convertToPaymentResponse(externalResponse, request, transaction);
     }

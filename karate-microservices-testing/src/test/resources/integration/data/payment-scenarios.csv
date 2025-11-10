@@ -1,0 +1,2 @@
+testCase,paymentMethod,gateway,allowedPaymentMethods,paymentMethodDetails,expectedStatus,description
+paypal_credit_card,CREDIT_CARD,PayPal,"[""PAYPAL""]","{""paypalOrderId"":""ORDER123""}",COMPLETED,PayPal credit card payment with order ID

@@ -13,6 +13,13 @@ import com.ahss.enums.PaymentMethodType;
 public interface PaymentIntegrator {
 
     /**
+     * Gets the gateway name for this integrator.
+     *
+     * @return the gateway name (e.g., "Stripe", "PayPal", "BankTransfer")
+     */
+    String getGatewayName();
+
+    /**
      * Checks if this integrator supports the given payment method type.
      *
      * @param type the payment method type

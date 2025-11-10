@@ -46,20 +46,51 @@ Scenario: pathMatches('/stripe/v1/') && headerContains('Authorization', 'Bearer 
   * def response = result.response
   * def responseStatus = result.responseStatus
 
-# PayPal gateway
-Scenario: pathMatches('/paypal/**')
-  * def callPaypal = function(tag){ return call read('classpath:mocks/payment-gateways/paypal-mock.feature@' + tag) { orders: paypalState.orders, captures: paypalState.captures } }
-  * def result = null
-  * if (pathMatches('/paypal/v1/oauth2/token') && methodIs('post')) result = callPaypal('paypal_oauth_post')
-  * if (pathMatches('/paypal/v2/checkout/orders') && methodIs('post')) result = callPaypal('paypal_orders_post')
-  * if (pathMatches('/paypal/v2/checkout/orders/{id}/capture') && methodIs('post')) result = callPaypal('paypal_orders_capture_post')
-  * if (pathMatches('/paypal/v2/checkout/orders/{id}') && methodIs('get')) result = callPaypal('paypal_orders_get')
-  * if (pathMatches('/paypal/v2/') && !headerContains('Authorization', 'Bearer')) result = callPaypal('paypal_auth_error')
+# PayPal gateway - OAuth Token
+Scenario: pathMatches('/paypal/v1/oauth2/token') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/paypal-mock.feature@paypal_oauth_post') { orders: paypalState.orders, captures: paypalState.captures }
   * if (result && result.orders) karate.set('paypalState.orders', result.orders)
   * if (result && result.captures) karate.set('paypalState.captures', result.captures)
-  * if (result) karate.set('response', result.response)
-  * if (result) karate.set('responseStatus', result.responseStatus)
-  * if (!result) karate.set('responseStatus', 404)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# PayPal gateway - Create Order
+Scenario: pathMatches('/paypal/v2/checkout/orders') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/paypal-mock.feature@paypal_orders_post') { orders: paypalState.orders, captures: paypalState.captures }
+  * if (result && result.orders) karate.set('paypalState.orders', result.orders)
+  * if (result && result.captures) karate.set('paypalState.captures', result.captures)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# PayPal gateway - Capture Order
+Scenario: pathMatches('/paypal/v2/checkout/orders/{id}/capture') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/paypal-mock.feature@paypal_orders_capture_post') { orders: paypalState.orders, captures: paypalState.captures }
+  * if (result && result.orders) karate.set('paypalState.orders', result.orders)
+  * if (result && result.captures) karate.set('paypalState.captures', result.captures)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# PayPal gateway - Get Order
+Scenario: pathMatches('/paypal/v2/checkout/orders/{id}') && methodIs('get')
+  * def result = call read('classpath:mocks/payment-gateways/paypal-mock.feature@paypal_orders_get') { orders: paypalState.orders, captures: paypalState.captures }
+  * if (result && result.orders) karate.set('paypalState.orders', result.orders)
+  * if (result && result.captures) karate.set('paypalState.captures', result.captures)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# PayPal gateway - Refund Capture
+Scenario: pathMatches('/paypal/v2/payments/captures/{id}/refund') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/paypal-mock.feature@paypal_refund_post') { orders: paypalState.orders, captures: paypalState.captures }
+  * if (result && result.orders) karate.set('paypalState.orders', result.orders)
+  * if (result && result.captures) karate.set('paypalState.captures', result.captures)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# PayPal gateway - Auth Error
+Scenario: pathMatches('/paypal/v2/') && !headerContains('Authorization', 'Bearer')
+  * def result = call read('classpath:mocks/payment-gateways/paypal-mock.feature@paypal_auth_error') { orders: paypalState.orders, captures: paypalState.captures }
+  * def response = result.response
+  * def responseStatus = result.responseStatus
 
 # Bank Transfer gateway
 Scenario: pathMatches('/bank-transfer/**')
