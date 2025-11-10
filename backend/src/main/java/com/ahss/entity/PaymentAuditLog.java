@@ -19,7 +19,7 @@ public class PaymentAuditLog {
     private UUID id;
 
     @JdbcTypeCode(SqlTypes.UUID)
-    @Column(name = "payment_request_id", nullable = false)
+    @Column(name = "payment_request_id")
     private UUID paymentRequestId;
 
     @Column(name = "payment_transaction_id")
@@ -102,25 +102,28 @@ public class PaymentAuditLog {
     }
 
     // Static factory methods for common audit actions
-    public static PaymentAuditLog createPaymentRequestAudit(UUID paymentRequestId, String action, 
-                                                           String oldStatus, String newStatus, 
+    public static PaymentAuditLog createPaymentRequestAudit(UUID paymentRequestId, String action,
+                                                           String oldStatus, String newStatus,
                                                            String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, oldStatus, newStatus, description);
+        audit.setEntityType("PAYMENT_REQUEST");
         audit.setUserId(userId);
         return audit;
     }
 
-    public static PaymentAuditLog createTransactionAudit(UUID paymentRequestId, UUID paymentTransactionId, 
+    public static PaymentAuditLog createTransactionAudit(UUID paymentRequestId, UUID paymentTransactionId,
                                                         String action, String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, description);
+        audit.setEntityType("TRANSACTION");
         audit.setPaymentTransactionId(paymentTransactionId);
         audit.setUserId(userId);
         return audit;
     }
 
-    public static PaymentAuditLog createRefundAudit(UUID paymentRequestId, UUID paymentRefundId, 
+    public static PaymentAuditLog createRefundAudit(UUID paymentRequestId, UUID paymentRefundId,
                                                    String action, String description, Long userId) {
         PaymentAuditLog audit = new PaymentAuditLog(paymentRequestId, action, description);
+        audit.setEntityType("REFUND");
         audit.setPaymentRefundId(paymentRefundId);
         audit.setUserId(userId);
         return audit;

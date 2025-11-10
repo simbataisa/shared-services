@@ -76,7 +76,7 @@ class StripeIntegratorWireMockIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"id\":\"ch_123\"}")));
+                        .withBody("{\"id\":\"ch_123\",\"status\":\"AUTHORIZED\",\"amount\":42.00,\"currency\":\"USD\",\"success\":true}")));
 
         PaymentRequestDto request = new PaymentRequestDto();
         request.setId(java.util.UUID.randomUUID());
@@ -107,7 +107,7 @@ class StripeIntegratorWireMockIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"id\":\"tok_456\"}")));
+                        .withBody("{\"token\":\"tok_456\",\"tokenType\":\"card\",\"success\":true}")));
 
         var resp = stripeIntegrator.tokenizeCard(new Object());
 

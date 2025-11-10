@@ -1,7 +1,7 @@
 Feature: E2E — Create user, assign role, then login
 
-  Background: 
-    # Base URL and auth setup using shared utilities
+  Background:
+  # Base URL and auth setup using shared utilities
     * def base = karate.get('baseUrl') || java.lang.System.getenv('BASE_URL') || 'http://localhost:8080'
     * url base
     * def login = callonce read('classpath:common/auth/login.feature')
@@ -15,19 +15,19 @@ Feature: E2E — Create user, assign role, then login
     * def utils = karate.get('utils')
     * configure report = { showLog: true, showAllSteps: true }
 
-    @e2e @smoke
+  @e2e @smoke
   Scenario: Create a user, assign a role, and login with the new user
-    - Steps:
-    1) Create a unique user using helper with provided auth/headers
-    2) Create a unique role and record role id
-    3) Assign role to user via helper
-    4) Login with new user's credentials
-    5) Verify user can access own record
-    - Assertions:
-       - New user JWT token must exist and be of reasonable length
-       - Verification helper completes successfully
-    - Notes:
-       - Helpers prioritize provided `auth`/`headers`; they avoid redundant login.
+  - Steps:
+  1) Create a unique user using helper with provided auth/headers
+  2) Create a unique role and record role id
+  3) Assign role to user via helper
+  4) Login with new user's credentials
+  5) Verify user can access own record
+  - Assertions:
+  - New user JWT token must exist and be of reasonable length
+  - Verification helper completes successfully
+  - Notes:
+  - Helpers prioritize provided `auth`/`headers`; they avoid redundant login.
     # Create a unique user
     * def unique = java.util.UUID.randomUUID().toString()
     * print 'ProvidedHeaders:', headersPreview

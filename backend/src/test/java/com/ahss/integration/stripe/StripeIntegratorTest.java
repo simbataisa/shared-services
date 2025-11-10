@@ -44,6 +44,15 @@ class StripeIntegratorTest {
         RestTemplate rt = mock(RestTemplate.class);
         StripeIntegrator integrator = new StripeIntegrator(rt);
 
+        // Mock the Stripe API response
+        StripeIntegrator.CreditCardResponse mockResponse = new StripeIntegrator.CreditCardResponse();
+        mockResponse.setId("txn_12345");
+        mockResponse.setStatus("AUTHORIZED");
+        mockResponse.setAmount(new BigDecimal("25.00"));
+        mockResponse.setCurrency("USD");
+        mockResponse.setSuccess(true);
+        when(rt.postForObject(anyString(), any(), any())).thenReturn(mockResponse);
+
         PaymentRequestDto request = new PaymentRequestDto();
         request.setId(UUID.randomUUID());
         request.setAmount(new BigDecimal("25.00"));
@@ -74,6 +83,13 @@ class StripeIntegratorTest {
     void tokenizeCard_returnsTokenizedResponse() {
         RestTemplate rt = mock(RestTemplate.class);
         StripeIntegrator integrator = new StripeIntegrator(rt);
+
+        // Mock the tokenization API response
+        StripeIntegrator.CreditCardTokenResponse mockTokenResponse = new StripeIntegrator.CreditCardTokenResponse();
+        mockTokenResponse.setToken("tok_123456789");
+        mockTokenResponse.setTokenType("card");
+        mockTokenResponse.setSuccess(true);
+        when(rt.postForObject(anyString(), any(), any())).thenReturn(mockTokenResponse);
 
         PaymentResponseDto resp = integrator.tokenizeCard(new Object());
         assertTrue(resp.isSuccess());

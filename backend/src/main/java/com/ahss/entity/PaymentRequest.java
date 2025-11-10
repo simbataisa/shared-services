@@ -8,10 +8,8 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "payment_request")
@@ -51,8 +49,11 @@ public class PaymentRequest {
     private String payerPhone;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(name = "allowed_payment_methods", columnDefinition = "payment_method_type[]", nullable = false)
-    private PaymentMethodType[] allowedPaymentMethods = {PaymentMethodType.CREDIT_CARD, PaymentMethodType.DEBIT_CARD};
+    @Column(name = "allowed_payment_methods", columnDefinition = "text[]", nullable = false)
+    private List<String> allowedPaymentMethodsRaw = Arrays.asList("CREDIT_CARD", "DEBIT_CARD");
+
+    @Transient
+    private PaymentMethodType[] allowedPaymentMethods;
 
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "pre_selected_payment_method", columnDefinition = "payment_method_type")
@@ -94,6 +95,16 @@ public class PaymentRequest {
     @OneToMany(mappedBy = "paymentRequest", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<PaymentAuditLog> auditLogs = new ArrayList<>();
 
+    @PostLoad
+    protected void onLoad() {
+        // Convert raw string list to enum array after loading from database
+        if (allowedPaymentMethodsRaw != null) {
+            allowedPaymentMethods = allowedPaymentMethodsRaw.stream()
+                    .map(PaymentMethodType::valueOf)
+                    .toArray(PaymentMethodType[]::new);
+        }
+    }
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -105,11 +116,23 @@ public class PaymentRequest {
         if (paymentToken == null) {
             paymentToken = generatePaymentToken();
         }
+        // Convert enum array to raw string list before persisting
+        if (allowedPaymentMethods != null) {
+            allowedPaymentMethodsRaw = Arrays.stream(allowedPaymentMethods)
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        // Convert enum array to raw string list before updating
+        if (allowedPaymentMethods != null) {
+            allowedPaymentMethodsRaw = Arrays.stream(allowedPaymentMethods)
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        }
     }
 
     private String generateRequestCode() {
@@ -212,11 +235,24 @@ public class PaymentRequest {
     }
 
     public PaymentMethodType[] getAllowedPaymentMethods() {
+        // Lazy initialization in case @PostLoad hasn't been called (e.g., in unit tests)
+        if (allowedPaymentMethods == null && allowedPaymentMethodsRaw != null && !allowedPaymentMethodsRaw.isEmpty()) {
+            allowedPaymentMethods = allowedPaymentMethodsRaw.stream()
+                    .map(PaymentMethodType::valueOf)
+                    .toArray(PaymentMethodType[]::new);
+        }
         return allowedPaymentMethods;
     }
 
     public void setAllowedPaymentMethods(PaymentMethodType[] allowedPaymentMethods) {
         this.allowedPaymentMethods = allowedPaymentMethods;
+        if (allowedPaymentMethods != null) {
+            this.allowedPaymentMethodsRaw = Arrays.stream(allowedPaymentMethods)
+                    .map(Enum::name)
+                    .collect(Collectors.toList());
+        } else {
+            this.allowedPaymentMethodsRaw = new ArrayList<>();
+        }
     }
 
     public PaymentMethodType getPreSelectedPaymentMethod() {

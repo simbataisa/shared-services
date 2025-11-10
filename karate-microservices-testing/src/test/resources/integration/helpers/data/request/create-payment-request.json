@@ -1,0 +1,11 @@
+{
+  "title": "Test Order #1234",
+  "amount": 49.99,
+  "currency": "USD",
+  "payerName": "Jane Doe",
+  "payerEmail": "jane.doe@example.com",
+  "allowedPaymentMethods": ["CREDIT_CARD"],
+  "preSelectedPaymentMethod": "CREDIT_CARD",
+  "tenantId": 1,
+  "metadata": { "source": "karate-e2e" }
+}

@@ -5,7 +5,14 @@ import com.ahss.dto.response.PaymentResponseDto;
 import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.enums.PaymentMethodType;
 import com.ahss.integration.PaymentIntegrator;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate; // Assuming RestTemplate for HTTP requests
 import java.math.BigDecimal;
@@ -18,26 +25,32 @@ import java.math.BigDecimal;
 @Component
 public class StripeIntegrator implements PaymentIntegrator {
 
+    private static final Logger log = LoggerFactory.getLogger(StripeIntegrator.class);
+
     private final RestTemplate restTemplate;
     private final String tokenizationApiUrl; // Configurable for tests
     private final String paymentApiUrl; // Configurable for tests
+    private final String apiKey; // Stripe API Key
 
     @org.springframework.beans.factory.annotation.Autowired
     public StripeIntegrator(
             RestTemplate restTemplate,
             @Value("${stripe.tokenizationApiUrl:https://api.stripe.com/v1/tokens}") String tokenizationApiUrl,
-            @Value("${stripe.paymentApiUrl:https://api.stripe.com/v1/charges}") String paymentApiUrl
+            @Value("${stripe.paymentApiUrl:https://api.stripe.com/v1/charges}") String paymentApiUrl,
+            @Value("${stripe.apiKey:}") String apiKey
     ) {
         this.restTemplate = restTemplate;
         this.tokenizationApiUrl = tokenizationApiUrl;
         this.paymentApiUrl = paymentApiUrl;
+        this.apiKey = apiKey;
     }
 
     // Backwards-compatible constructor for existing unit tests
     public StripeIntegrator(RestTemplate restTemplate) {
         this(restTemplate,
                 "https://api.stripe.com/v1/tokens",
-                "https://api.stripe.com/v1/charges");
+                "https://api.stripe.com/v1/charges",
+                "");
     }
 
     @Override
@@ -47,11 +60,18 @@ public class StripeIntegrator implements PaymentIntegrator {
 
     @Override
     public PaymentResponseDto initiatePayment(PaymentRequestDto request, PaymentTransactionDto transaction) {
+        log.info("Initiating payment for transaction: {}", transaction);
         // Assuming token is already available or tokenize first
         CreditCardPaymentRequest externalRequest = convertToCreditCardRequest(request, transaction);
+        log.info("Sending payment request to Stripe: {}", externalRequest);
+
+        // Create headers with authorization
+        HttpHeaders headers = createAuthHeaders();
+        HttpEntity<CreditCardPaymentRequest> requestEntity = new HttpEntity<>(externalRequest, headers);
 
         // Send HTTP request to payment API
-        CreditCardResponse externalResponse = restTemplate.postForObject(paymentApiUrl, externalRequest, CreditCardResponse.class);
+        CreditCardResponse externalResponse = restTemplate.postForObject(paymentApiUrl, requestEntity, CreditCardResponse.class);
+        log.info("Received response from Stripe: {}", externalResponse);
 
         // Convert external response to internal PaymentResponseDto
         return convertToPaymentResponse(externalResponse, request, transaction);
@@ -69,17 +89,36 @@ public class StripeIntegrator implements PaymentIntegrator {
         // Convert card details to external format
         CreditCardTokenRequest tokenRequest = convertToTokenRequest(cardDetails);
 
+        // Create headers with authorization
+        HttpHeaders headers = createAuthHeaders();
+        HttpEntity<CreditCardTokenRequest> requestEntity = new HttpEntity<>(tokenRequest, headers);
+
         // Send HTTP request to tokenization API
-        CreditCardTokenResponse tokenResponse = restTemplate.postForObject(tokenizationApiUrl, tokenRequest, CreditCardTokenResponse.class);
+        CreditCardTokenResponse tokenResponse = restTemplate.postForObject(tokenizationApiUrl, requestEntity, CreditCardTokenResponse.class);
 
         // Convert to PaymentResponseDto
         return convertTokenToPaymentResponse(tokenResponse);
     }
 
     // Helper methods
+    private HttpHeaders createAuthHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (apiKey != null && !apiKey.isEmpty()) {
+            headers.set("Authorization", "Bearer " + apiKey);
+        }
+        return headers;
+    }
     private CreditCardPaymentRequest convertToCreditCardRequest(PaymentRequestDto request, PaymentTransactionDto transaction) {
-        // Implementation for conversion
-        return new CreditCardPaymentRequest(); // Placeholder
+        CreditCardPaymentRequest ccRequest = new CreditCardPaymentRequest();
+        ccRequest.setAmount(transaction.getAmount());
+        ccRequest.setCurrency(transaction.getCurrency());
+        ccRequest.setDescription(request.getTitle());
+        ccRequest.setPaymentRequestId(request.getId().toString());
+        // Token should be obtained from transaction metadata or payment method details
+        // For now, using a placeholder - in production, this would come from tokenization
+        ccRequest.setToken("tok_placeholder");
+        return ccRequest;
     }
 
     private CreditCardTokenRequest convertToTokenRequest(Object cardDetails) {
@@ -88,20 +127,30 @@ public class StripeIntegrator implements PaymentIntegrator {
     }
 
     private PaymentResponseDto convertToPaymentResponse(CreditCardResponse externalResponse, PaymentRequestDto request, PaymentTransactionDto transaction) {
+        log.info("Mapping Stripe response to internal PaymentResponseDto: {}", externalResponse);
         PaymentResponseDto resp = new PaymentResponseDto();
-        resp.setSuccess(true); // Placeholder until actual response mapping
-        resp.setStatus("AUTHORIZED");
-        resp.setMessage("Credit card payment authorized");
+
+        if (externalResponse != null) {
+            Boolean isSuccess = externalResponse.getSuccess() != null ? externalResponse.getSuccess() : (externalResponse.getId() != null);
+            resp.setSuccess(isSuccess);
+            resp.setStatus(externalResponse.getStatus() != null ? externalResponse.getStatus() : "AUTHORIZED");
+            resp.setMessage(isSuccess ? "Credit card payment authorized" : externalResponse.getErrorMessage());
+            resp.setExternalTransactionId(externalResponse.getId());
+            resp.setAmount(externalResponse.getAmount());
+            resp.setCurrency(externalResponse.getCurrency());
+        } else {
+            // Handle null response (network error, etc.)
+            resp.setSuccess(false);
+            resp.setStatus("FAILED");
+            resp.setMessage("No response received from payment gateway");
+        }
+
         resp.setGatewayName("Stripe");
-        // External IDs would come from externalResponse once defined
-        resp.setExternalTransactionId(null);
         resp.setExternalRefundId(null);
         resp.setPaymentRequestId(request.getId());
         resp.setPaymentTransactionId(transaction.getId());
-        resp.setAmount(transaction.getAmount());
-        resp.setCurrency(transaction.getCurrency());
         resp.setProcessedAt(java.time.LocalDateTime.now());
-        resp.setGatewayResponse(null); // Fill with mapped details from externalResponse when available
+        resp.setGatewayResponse(null); // Could serialize externalResponse to Map if needed
         resp.setMetadata(request.getMetadata());
         return resp;
     }
@@ -118,19 +167,43 @@ public class StripeIntegrator implements PaymentIntegrator {
     }
 
     // Define inner classes for external request/response if needed
-    private static class CreditCardPaymentRequest {
-        // Fields for payment request
+    @Data
+    @NoArgsConstructor
+    static class CreditCardPaymentRequest {
+        private String token;
+        private BigDecimal amount;
+        private String currency;
+        private String description;
+        private String paymentRequestId;
     }
 
-    private static class CreditCardResponse {
-        // Fields for payment response
+    @Data
+    @NoArgsConstructor
+    static class CreditCardResponse {
+        private String id;
+        private String status;
+        private BigDecimal amount;
+        private String currency;
+        private Boolean success;
+        private String errorMessage;
     }
 
-    private static class CreditCardTokenRequest {
-        // Fields for token request
+    @Data
+    @NoArgsConstructor
+    static class CreditCardTokenRequest {
+        private String cardNumber;
+        private String expiryMonth;
+        private String expiryYear;
+        private String cvv;
+        private String cardHolderName;
     }
 
-    private static class CreditCardTokenResponse {
-        // Fields for token response
+    @Data
+    @NoArgsConstructor
+    static class CreditCardTokenResponse {
+        private String token;
+        private String tokenType;
+        private Boolean success;
+        private String errorMessage;
     }
 }

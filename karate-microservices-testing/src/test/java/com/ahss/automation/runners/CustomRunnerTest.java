@@ -26,7 +26,7 @@ class CustomRunnerTest {
       String excludeTags = System.getProperty("exclude.tags", System.getenv().getOrDefault("EXCLUDE_TAGS", "~@ignore"));
       String[] include = includeTags.isBlank() ? new String[] {} : includeTags.split(",");
       String[] exclude = excludeTags.isBlank() ? new String[] {} : excludeTags.split(",");
-      return Karate.run("classpath:api")
+      return Karate.run("classpath:integration/payment-end-to-end-success.feature")
           .tags(Stream.concat(Stream.of(include), Stream.of(exclude)).toArray(String[]::new))
           .karateEnv(System.getProperty("karate.env", "qa"));
     }

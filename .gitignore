@@ -26,6 +26,7 @@ replay_pid*
 
 # Java/Spring Boot Backend
 backend/build/
+backend/bin/
 backend/.gradle/
 #backend/gradlew
 #backend/gradlew.bat
@@ -47,6 +48,7 @@ backend/*.trace.db
 
 # Karate Microservices Testing
 karate-microservices-testing/build/
+karate-microservices-testing/bin/
 karate-microservices-testing/.gradle/
 karate-microservices-testing/out/
 karate-microservices-testing/target/

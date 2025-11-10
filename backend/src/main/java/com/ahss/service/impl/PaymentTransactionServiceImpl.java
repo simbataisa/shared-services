@@ -17,6 +17,8 @@ import com.ahss.repository.PaymentTransactionRepository;
 import com.ahss.service.PaymentTransactionService;
 import com.ahss.service.PaymentAuditLogService;
 import com.ahss.service.PaymentRequestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,20 +38,25 @@ import java.util.stream.Collectors;
 @Transactional
 public class PaymentTransactionServiceImpl implements PaymentTransactionService {
 
-    @Autowired
-    private PaymentTransactionRepository paymentTransactionRepository;
+    private static final Logger log = LoggerFactory.getLogger(PaymentTransactionServiceImpl.class);
 
-    @Autowired
-    private PaymentAuditLogService auditLogService;
+    private final PaymentTransactionRepository paymentTransactionRepository;
 
-    @Autowired
-    private PaymentRequestService paymentRequestService;
+    private final PaymentAuditLogService auditLogService;
 
-    @Autowired
-    private PaymentIntegratorFactory integratorFactory;
+    private final PaymentRequestService paymentRequestService;
 
-    @Autowired
-    private PaymentCallbackProducer paymentCallbackProducer;
+    private final PaymentIntegratorFactory integratorFactory;
+
+    private final PaymentCallbackProducer paymentCallbackProducer;
+
+    public PaymentTransactionServiceImpl(PaymentTransactionRepository paymentTransactionRepository, PaymentAuditLogService auditLogService, PaymentRequestService paymentRequestService, PaymentIntegratorFactory integratorFactory, PaymentCallbackProducer paymentCallbackProducer) {
+        this.paymentTransactionRepository = paymentTransactionRepository;
+        this.auditLogService = auditLogService;
+        this.paymentRequestService = paymentRequestService;
+        this.integratorFactory = integratorFactory;
+        this.paymentCallbackProducer = paymentCallbackProducer;
+    }
 
     @Override
     public PaymentTransactionDto processPayment(ProcessPaymentDto processDto) {
@@ -59,24 +66,17 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
                 .orElseThrow(() -> new RuntimeException("Payment request not found for token: " + processDto.getPaymentToken()));
 
         // Create a new transaction seeded from request and process details
-        PaymentTransaction transaction = new PaymentTransaction();
-        transaction.setPaymentRequestId(paymentRequest.getId());
-        transaction.setTransactionType(PaymentTransactionType.PAYMENT);
-        // Start transaction in a DB-supported initial state
-        transaction.setTransactionStatus(PaymentTransactionStatus.PENDING);
-        transaction.setAmount(paymentRequest.getAmount());
-        transaction.setCurrency(paymentRequest.getCurrency());
-        transaction.setPaymentMethod(processDto.getPaymentMethod());
-        transaction.setPaymentMethodDetails(processDto.getPaymentMethodDetails());
-        transaction.setGatewayName(processDto.getGatewayName());
-        transaction.setMetadata(processDto.getMetadata());
+        PaymentTransaction transaction = getPaymentTransaction(processDto, paymentRequest);
 
         // Persist transaction before calling external gateway to obtain IDs
         PaymentTransaction savedTransaction = paymentTransactionRepository.save(transaction);
         PaymentTransactionDto transactionDto = convertToDto(savedTransaction);
 
         // Route to the appropriate integrator and initiate payment
+        log.info("Payment transaction saved successfully");
         PaymentIntegrator integrator = integratorFactory.getIntegrator(processDto.getPaymentMethod());
+        log.info("Payment integrator: {}", integrator);
+        log.info("Initiating payment for transaction: {}", transactionDto);
         PaymentResponseDto response = integrator.initiatePayment(paymentRequest, transactionDto);
 
         // Update transaction with response details
@@ -99,6 +99,21 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         paymentCallbackProducer.send(event);
 
         return convertToDto(updated);
+    }
+
+    private static PaymentTransaction getPaymentTransaction(ProcessPaymentDto processDto, PaymentRequestDto paymentRequest) {
+        PaymentTransaction transaction = new PaymentTransaction();
+        transaction.setPaymentRequestId(paymentRequest.getId());
+        transaction.setTransactionType(PaymentTransactionType.PAYMENT);
+        // Start transaction in a DB-supported initial state
+        transaction.setTransactionStatus(PaymentTransactionStatus.PENDING);
+        transaction.setAmount(paymentRequest.getAmount());
+        transaction.setCurrency(paymentRequest.getCurrency());
+        transaction.setPaymentMethod(processDto.getPaymentMethod());
+        transaction.setPaymentMethodDetails(processDto.getPaymentMethodDetails());
+        transaction.setGatewayName(processDto.getGatewayName());
+        transaction.setMetadata(processDto.getMetadata());
+        return transaction;
     }
 
     @Override
