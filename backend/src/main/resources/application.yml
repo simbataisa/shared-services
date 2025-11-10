@@ -60,12 +60,58 @@ cors:
     - https://shared-services.dennisdao.com
     - https://api-shared-services.dennisdao.com
 
+# Payment Gateway Mock URLs (Karate Mock Server)
+# Default mock server runs on http://localhost:8090
+payment:
+  gateways:
+    mock:
+      enabled: true
+      baseUrl: ${MOCK_SERVER_URL:http://localhost:8090}
+
+    stripe:
+      enabled: true
+      tokenizationApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/tokens}
+      paymentApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/charges}
+      refundApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/refunds}
+      apiKey: ${STRIPE_API_KEY:mock_stripe_key}
+      webhookSecret: ${STRIPE_WEBHOOK_SECRET:mock_webhook_secret}
+
+    paypal:
+      enabled: true
+      baseUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal}
+      tokenUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v1/oauth2/token}
+      ordersUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v2/checkout/orders}
+      clientId: ${PAYPAL_CLIENT_ID:mock_paypal_client_id}
+      clientSecret: ${PAYPAL_CLIENT_SECRET:mock_paypal_secret}
+      webhookId: ${PAYPAL_WEBHOOK_ID:mock_webhook_id}
+
+    bankTransfer:
+      enabled: true
+      baseUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer}
+      transfersUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/transfers}
+      verifyUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/accounts/verify}
+      apiKey: ${BANK_TRANSFER_API_KEY:mock_bank_api_key}
+
+# Compatibility with old property names
+stripe:
+  tokenizationApiUrl: ${payment.gateways.stripe.tokenizationApiUrl}
+  paymentApiUrl: ${payment.gateways.stripe.paymentApiUrl}
+
+paypal:
+  baseUrl: ${payment.gateways.paypal.baseUrl}
+  clientId: ${payment.gateways.paypal.clientId}
+  clientSecret: ${payment.gateways.paypal.clientSecret}
+
+bankTransfer:
+  baseUrl: ${payment.gateways.bankTransfer.baseUrl}
+  apiKey: ${payment.gateways.bankTransfer.apiKey}
+
 logging:
   level:
     org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.postgresql: DEBUG
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+    org.postgresql: INFO
     com.ahss: DEBUG
   pattern:
     level: "%5p [traceId=%mdc{traceId}, spanId=%mdc{spanId}]"
