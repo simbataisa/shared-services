@@ -17,6 +17,8 @@ import com.ahss.repository.PaymentTransactionRepository;
 import com.ahss.service.PaymentTransactionService;
 import com.ahss.service.PaymentAuditLogService;
 import com.ahss.service.PaymentRequestService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,15 +51,17 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
     private final PaymentIntegratorFactory integratorFactory;
 
     private final PaymentCallbackProducer paymentCallbackProducer;
+    private final ObjectMapper objectMapper;
 
     public PaymentTransactionServiceImpl(PaymentTransactionRepository paymentTransactionRepository,
-            PaymentAuditLogService auditLogService, PaymentRequestService paymentRequestService,
-            PaymentIntegratorFactory integratorFactory, PaymentCallbackProducer paymentCallbackProducer) {
+                                         PaymentAuditLogService auditLogService, PaymentRequestService paymentRequestService,
+                                         PaymentIntegratorFactory integratorFactory, PaymentCallbackProducer paymentCallbackProducer, ObjectMapper objectMapper) {
         this.paymentTransactionRepository = paymentTransactionRepository;
         this.auditLogService = auditLogService;
         this.paymentRequestService = paymentRequestService;
         this.integratorFactory = integratorFactory;
         this.paymentCallbackProducer = paymentCallbackProducer;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -97,9 +101,15 @@ public class PaymentTransactionServiceImpl implements PaymentTransactionService 
         }
 
         PaymentTransaction updated = paymentTransactionRepository.save(savedTransaction);
+        log.info("Payment transaction updated successfully: {}", updated);
 
         // Publish callback event for downstream consumers
         PaymentCallbackEvent event = PaymentResponseAdapter.toCallbackEvent(response);
+        try {
+            log.info("Sending payment callback event: {}", objectMapper.writeValueAsString(event));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         paymentCallbackProducer.send(event);
 
         return convertToDto(updated);

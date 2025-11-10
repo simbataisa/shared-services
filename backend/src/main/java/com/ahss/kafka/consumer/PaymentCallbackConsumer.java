@@ -9,10 +9,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class PaymentCallbackConsumer extends BaseJsonKafkaConsumer {
 
     private final PaymentSagaOrchestrator orchestrator;
@@ -25,11 +28,12 @@ public class PaymentCallbackConsumer extends BaseJsonKafkaConsumer {
     @KafkaListener(topics = "${app.kafka.topics.payment-callbacks}", groupId = "${app.kafka.consumer.group}")
     public void onMessage(String message) {
         try {
+            log.info("Payment callback received: {}", message);
             PaymentCallbackEvent event = parseMessage(message);
+            log.info("Payment callback parsed: {}", event);
             orchestrator.handle(event);
         } catch (Exception e) {
-            // In a real system, route to DLT
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 
