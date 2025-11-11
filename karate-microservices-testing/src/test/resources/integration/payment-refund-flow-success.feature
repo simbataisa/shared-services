@@ -67,3 +67,6 @@ Feature: End-to-end payment full refund flow
     And match response.data.amount == originalAmount
     And match response.data.currency == originalCurrency
     * print 'Payment refund e2e verified: request', paymentRequestId, 'transaction', transactionId
+
+    # Expose setup values for re-use by calling features
+    * def result = { paymentRequestId: #(paymentRequestId), transactionId: #(transactionId), originalAmount: #(originalAmount), originalCurrency: #(originalCurrency), refundId: #(refundId) }

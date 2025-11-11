@@ -92,7 +92,9 @@ Scenario: pathMatches('/bank-transfer/api/v1/transfers/{id}/refund') && methodIs
   * def canRefund = transfer && transfer.status == 'COMPLETED'
 
   # Build refund response
-  * def response = canRefund ? { id: '#(refundId)', status: 'REFUNDED', amount: #(amount), currency: '#(currency)', success: true, externalRefundId: '#(refundId)', message: 'Bank transfer refund processed successfully' } : { error: { code: 'CANNOT_REFUND', message: 'Transfer cannot be refunded in current state' } }
+  * def successResponse = { id: '#(refundId)', status: 'REFUNDED', amount: #(amount), currency: '#(currency)', success: true, externalRefundId: '#(refundId)', message: 'Bank transfer refund processed successfully' }
+  * def errorResponse = { error: { code: 'CANNOT_REFUND', message: 'Transfer cannot be refunded in current state' } }
+  * def response = canRefund ? successResponse : errorResponse
   * def responseStatus = canRefund ? 200 : 400
 
 # Bank Transfer - List Transfers

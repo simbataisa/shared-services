@@ -15,6 +15,8 @@ import com.ahss.integration.PaymentIntegratorFactory;
 import com.ahss.repository.PaymentRefundRepository;
 import com.ahss.repository.PaymentRequestRepository;
 import com.ahss.repository.PaymentTransactionRepository;
+import com.ahss.exception.BadRequestException;
+import com.ahss.exception.ResourceNotFoundException;
 import com.ahss.service.PaymentAuditLogService;
 import com.ahss.service.PaymentRefundService;
 import com.ahss.service.PaymentRequestService;
@@ -66,6 +68,41 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     public PaymentRefundDto createRefund(CreateRefundDto createDto) {
+        // Ensure the referenced transaction exists (business validation beyond @Valid)
+        PaymentTransaction originalTransaction = paymentTransactionRepository
+                .findById(createDto.getPaymentTransactionId())
+                .orElseThrow(() -> new BadRequestException(
+                        "Original payment transaction not found with id: " + createDto.getPaymentTransactionId()));
+
+        // Validate refund amount does not exceed remaining refundable amount
+        if (originalTransaction == null) {
+            throw new ResourceNotFoundException(
+                    "No original transaction found with " + createDto.getPaymentTransactionId());
+        }
+
+        if (originalTransaction.getAmount().compareTo(createDto.getRefundAmount()) < 0) {
+            throw new BadRequestException("Refund amount exceeds original transaction amount: requested "
+                    + createDto.getRefundAmount() + ", available " + originalTransaction.getAmount());
+
+        }
+
+        BigDecimal alreadyRefunded = paymentRefundRepository
+                .sumRefundAmountByTransactionIdAndStatus(originalTransaction.getId(), PaymentTransactionStatus.SUCCESS);
+        if (alreadyRefunded == null) {
+            alreadyRefunded = BigDecimal.ZERO;
+        }
+        BigDecimal remainingRefundable = originalTransaction.getAmount().subtract(alreadyRefunded);
+        if (remainingRefundable.compareTo(BigDecimal.ZERO) < 0) {
+            remainingRefundable = BigDecimal.ZERO;
+        }
+
+        if (createDto.getRefundAmount().compareTo(remainingRefundable) > 0) {
+            throw new BadRequestException("Refund amount exceeds remaining refundable amount: requested "
+                    + createDto.getRefundAmount() + ", available " + remainingRefundable);
+        }
+
+        // Optionally, additional business rules like currency match could go here
+
         PaymentRefund refund = convertToEntity(createDto);
         refund.setRefundStatus(PaymentTransactionStatus.PENDING);
 
@@ -79,25 +116,31 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
         // Get the refund record
         PaymentRefund refund = paymentRefundRepository.findById(refundId)
-                .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + refundId));
+                .orElseThrow(() -> new BadRequestException("Payment refund not found with id: " + refundId));
 
         // Validate refund is in PENDING status
         if (refund.getRefundStatus() != PaymentTransactionStatus.PENDING) {
-            throw new RuntimeException("Refund can only be processed when in PENDING status. Current status: " + refund.getRefundStatus());
+            throw new BadRequestException(
+                    "Refund can only be processed when in PENDING status. Current status: " + refund.getRefundStatus());
         }
 
         // Get the original payment transaction
         PaymentTransaction originalTransaction = paymentTransactionRepository.findById(refund.getPaymentTransactionId())
-                .orElseThrow(() -> new RuntimeException("Original payment transaction not found with id: " + refund.getPaymentTransactionId()));
+                .orElseThrow(() -> new BadRequestException(
+                        "Original payment transaction not found with id: " + refund.getPaymentTransactionId()));
 
         // Get the payment request
         PaymentRequest paymentRequest = paymentRequestRepository.findById(originalTransaction.getPaymentRequestId())
-                .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + originalTransaction.getPaymentRequestId()));
+                .orElseThrow(() -> new BadRequestException(
+                        "Payment request not found with id: " + originalTransaction.getPaymentRequestId()));
 
-        log.info("Found original transaction: {} for payment request: {}", originalTransaction.getId(), paymentRequest.getId());
+        log.info("Found original transaction: {} for payment request: {}", originalTransaction.getId(),
+                paymentRequest.getId());
 
-        // Determine gateway - use refund's gateway if specified, otherwise use transaction's gateway
-        String gatewayName = refund.getGatewayName() != null ? refund.getGatewayName() : originalTransaction.getGatewayName();
+        // Determine gateway - use refund's gateway if specified, otherwise use
+        // transaction's gateway
+        String gatewayName = refund.getGatewayName() != null ? refund.getGatewayName()
+                : originalTransaction.getGatewayName();
         if (gatewayName == null) {
             throw new RuntimeException("Gateway name not specified in refund or original transaction");
         }
@@ -105,7 +148,8 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         log.info("Processing refund through gateway: {}", gatewayName);
 
         // Get the payment integrator
-        PaymentIntegrator integrator = integratorFactory.getIntegrator(originalTransaction.getPaymentMethod(), gatewayName);
+        PaymentIntegrator integrator = integratorFactory.getIntegrator(originalTransaction.getPaymentMethod(),
+                gatewayName);
 
         // Convert entities to DTOs for integrator
         PaymentTransactionDto transactionDto = convertTransactionToDto(originalTransaction);
@@ -122,7 +166,8 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
                 refund.setExternalRefundId(gatewayResponse.getExternalRefundId());
                 refund.setGatewayResponse(gatewayResponse.getGatewayResponse());
                 refund.setProcessedAt(LocalDateTime.now());
-                log.info("Refund processed successfully. External refund ID: {}", gatewayResponse.getExternalRefundId());
+                log.info("Refund processed successfully. External refund ID: {}",
+                        gatewayResponse.getExternalRefundId());
             } else {
                 refund.setRefundStatus(PaymentTransactionStatus.FAILED);
                 refund.setErrorMessage(gatewayResponse.getMessage());
@@ -151,12 +196,15 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     private void updatePaymentRequestStatusAfterRefund(PaymentRequest paymentRequest, BigDecimal refundAmount) {
         // Get all transactions for this payment request
-        List<PaymentTransaction> transactions = paymentTransactionRepository.findByPaymentRequestId(paymentRequest.getId());
+        List<PaymentTransaction> transactions = paymentTransactionRepository
+                .findByPaymentRequestId(paymentRequest.getId());
 
-        // Calculate total successful refunds for all transactions of this payment request
+        // Calculate total successful refunds for all transactions of this payment
+        // request
         BigDecimal totalRefunded = BigDecimal.ZERO;
         for (PaymentTransaction transaction : transactions) {
-            List<PaymentRefund> successfulRefunds = paymentRefundRepository.findSuccessfulRefundsByTransactionId(transaction.getId());
+            List<PaymentRefund> successfulRefunds = paymentRefundRepository
+                    .findSuccessfulRefundsByTransactionId(transaction.getId());
             BigDecimal transactionRefunds = successfulRefunds.stream()
                     .map(PaymentRefund::getRefundAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -249,21 +297,24 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentRefundDto> getRefundsCreatedBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+    public Page<PaymentRefundDto> getRefundsCreatedBetween(LocalDateTime startDate, LocalDateTime endDate,
+            Pageable pageable) {
         List<PaymentRefund> refunds = paymentRefundRepository.findByCreatedAtBetween(startDate, endDate);
         return convertListToPage(refunds, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentRefundDto> getRefundsProcessedBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+    public Page<PaymentRefundDto> getRefundsProcessedBetween(LocalDateTime startDate, LocalDateTime endDate,
+            Pageable pageable) {
         List<PaymentRefund> refunds = paymentRefundRepository.findByProcessedAtBetween(startDate, endDate);
         return convertListToPage(refunds, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PaymentRefundDto> getRefundsByAmountRange(BigDecimal minAmount, BigDecimal maxAmount, Pageable pageable) {
+    public Page<PaymentRefundDto> getRefundsByAmountRange(BigDecimal minAmount, BigDecimal maxAmount,
+            Pageable pageable) {
         List<PaymentRefund> refunds = paymentRefundRepository.findByRefundAmountBetween(minAmount, maxAmount);
         return convertListToPage(refunds, pageable);
     }
@@ -299,7 +350,8 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     @Override
     @Transactional(readOnly = true)
     public List<PaymentRefundDto> getStaleRefunds(LocalDateTime cutoffTime) {
-        List<PaymentRefund> refunds = paymentRefundRepository.findStaleRefunds(PaymentTransactionStatus.PENDING, cutoffTime);
+        List<PaymentRefund> refunds = paymentRefundRepository.findStaleRefunds(PaymentTransactionStatus.PENDING,
+                cutoffTime);
         return refunds.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -308,7 +360,8 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     @Override
     @Transactional(readOnly = true)
     public List<PaymentRefundDto> getSuccessfulRefundsByTransaction(UUID paymentTransactionId) {
-        List<PaymentRefund> refunds = paymentRefundRepository.findSuccessfulRefundsByTransactionId(paymentTransactionId);
+        List<PaymentRefund> refunds = paymentRefundRepository
+                .findSuccessfulRefundsByTransactionId(paymentTransactionId);
         return refunds.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
@@ -338,7 +391,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
                 .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + id));
 
         refund.setRefundStatus(status);
-        
+
         PaymentRefund updatedRefund = paymentRefundRepository.save(refund);
         return convertToDto(updatedRefund);
     }
@@ -352,7 +405,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         refund.setExternalRefundId(externalRefundId);
         refund.setGatewayResponse(gatewayResponse);
         refund.setProcessedAt(LocalDateTime.now());
-        
+
         PaymentRefund updatedRefund = paymentRefundRepository.save(refund);
         return convertToDto(updatedRefund);
     }
@@ -365,7 +418,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         refund.setRefundStatus(PaymentTransactionStatus.FAILED);
         refund.setErrorCode(errorCode);
         refund.setErrorMessage(errorMessage);
-        
+
         PaymentRefund updatedRefund = paymentRefundRepository.save(refund);
         return convertToDto(updatedRefund);
     }
@@ -378,7 +431,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         refund.setRefundStatus(PaymentTransactionStatus.PENDING);
         refund.setErrorCode(null);
         refund.setErrorMessage(null);
-        
+
         PaymentRefund updatedRefund = paymentRefundRepository.save(refund);
         return convertToDto(updatedRefund);
     }
@@ -390,7 +443,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
 
         refund.setRefundStatus(PaymentTransactionStatus.CANCELLED);
         refund.setReason(reason);
-        
+
         paymentRefundRepository.save(refund);
     }
 
@@ -410,7 +463,7 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     @Transactional(readOnly = true)
     public boolean canRefund(UUID paymentTransactionId, BigDecimal refundAmount) {
         BigDecimal availableAmount = getAvailableRefundAmount(paymentTransactionId);
-        return availableAmount.compareTo(refundAmount) >= 0;
+        return refundAmount != null && availableAmount.compareTo(refundAmount) >= 0;
     }
 
     @Override
@@ -418,7 +471,14 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     public BigDecimal getAvailableRefundAmount(UUID paymentTransactionId) {
         BigDecimal totalRefunded = paymentRefundRepository.sumRefundAmountByTransactionIdAndStatus(
                 paymentTransactionId, PaymentTransactionStatus.SUCCESS);
-        return totalRefunded != null ? totalRefunded : BigDecimal.ZERO;
+        if (totalRefunded == null) {
+            totalRefunded = BigDecimal.ZERO;
+        }
+        BigDecimal originalAmount = paymentTransactionRepository.findById(paymentTransactionId)
+                .map(PaymentTransaction::getAmount)
+                .orElse(BigDecimal.ZERO);
+        BigDecimal remaining = originalAmount.subtract(totalRefunded);
+        return remaining.compareTo(BigDecimal.ZERO) > 0 ? remaining : BigDecimal.ZERO;
     }
 
     @Override
@@ -462,8 +522,9 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
     @Override
     public void processStaleRefunds() {
         LocalDateTime cutoffTime = LocalDateTime.now().minusHours(24);
-        List<PaymentRefund> staleRefunds = paymentRefundRepository.findStaleRefunds(PaymentTransactionStatus.PENDING, cutoffTime);
-        
+        List<PaymentRefund> staleRefunds = paymentRefundRepository.findStaleRefunds(PaymentTransactionStatus.PENDING,
+                cutoffTime);
+
         for (PaymentRefund refund : staleRefunds) {
             refund.setRefundStatus(PaymentTransactionStatus.FAILED);
             refund.setErrorMessage("Refund timed out");
@@ -480,14 +541,14 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         List<PaymentRefundDto> dtos = refunds.stream()
                 .map(this::convertToDto)
                 .collect(Collectors.toList());
-        
+
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), dtos.size());
-        
+
         if (start > dtos.size()) {
             return new PageImpl<>(List.of(), pageable, dtos.size());
         }
-        
+
         return new PageImpl<>(dtos.subList(start, end), pageable, dtos.size());
     }
 
