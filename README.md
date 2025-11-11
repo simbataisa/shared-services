@@ -271,8 +271,6 @@ Notes (containers):
     docker compose -f docker-compose.windows.yml --profile observability up -d
     ```
 
-````
-
 ## 📋 Prerequisites
 
 - **Java 21** or higher
@@ -293,6 +291,7 @@ cd shared-services
 ```
 
 The script will:
+
 1. ✅ Build backend Docker image
 2. ✅ Build frontend Docker image
 3. ✅ Start all services with observability profile
@@ -301,6 +300,7 @@ The script will:
 ### Option 2: Manual Setup
 
 #### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd shared-services
@@ -337,11 +337,13 @@ This starts all required services:
 - **Frontend** - React application
 
 **Note on Kafka Configuration:**
+
 - Host applications (running on your machine) connect to Kafka at `localhost:9092` (default in `application.yml`)
 - Docker containers connect to Kafka at `kafka:29092` (overridden by `SPRING_KAFKA_BOOTSTRAP_SERVERS` environment variable)
 - This dual-listener setup allows both host and containerized services to communicate with Kafka properly
 
 **Configuration Details:**
+
 ```yaml
 # application.yml (default for local development)
 spring:
@@ -373,11 +375,13 @@ cd karate-microservices-testing
 ```
 
 The Docker container will reach the mock server at `host.docker.internal:8090`. This allows:
+
 - ✅ Backend in Docker to call mock Stripe, PayPal, BankTransfer APIs
 - ✅ Payment gateway integration testing without external API calls
 - ✅ Isolated testing environment
 
 **How it works:**
+
 - The backend uses `MOCK_SERVER_HOST=host.docker.internal` environment variable
 - Mock URLs: `http://host.docker.internal:8090/stripe/*`, `/paypal/*`, `/bank-transfer/*`
 - For local development (not Docker), URLs default to `http://localhost:8090/*`
