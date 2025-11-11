@@ -1,0 +1,46 @@
+name: Karate Tests
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ '21' ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+
+      - name: Start mock server (background via Gradle wrapper)
+        working-directory: karate-microservices-testing
+        run: |
+          nohup ./gradlew -q mockStart &
+          sleep 3
+
+      - name: Run smoke tests against QA URLs (mocked) with Gradle wrapper
+        working-directory: karate-microservices-testing
+        env:
+          BASE_URL: http://localhost:8090
+          AUTH_BASE_URL: http://localhost:8090/auth
+          MOCK_SERVER_URL: http://localhost:8090
+        run: |
+          ./gradlew -q testSmoke -Dkarate.env=qa -Dthreads=5
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: karate-reports
+          path: |
+            karate-microservices-testing/target/karate-reports/**
+            karate-microservices-testing/target/surefire-reports/**

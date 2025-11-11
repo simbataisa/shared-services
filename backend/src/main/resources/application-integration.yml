@@ -1,0 +1,96 @@
+# Integration Profile Configuration
+# This profile is used for integration testing with Karate mock servers
+# Start the Karate mock server first on port 8090
+# Activate this profile via: --spring.profiles.active=integration
+
+spring:
+  # Use PostgreSQL from docker-compose.yml
+  datasource:
+    url: ${INTEGRATION_DB_URL:jdbc:postgresql://localhost:5432/sharedservices}
+    driver-class-name: ${INTEGRATION_DB_DRIVER:org.postgresql.Driver}
+    username: ${INTEGRATION_DB_USER:postgres}
+    password: ${INTEGRATION_DB_PASSWORD:postgres}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+    producer:
+      retries: 0
+
+# Payment Gateway Mock URLs (Karate Mock Server)
+# Default mock server runs on http://localhost:8090
+payment:
+  gateways:
+    mock:
+      enabled: true
+      baseUrl: ${MOCK_SERVER_URL:http://localhost:8090}
+
+    stripe:
+      enabled: true
+      tokenizationApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/tokens}
+      paymentApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/charges}
+      refundApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/refunds}
+      apiKey: ${STRIPE_API_KEY:mock_stripe_key}
+      webhookSecret: ${STRIPE_WEBHOOK_SECRET:mock_webhook_secret}
+
+    paypal:
+      enabled: true
+      baseUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal}
+      tokenUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v1/oauth2/token}
+      ordersUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v2/checkout/orders}
+      clientId: ${PAYPAL_CLIENT_ID:mock_paypal_client_id}
+      clientSecret: ${PAYPAL_CLIENT_SECRET:mock_paypal_secret}
+      webhookId: ${PAYPAL_WEBHOOK_ID:mock_webhook_id}
+
+    bankTransfer:
+      enabled: true
+      baseUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer}
+      transfersUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/transfers}
+      verifyUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/accounts/verify}
+      apiKey: ${BANK_TRANSFER_API_KEY:mock_bank_api_key}
+
+# Compatibility with old property names
+stripe:
+  tokenizationApiUrl: ${payment.gateways.stripe.tokenizationApiUrl}
+  paymentApiUrl: ${payment.gateways.stripe.paymentApiUrl}
+
+paypal:
+  baseUrl: ${payment.gateways.paypal.baseUrl}
+  clientId: ${payment.gateways.paypal.clientId}
+  clientSecret: ${payment.gateways.paypal.clientSecret}
+
+bankTransfer:
+  baseUrl: ${payment.gateways.bankTransfer.baseUrl}
+  apiKey: ${payment.gateways.bankTransfer.apiKey}
+
+# Disable tracing for integration tests
+management:
+  tracing:
+    enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: false
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.ahss: DEBUG
+    com.ahss.integration: TRACE
+    org.springframework.web.client.RestTemplate: DEBUG

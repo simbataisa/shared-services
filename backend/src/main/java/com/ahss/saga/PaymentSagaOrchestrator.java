@@ -12,6 +12,7 @@ import com.ahss.service.PaymentAuditLogService;
 import com.ahss.service.PaymentRefundService;
 import com.ahss.service.PaymentRequestService;
 import com.ahss.service.PaymentTransactionService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Component
 public class PaymentSagaOrchestrator {
 
@@ -53,6 +55,7 @@ public class PaymentSagaOrchestrator {
     }
 
     private void handleRequestApproval(PaymentCallbackEvent event) {
+        log.info("Handling request approval event: {}", event);
         UUID requestId = resolveRequestId(event);
         if (requestId == null) {
             logMissingReference("REQUEST_APPROVED", event);
@@ -67,6 +70,7 @@ public class PaymentSagaOrchestrator {
     }
 
     private void handleRequestRejection(PaymentCallbackEvent event) {
+        log.info("Handling request rejection event: {}", event);
         UUID requestId = resolveRequestId(event);
         if (requestId == null) {
             logMissingReference("REQUEST_REJECTED", event);
@@ -81,6 +85,7 @@ public class PaymentSagaOrchestrator {
     }
 
     private void handlePaymentSuccess(PaymentCallbackEvent event) {
+        log.info("Handling payment success event: {}", event);
         Optional<PaymentTransactionDto> opt = transactionService
                 .getTransactionByExternalId(event.getExternalTransactionId());
         if (opt.isEmpty()) {
@@ -99,6 +104,7 @@ public class PaymentSagaOrchestrator {
     }
 
     private void handlePaymentFailure(PaymentCallbackEvent event) {
+        log.info("Handling payment failure event: {}", event);
         Optional<PaymentTransactionDto> opt = transactionService
                 .getTransactionByExternalId(event.getExternalTransactionId());
         if (opt.isEmpty()) {
@@ -116,6 +122,7 @@ public class PaymentSagaOrchestrator {
     }
 
     private void handleRefundSuccess(PaymentCallbackEvent event) {
+        log.info("Handling refund success event: {}", event);
         Optional<PaymentRefundDto> opt = refundService.getRefundByExternalId(event.getExternalRefundId());
         if (opt.isEmpty()) {
             logMissingReference("REFUND_SUCCESS", event);
@@ -145,6 +152,7 @@ public class PaymentSagaOrchestrator {
     }
 
     private void handleRefundFailure(PaymentCallbackEvent event) {
+        log.info("Handling refund failure event: {}", event);
         Optional<PaymentRefundDto> opt = refundService.getRefundByExternalId(event.getExternalRefundId());
         if (opt.isEmpty()) {
             logMissingReference("REFUND_FAILED", event);
@@ -159,6 +167,7 @@ public class PaymentSagaOrchestrator {
     }
 
     private UUID resolveRequestId(PaymentCallbackEvent event) {
+        log.info("Resolving request ID for event: {}", event);
         if (event.getPaymentRequestId() != null)
             return event.getPaymentRequestId();
         if (event.getPaymentToken() != null) {
@@ -176,6 +185,7 @@ public class PaymentSagaOrchestrator {
 
     private void logMissingReference(String action, PaymentCallbackEvent event) {
         // No audit entity available to attach; consider logging to an external system.
+        log.warn("{}: No payment request found for event: {}", action, event);
     }
 
     private String safe(String s) {

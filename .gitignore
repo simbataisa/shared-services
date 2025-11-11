@@ -13,6 +13,7 @@
 # Package Files
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
+!otel-javaagent.jar
 *.war
 *.nar
 *.ear
@@ -26,6 +27,7 @@ replay_pid*
 
 # Java/Spring Boot Backend
 backend/build/
+backend/bin/
 backend/.gradle/
 #backend/gradlew
 #backend/gradlew.bat
@@ -44,6 +46,17 @@ backend/src/main/resources/application-local.properties
 backend/*.db
 backend/*.mv.db
 backend/*.trace.db
+
+# Karate Microservices Testing
+karate-microservices-testing/build/
+karate-microservices-testing/bin/
+karate-microservices-testing/.gradle/
+karate-microservices-testing/out/
+karate-microservices-testing/target/
+karate-microservices-testing/.idea/
+karate-microservices-testing/*.iml
+karate-microservices-testing/*.ipr
+karate-microservices-testing/*.iws  
 
 # Frontend/Node.js
 frontend/node_modules/

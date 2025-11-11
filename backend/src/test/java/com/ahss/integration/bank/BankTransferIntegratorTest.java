@@ -9,6 +9,7 @@ import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
@@ -26,12 +27,23 @@ import static org.mockito.Mockito.*;
 @Feature("Bank Transfer Integration")
 class BankTransferIntegratorTest {
 
+    private BankTransferIntegrator integrator;
+    private final String transferApiUrl = "https://api.banktransfer.example.com/v1/transfers";
+    private final String verifyApiUrl = "https://api.banktransfer.example.com/v1/transfers/verify";
+    private final String apiKey = "testApiKey";
+
+    private RestTemplate rt;
+
+    @BeforeEach
+    void setUp() {
+        rt = mock(RestTemplate.class);
+        integrator = new BankTransferIntegrator(rt, transferApiUrl, verifyApiUrl, apiKey);
+    }
+
     @Test
     @DisplayName("supports() returns true for BANK_TRANSFER and false for other methods")
     @Story("Supports BANK_TRANSFER and false for other methods")
     void supports_onlyBankTransfer() {
-        RestTemplate rt = mock(RestTemplate.class);
-        BankTransferIntegrator integrator = new BankTransferIntegrator(rt);
         assertTrue(integrator.supports(PaymentMethodType.BANK_TRANSFER));
         assertFalse(integrator.supports(PaymentMethodType.PAYPAL));
         assertFalse(integrator.supports(PaymentMethodType.CREDIT_CARD));
@@ -41,8 +53,6 @@ class BankTransferIntegratorTest {
     @DisplayName("initiatePayment() returns initiated response for valid request")
     @Story("Initiate Payment for BANK_TRANSFER")
     void initiatePayment_returnsInitiatedResponse() {
-        RestTemplate rt = mock(RestTemplate.class);
-        BankTransferIntegrator integrator = new BankTransferIntegrator(rt);
 
         PaymentRequestDto request = new PaymentRequestDto();
         request.setId(UUID.randomUUID());
@@ -53,6 +63,16 @@ class BankTransferIntegratorTest {
         tx.setId(UUID.randomUUID());
         tx.setAmount(new BigDecimal("55.00"));
         tx.setCurrency("USD");
+
+
+        BankTransferIntegrator.BankTransferResponse bankTransferResponse = new BankTransferIntegrator.BankTransferResponse();
+        bankTransferResponse.setSuccess(true);
+        bankTransferResponse.setStatus(BankTransferWebhookEventType.TRANSFER_INITIATED.getValue());
+        bankTransferResponse.setMessage("Bank transfer initiated");
+        bankTransferResponse.setExternalTransactionId("ext-bank-001");
+
+        when(rt.postForObject(anyString(), any(), any()))
+                .thenReturn(bankTransferResponse);
 
         PaymentResponseDto resp = integrator.initiatePayment(request, tx);
         assertTrue(resp.isSuccess());
@@ -71,9 +91,6 @@ class BankTransferIntegratorTest {
     @DisplayName("processRefund() returns refund completed response for valid request")
     @Story("Process Refund for BANK_TRANSFER")
     void processRefund_returnsRefundCompletedResponse() {
-        RestTemplate rt = mock(RestTemplate.class);
-        BankTransferIntegrator integrator = new BankTransferIntegrator(rt);
-
         PaymentTransactionDto tx = new PaymentTransactionDto();
         tx.setId(UUID.randomUUID());
         tx.setPaymentRequestId(UUID.randomUUID());
@@ -102,8 +119,6 @@ class BankTransferIntegratorTest {
     @DisplayName("tokenizeCard() throws UnsupportedOperationException")
     @Story("Tokenize Card for BANK_TRANSFER")
     void tokenizeCard_throwsUnsupportedOperation() {
-        RestTemplate rt = mock(RestTemplate.class);
-        BankTransferIntegrator integrator = new BankTransferIntegrator(rt);
         assertThrows(UnsupportedOperationException.class, () -> integrator.tokenizeCard(new Object()));
     }
 }

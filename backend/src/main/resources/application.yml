@@ -28,8 +28,8 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     properties:
       hibernate:
-        format_sql: true
-        show_sql: true
+        format_sql: false
+        show_sql: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
         type:
           preferred_uuid_jdbc_type: OTHER
@@ -60,12 +60,66 @@ cors:
     - https://shared-services.dennisdao.com
     - https://api-shared-services.dennisdao.com
 
+# Payment Gateway Mock URLs (Karate Mock Server)
+# Default mock server runs on http://localhost:8090
+payment:
+  gateways:
+    mock:
+      enabled: true
+      baseUrl: ${MOCK_SERVER_URL:http://localhost:8090}
+
+    stripe:
+      enabled: true
+      tokenizationApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/tokens}
+      paymentApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/charges}
+      refundApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/refunds}
+      apiKey: ${STRIPE_API_KEY:mock_stripe_key}
+      webhookId: ${STRIPE_WEBHOOK_ID:mock_stripe_webhook_id}
+      webhookSecret: ${STRIPE_WEBHOOK_SECRET:mock_stripe_webhook_secret}
+
+    paypal:
+      enabled: true
+      tokenUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v1/oauth2/token}
+      ordersUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v2/checkout/orders}
+      refundBaseUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v2/checkout/refunds}
+      clientId: ${PAYPAL_CLIENT_ID:mock_paypal_client_id}
+      clientSecret: ${PAYPAL_CLIENT_SECRET:mock_paypal_secret}
+      webhookId: ${PAYPAL_WEBHOOK_ID:mock_paypal_webhook_id}
+      webhookSecret: ${PAYPAL_WEBHOOK_SECRET:mock_paypal_webhook_secret}
+
+    bankTransfer:
+      enabled: true
+      transfersUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/transfers}
+      verifyUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/accounts/verify}
+      apiKey: ${BANK_TRANSFER_API_KEY:mock_bank_api_key}
+      webhookId: ${BANK_TRANSFER_WEBHOOK_ID:mock_bank_transfer_webhook_id}
+      webhookSecret: ${BANK_TRANSFER_WEBHOOK_SECRET:mock_bank_transfer_webhook_secret}
+
+# Compatibility with old property names
+stripe:
+  tokenizationApiUrl: ${payment.gateways.stripe.tokenizationApiUrl}
+  paymentApiUrl: ${payment.gateways.stripe.paymentApiUrl}
+  refundApiUrl: ${payment.gateways.stripe.refundApiUrl}
+  apiKey: ${payment.gateways.stripe.apiKey}
+
+paypal:
+  orderApiUrl: ${payment.gateways.paypal.ordersUrl}
+  tokenApiUrl: ${payment.gateways.paypal.tokenUrl}
+  refundApiUrl: ${payment.gateways.paypal.refundBaseUrl}
+  clientId: ${payment.gateways.paypal.clientId}
+  clientSecret: ${payment.gateways.paypal.clientSecret}
+
+bankTransfer:
+  transferApiUrl: ${payment.gateways.bankTransfer.transfersUrl}
+  verifyApiUrl: ${payment.gateways.bankTransfer.verifyUrl}
+  apiKey: ${payment.gateways.bankTransfer.apiKey}
+
 logging:
   level:
     org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.postgresql: DEBUG
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+    org.postgresql: INFO
     com.ahss: DEBUG
   pattern:
     level: "%5p [traceId=%mdc{traceId}, spanId=%mdc{spanId}]"

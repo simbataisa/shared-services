@@ -1,0 +1,4 @@
+[
+  { "id": 1, "status": "CREATED", "userId": 1, "sku": "ABC-123", "quantity": 1 },
+  { "id": 2, "status": "CREATED", "userId": 2, "sku": "SKU-002", "quantity": 3 }
+]

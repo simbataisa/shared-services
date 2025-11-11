@@ -1,0 +1,7 @@
+{
+  "paymentToken": "#(paymentToken || '')",
+  "paymentMethod": "#(paymentMethod || 'CREDIT_CARD')",
+  "paymentMethodDetails": "#(paymentMethodDetails || { cardNumber: '4111111111111111', expMonth: 12, expYear: 2030, cvv: '123' })",
+  "gatewayName": "#(gatewayName || 'Stripe')",
+  "metadata": "#(metadata || { testCase: 'payment-end-to-end-success' })"
+}

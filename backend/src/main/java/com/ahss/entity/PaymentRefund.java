@@ -40,7 +40,7 @@ public class PaymentRefund {
     @Column(name = "refund_reason", columnDefinition = "TEXT")
     private String reason;
 
-    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "refund_status", nullable = false, columnDefinition = "payment_transaction_status")
     private PaymentTransactionStatus refundStatus = PaymentTransactionStatus.PENDING;
 

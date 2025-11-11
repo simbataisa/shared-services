@@ -1,0 +1,12 @@
+{
+  "title": "#(title || 'Test Order #1234')",
+  "amount": "#(amount || 49.99)",
+  "currency": "#(currency || 'USD')",
+  "payerName": "#(payerName || 'Jane Doe')",
+  "payerEmail": "#(payerEmail || 'jane.doe@example.com')",
+  "allowedPaymentMethods": "#(allowedPaymentMethods || ['CREDIT_CARD'])",
+  "preSelectedPaymentMethod": "#(preSelectedPaymentMethod || 'CREDIT_CARD')",
+  "paymentGateway": "#(paymentGateway || 'Stripe')",
+  "tenantId": "#(tenantId || 1)",
+  "metadata": "#(metadata || { source: 'karate-e2e' })"
+}

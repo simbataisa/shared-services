@@ -1,0 +1,44 @@
+Feature: End-to-end payment success flow - JSON Data Driven
+
+  Background:
+    * def base = karate.get('baseUrl') || java.lang.System.getenv('BASE_URL') || 'http://localhost:8080'
+    * url base
+    * def login = callonce read('classpath:common/auth/login.feature')
+    * def auth = { token: #(login.token) }
+    * configure headers = read('classpath:common/headers/common-headers.js')
+    * def headersFn = read('classpath:common/headers/common-headers.js')
+    * def headersPreview = headersFn()
+    * print 'Computed headers preview:', headersPreview
+    * def utils = karate.get('utils')
+    * configure retry = { count: 3, interval: 1000 }
+
+    # Read test data from JSON file
+    * def testData = read('classpath:integration/data/payment-scenarios.json')
+    * print 'Loaded test scenarios:', testData.length, 'scenarios'
+
+  @e2e @payments @success @json-driven
+  Scenario: Execute all payment scenarios from JSON
+    # Loop through each test scenario
+    * def executeTest =
+      """
+      function(scenario) {
+        karate.log('Executing scenario:', scenario.testCase);
+        var result = karate.call('classpath:integration/payment-end-to-end-scenario.feature', {
+          testCase: scenario.testCase,
+          paymentMethod: scenario.paymentMethod,
+          gateway: scenario.gateway,
+          allowedPaymentMethods: scenario.allowedPaymentMethods,
+          paymentMethodDetails: scenario.paymentMethodDetails,
+          expectedStatus: scenario.expectedStatus,
+          description: scenario.description,
+          auth: auth,
+          headers: headersPreview
+        });
+        karate.log('Completed scenario:', scenario.testCase);
+        return result;
+      }
+      """
+    * def results = karate.map(testData, executeTest)
+    * print '========================================='
+    * print 'All scenarios executed:', results.length
+    * print '========================================='

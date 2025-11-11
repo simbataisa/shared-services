@@ -32,6 +32,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
     // Micrometer Tracing + OpenTelemetry OTLP exporter
     implementation 'io.micrometer:micrometer-tracing-bridge-otel:1.3.5'
     implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
@@ -47,6 +53,8 @@ dependencies {
     implementation 'org.flywaydb:flyway-core:9.5.1'
     implementation 'io.hypersistence:hypersistence-utils-hibernate-63:3.8.3'
     runtimeOnly 'org.postgresql:postgresql:42.7.3'
+    // H2 for integration testing
+    runtimeOnly 'com.h2database:h2:2.2.224'
 
     // Kafka (for CloudEvents tracing propagation)
     implementation 'org.springframework.kafka:spring-kafka:3.2.4'

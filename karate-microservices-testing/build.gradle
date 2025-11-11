@@ -1,0 +1,93 @@
+plugins {
+  id 'java'
+  id 'scala'
+  id 'io.gatling.gradle' version '3.11.5'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  implementation 'org.slf4j:slf4j-api:2.0.12'
+
+  // Align Karate libs to 1.5.x (new group io.karatelabs)
+  testImplementation 'io.karatelabs:karate-junit5:1.5.1'
+  testImplementation 'ch.qos.logback:logback-classic:1.4.14'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+
+  // Ensure Karate-Gatling is available for compiling tests
+  testImplementation 'io.karatelabs:karate-gatling:1.5.2.RC6'
+  // Align Gatling core libs to 3.11.5 on the test classpath
+  testImplementation 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
+
+  // Gatling + Karate for performance tests
+  gatlingImplementation 'io.karatelabs:karate-gatling:1.5.2.RC6'
+  // Align Gatling core libs to 3.11.5 on the gatling source-set
+  gatlingImplementation 'io.gatling.highcharts:gatling-charts-highcharts:3.11.5'
+}
+
+test {
+  useJUnitPlatform()
+  // Allow passing env/threads via -D or Gradle properties
+  systemProperty 'karate.env', System.getProperty('karate.env', System.getProperty('env', 'qa'))
+  systemProperty 'threads', System.getProperty('threads', '5')
+  // Propagate karate.options from JVM args to the forked test JVM so runners can see it
+  systemProperty 'karate.options', System.getProperty('karate.options', '')
+  // Mock server properties for CustomRunnerTest
+  systemProperty 'mock.server.enabled', System.getProperty('mock.server.enabled', 'false')
+  systemProperty 'mock.port', System.getProperty('mock.port', '8090')
+  systemProperty 'mock.block.ms', System.getProperty('mock.block.ms', '600000')
+  testLogging {
+    events 'passed', 'skipped', 'failed'
+  }
+}
+
+// Gatling plugin is configured via Gradle properties and defaults; set simulation class at the command line
+
+// Align Gatling sources with PRD structure: use src/test/scala and src/test/resources
+sourceSets {
+  gatling {
+    // Keep simulations only in the dedicated Gatling source-set to avoid duplicates
+    scala.srcDirs = ["src/gatling/scala"]
+    resources.srcDirs = ["src/test/resources"]
+  }
+}
+
+tasks.register('testSmoke', Test) {
+  useJUnitPlatform()
+  systemProperty 'karate.env', System.getProperty('karate.env', 'qa')
+  systemProperty 'threads', System.getProperty('threads', '5')
+  systemProperty 'karate.options', '--tags @smoke'
+  testLogging { events 'passed', 'skipped', 'failed' }
+}
+
+tasks.register('testContract', Test) {
+  useJUnitPlatform()
+  systemProperty 'karate.env', System.getProperty('karate.env', 'qa')
+  systemProperty 'karate.options', '--tags @contract'
+  testLogging { events 'passed', 'skipped', 'failed' }
+}
+
+tasks.register('testPerf', Test) {
+  useJUnitPlatform()
+  // Only run PerformanceTestRunner
+  filter { includeTestsMatching '*PerformanceTestRunner' }
+  systemProperty 'karate.env', System.getProperty('karate.env', 'qa')
+  systemProperty 'threads', System.getProperty('threads', '10')
+  testLogging { events 'passed', 'skipped', 'failed' }
+}
+
+tasks.register('mockStart', Test) {
+  useJUnitPlatform()
+  // Only run MockRunner, and keep it alive long enough for CI/local
+  filter { includeTestsMatching '*MockRunner' }
+  systemProperty 'mock.block.ms', System.getProperty('mock.block.ms', '600000')
+  testLogging { events 'passed', 'skipped', 'failed' }
+}

@@ -1,8 +1,15 @@
 package com.ahss.config;
 
 import com.ahss.tracing.kafka.OtelKafkaProducerInterceptor;
+import com.ahss.tracing.kafka.OtelKafkaConsumerInterceptor;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -20,6 +27,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.kafka.config.TopicBuilder;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +36,29 @@ import java.util.ArrayList;
 @Configuration
 @ConditionalOnClass(KafkaTemplate.class)
 public class KafkaConfig {
+
+    private static final TextMapGetter<Headers> KAFKA_HEADER_GETTER = new TextMapGetter<Headers>() {
+        @Override
+        public Iterable<String> keys(Headers headers) {
+            List<String> keys = new ArrayList<>();
+            if (headers != null) {
+                headers.forEach(header -> keys.add(header.key()));
+            }
+            return keys;
+        }
+
+        @Override
+        public String get(Headers headers, String key) {
+            if (headers == null || key == null) {
+                return null;
+            }
+            Header header = headers.lastHeader(key);
+            if (header == null || header.value() == null) {
+                return null;
+            }
+            return new String(header.value(), StandardCharsets.UTF_8);
+        }
+    };
 
     @Bean
     @ConditionalOnMissingBean
@@ -72,6 +103,28 @@ public class KafkaConfig {
         // Ensure String deserializers for simple JSON string payloads
         props.putIfAbsent(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         props.putIfAbsent(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+
+        // Add OTEL consumer interceptor for distributed tracing
+        String interceptorClass = OtelKafkaConsumerInterceptor.class.getName();
+        Object existing = props.get(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG);
+        switch (existing) {
+            case null -> props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, List.of(interceptorClass));
+            case List<?> list -> {
+                if (!list.contains(interceptorClass)) {
+                    List<Object> newList = new ArrayList<>(list);
+                    newList.add(interceptorClass);
+                    props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, newList);
+                }
+            }
+            case String s -> {
+                if (!s.contains(interceptorClass)) {
+                    props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, s + "," + interceptorClass);
+                }
+            }
+            default -> {
+            }
+        }
+
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
@@ -83,6 +136,26 @@ public class KafkaConfig {
         factory.setConsumerFactory(consumerFactory);
         factory.setConcurrency(3);
         factory.getContainerProperties().setObservationEnabled(true);
+
+        // Add record interceptor to extract and set trace context from Kafka headers
+        factory.setRecordInterceptor((record, consumer) -> {
+            try {
+                // Extract context from Kafka headers
+                Context extractedContext = GlobalOpenTelemetry.getPropagators()
+                    .getTextMapPropagator()
+                    .extract(Context.current(), record.headers(), KAFKA_HEADER_GETTER);
+
+                if (extractedContext != null && extractedContext != Context.current()) {
+                    // Make the context current for the processing of this record
+                    // The scope will be closed automatically by Spring Kafka's observation mechanism
+                    extractedContext.makeCurrent();
+                }
+            } catch (Exception e) {
+                // Continue without trace context if extraction fails
+            }
+            return record;
+        });
+
         return factory;
     }
 

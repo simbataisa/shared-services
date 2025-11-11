@@ -1,6 +1,8 @@
 package com.ahss.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 @Entity
@@ -17,15 +19,15 @@ public class Tenant {
     @Column(nullable = false)
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "type", nullable = false, columnDefinition = "tenant_type")
     private TenantType type;
 
     @Column(name = "organization_id")
     private Long organizationId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tenant_status", nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "tenant_status", nullable = false, columnDefinition = "tenant_status")
     private TenantStatus status = TenantStatus.ACTIVE;
 
     @Column(name = "created_at", nullable = false, updatable = false)

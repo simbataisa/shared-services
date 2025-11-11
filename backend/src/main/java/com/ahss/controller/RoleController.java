@@ -36,8 +36,11 @@ import java.util.Optional;
 })
 public class RoleController {
 
-    @Autowired
-    private RoleService roleService;
+    private final RoleService roleService;
+
+    public RoleController(RoleService roleService) {
+        this.roleService = roleService;
+    }
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary = "Get all roles", description = "Retrieve all active roles")
