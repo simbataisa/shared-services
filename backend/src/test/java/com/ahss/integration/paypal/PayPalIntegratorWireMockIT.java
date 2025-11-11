@@ -13,28 +13,27 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = PayPalIntegratorWireMockIT.ProxyRestTemplateConfig.class)
+@SpringBootTest(classes = PayPalIntegratorWireMockIT.ProxyRestTemplateConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
+})
+@AutoConfigureWireMock(port = 0)
 @ActiveProfiles("test")
+@Import({ PayPalIntegratorWireMockIT.ProxyRestTemplateConfig.class })
 @Epic("Payment Channel Integration")
 @Feature("PayPal Integration")
 class PayPalIntegratorWireMockIT {
@@ -43,10 +42,15 @@ class PayPalIntegratorWireMockIT {
 
   @Autowired private RestTemplate restTemplate;
 
-  @TestConfiguration
+  @org.springframework.context.annotation.Configuration
   static class ProxyRestTemplateConfig {
+
     @Bean
-    @Primary
+    ObjectMapper objectMapper() {
+      return new ObjectMapper();
+    }
+
+    @Bean
     RestTemplate restTemplate() {
       RestTemplate template = new RestTemplate();
       java.util.List<org.springframework.http.converter.HttpMessageConverter<?>> converters =
@@ -71,23 +75,16 @@ class PayPalIntegratorWireMockIT {
     @Bean
     PayPalIntegrator payPalIntegrator(
         RestTemplate restTemplate,
-        @Value("${paypal.orderApiUrl:https://api-m.paypal.com/v2/checkout/orders}")
-            String orderApiUrl,
-        @Value(
-                "${paypal.refundApiUrl:https://api-m.paypal.com/v2/payments/captures/{capture_id}/refund}")
-            String refundApiUrl,
-        @Value("${paypal.tokenApiUrl:https://api-m.paypal.com/v2/checkout/orders}")
-            String tokenApiUrl,
-        @Value("${paypal.clientId:mock_client_id}") String clientId,
-        @Value("${paypal.clientSecret:mock_client_secret}") String clientSecret,
+        @Value("${wiremock.server.port}") int wiremockPort,
         ObjectMapper objectMapper) {
+      String baseUrl = "http://localhost:" + wiremockPort;
       return new PayPalIntegrator(
           restTemplate,
-          orderApiUrl,
-          refundApiUrl,
-          tokenApiUrl,
-          clientId,
-          clientSecret,
+          baseUrl + "/paypal/v2/checkout/orders",
+          baseUrl + "/paypal/v2/checkout/refunds",
+          baseUrl + "/paypal/v1/oauth2/token",
+          "mock_client_id",
+          "mock_client_secret",
           objectMapper);
     }
   }
@@ -96,14 +93,11 @@ class PayPalIntegratorWireMockIT {
   @DisplayName("initiatePayment() returns created response for valid request")
   @Story("Initiates payment for valid request")
   void initiatePayment_returnsCreatedResponse_viaWireMock() {
-    MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
-    server
-        .expect(requestTo("http://example.com/v2/checkout/orders"))
-        .andExpect(method(HttpMethod.POST))
-        .andRespond(
-            withStatus(HttpStatus.CREATED)
-                .body("{\"id\":\"order_abc\"}")
-                .contentType(MediaType.APPLICATION_JSON));
+    stubFor(post(urlPathEqualTo("/paypal/v2/checkout/orders"))
+        .willReturn(aResponse()
+            .withStatus(201)
+            .withHeader("Content-Type", "application/json")
+            .withBody("{\"id\":\"order_abc\"}")));
 
     PaymentRequestDto request = new PaymentRequestDto();
     request.setId(java.util.UUID.randomUUID());
@@ -122,22 +116,20 @@ class PayPalIntegratorWireMockIT {
     assertEquals("PayPal", resp.getGatewayName());
     assertEquals(tx.getAmount(), resp.getAmount());
     assertEquals(tx.getCurrency(), resp.getCurrency());
-    server.verify();
+
+    verify(postRequestedFor(urlPathEqualTo("/paypal/v2/checkout/orders")));
   }
 
   @Test
   @DisplayName("processRefund() returns refunded response for valid request")
   @Story("Processes refund for valid request")
   void processRefund_returnsRefundedResponse_viaWireMock() {
-    MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
-    // Match the expanded path
-    server
-        .expect(requestTo("http://example.com/v2/payments/captures/CAPTURE_123/refund"))
-        .andExpect(method(HttpMethod.POST))
-        .andRespond(
-            withStatus(HttpStatus.CREATED)
-                .body("{\"id\":\"refund_xyz\"}")
-                .contentType(MediaType.APPLICATION_JSON));
+    // WireMock stub - note the URL template variable gets expanded by RestTemplate
+    stubFor(post(urlPathMatching("/paypal/v2/checkout/refunds"))
+        .willReturn(aResponse()
+            .withStatus(201)
+            .withHeader("Content-Type", "application/json")
+            .withBody("{\"id\":\"refund_xyz\"}")));
 
     PaymentTransactionDto tx = new PaymentTransactionDto();
     tx.setId(java.util.UUID.randomUUID());
@@ -152,6 +144,7 @@ class PayPalIntegratorWireMockIT {
     assertEquals("PayPal", resp.getGatewayName());
     assertEquals(tx.getAmount(), resp.getAmount());
     assertEquals(tx.getCurrency(), resp.getCurrency());
-    server.verify();
+
+    verify(postRequestedFor(urlPathMatching("/paypal/v2/checkout/refunds")));
   }
 }

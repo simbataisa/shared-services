@@ -4,6 +4,7 @@ import com.ahss.dto.response.PaymentRequestDto;
 import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.integration.stripe.StripeIntegrator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -12,32 +13,24 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.context.annotation.Primary;
 
 import java.math.BigDecimal;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 
 import static org.junit.jupiter.api.Assertions.*;
-import com.ahss.SharedServicesApplication;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 @SpringBootTest(classes = StripeIntegratorWireMockIT.ProxyRestTemplateConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
-        "stripe.paymentApiUrl=http://localhost:${wiremock.server.port}/v1/charges",
-        "stripe.tokenizationApiUrl=http://localhost:${wiremock.server.port}/v1/tokens"
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration"
 })
 @AutoConfigureWireMock(port = 0)
 @ActiveProfiles("test")
-@Import({ StripeIntegratorWireMockIT.ProxyRestTemplateConfig.class, StripeIntegrator.class })
+@Import({ StripeIntegratorWireMockIT.ProxyRestTemplateConfig.class })
 @Epic("Payment Channel Integration")
 @Feature("Stripe Integration")
 class StripeIntegratorWireMockIT {
@@ -49,8 +42,13 @@ class StripeIntegratorWireMockIT {
 
     @Configuration
     static class ProxyRestTemplateConfig {
+
         @Bean
-        @Primary
+        ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
+
+        @Bean
         RestTemplate restTemplate() {
             RestTemplate template = new RestTemplate();
             // Ensure JSON serialization support in minimal context
@@ -65,6 +63,21 @@ class StripeIntegratorWireMockIT {
             converters.add(new org.springframework.http.converter.FormHttpMessageConverter());
             template.setMessageConverters(converters);
             return template;
+        }
+
+        @Bean
+        StripeIntegrator stripeIntegrator(
+                RestTemplate restTemplate,
+                @org.springframework.beans.factory.annotation.Value("${wiremock.server.port}") int wiremockPort,
+                ObjectMapper objectMapper) {
+            String baseUrl = "http://localhost:" + wiremockPort;
+            return new StripeIntegrator(
+                    restTemplate,
+                    baseUrl + "/v1/tokens",
+                    baseUrl + "/v1/charges",
+                    baseUrl + "/v1/refunds",
+                    "mock_stripe_key",
+                    objectMapper);
         }
     }
 

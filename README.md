@@ -14,33 +14,51 @@ This is a full-stack application built with:
 ## 🚀 Key Features
 
 ### Core Platform (AHSS Core)
+
 - **Dashboard**: Main overview and system monitoring
 - **System Configuration**: Platform-wide settings management
 - **Audit Logging**: Comprehensive system audit trails
 
 ### User Management System
+
 - **User Administration**: Complete user lifecycle management
 - **Authentication**: Secure JWT-based authentication
 - **Profile Management**: User profiles and preferences
 - **User Groups**: Organizational user grouping
 
 ### Multi-Tenant Support
+
 - **Tenant Administration**: Multi-tenant organization management
 - **Organization Structure**: Hierarchical organization management
 - **Tenant Configuration**: Tenant-specific settings
 
 ### Role-Based Access Control (RBAC)
+
 - **Role Management**: Comprehensive role definition and management
 - **Permission Management**: Granular permission system
 - **Advanced RBAC**: Role-based and attribute-based access control
 
+### Payment Management
+
+- **Payment Requests**: Full lifecycle management (DRAFT → APPROVED → PENDING → PROCESSING → COMPLETED/FAILED/CANCELLED; post-payment VOIDED/REFUNDED/PARTIAL_REFUND)
+- **State Machine**: Documented transitions and rules ([technical doc](./payment-request-state-machine.md), [PRD](.trae/documents/payment-prd.md))
+- **Gateway Integrations**: Modular integrator for Stripe, PayPal, Bank Transfer ([guide](backend/PAYMENT-INTEGRATOR-FACTORY-GUIDE.md))
+- **Refunds & Voids**: Supports full and partial refunds, void operations with audit trail
+- **Webhooks & Notifications**: Asynchronous processing and callback handling
+- **Unique Identifiers**: Standardized payment UUIDs and tokenization ([technical guide](.trae/documents/payment-uuid-technical-guide.md))
+- **Testing**: Karate mock server and data‑driven tests ([module](karate-microservices-testing/README.md))
+
 ### Additional Systems
+
 - **Analytics & Reporting**: Business intelligence platform
 - **Integration Hub**: API gateway and integration services (Draft)
+- **Payment Request State Machine**: Documented lifecycle, transitions, and rules ([technical doc](./payment-request-state-machine.md))
+- **Microservices Testing**: Karate-based API and performance test suite (`karate-microservices-testing`)
 
 ## 🛠️ Technology Stack
 
 ### Backend
+
 - **Runtime**: Java 21
 - **Framework**: Spring Boot 3.3.4
 - **Security**: Spring Security + JWT
@@ -51,6 +69,7 @@ This is a full-stack application built with:
 - **Authentication**: JWT with comprehensive user claims
 
 ### Frontend
+
 - **Framework**: React 19 with TypeScript
 - **Build Tool**: Vite
 - **UI Components**: Shadcn/UI + Radix UI
@@ -64,25 +83,38 @@ This is a full-stack application built with:
 - **Date Handling**: date-fns
 
 ### Infrastructure
+
 - **Database**: PostgreSQL 16 (Docker)
 - **Containerization**: Docker Compose
 - **Development**: Hot reload for both frontend and backend
+
+### Testing & QA
+
+- **API Testing**: Karate framework for microservices end-to-end and data-driven tests
+- **Mocking**: Built-in mock server and custom runners for isolated scenarios
+- **Performance**: Gatling integration via Karate for load and stress testing
+- **Project**: `karate-microservices-testing/` module with Gradle tasks and detailed guides
 
 ## 🧭 Observability (Tracing)
 
 This project uses OpenTelemetry for distributed tracing. Spans are produced by Spring (Micrometer Tracing) and the OpenTelemetry Java agent, sent to an OpenTelemetry Collector, and visualized in Jaeger.
 
 ### Components
+
 - **Backend**: emits OTLP HTTP traces to `http://localhost:4318/v1/traces`.
 - **Collector**: receives OTLP HTTP on `:4318`, batches spans, and exports to Jaeger over OTLP gRPC `:4317`.
 - **Jaeger**: UI at `http://localhost:16686` for searching and viewing traces.
 
-### Start Collector + Jaeger
+### Start All Observability Services
+
 ```bash
-docker-compose up -d otel-collector jaeger
+docker compose --profile observability up -d
 ```
 
+This starts PostgreSQL, Kafka, OpenTelemetry Collector, Jaeger, and Kafka UI.
+
 Collector config (`otel-collector-config.yaml`):
+
 ```yaml
 receivers:
   otlp:
@@ -107,7 +139,9 @@ service:
 ```
 
 ### Run Backend with Java Agent
+
 The agent auto-instruments HTTP server and JDBC/Hibernate.
+
 ```bash
 cd backend
 JAVA_TOOL_OPTIONS="-javaagent:../otel-javaagent.jar" \
@@ -120,6 +154,7 @@ OTEL_LOGS_EXPORTER=none \
 ```
 
 Spring configuration also enables Micrometer Tracing:
+
 ```yaml
 management:
   tracing:
@@ -132,6 +167,7 @@ management:
 ```
 
 ### Verify Tracing
+
 - Trigger activity:
   ```bash
   curl -X GET 'http://localhost:8080/api/v1/tenants/search?query=demo'
@@ -144,83 +180,69 @@ management:
 - Open Jaeger UI (`http://localhost:16686`), select service `sharedservices-backend`, search traces.
 
 Notes:
+
 - If you see agent warnings about logs export (`404` to `:4318`), set `OTEL_LOGS_EXPORTER=none` or add a logs pipeline to the collector.
 
 ### Convenience Gradle Task
+
 Run with the agent attached via a dedicated task:
+
 ```bash
 cd backend
 ./gradlew bootRunWithAgent
 ```
 
 ### Containerized Backend with Agent
-Use the Compose backend service that mounts the agent and targets the collector:
+
+_Build the backend image and start all services:_
+
 ```bash
-# Build the backend image with Jib (Docker CLI available)
+# Build the backend image with Jib
 cd backend && ./gradlew dockerBuild
-# If Gradle still can’t find Docker, pass the CLI path explicitly:
-cd backend && ./gradlew dockerBuild -Djib.dockerClient.executable="$(which docker)"
-# Apple Silicon (M1/M2): defaults to linux/arm64 image.
-# Windows (x86_64): build an amd64 image via either option:
-# 1) Convenience task:
+
+# Start all services (includes backend with agent)
+docker compose --profile observability up -d
+```
+
+_Platform-specific builds:_
+
+```bash
+# Apple Silicon (M1/M2) - defaults to linux/arm64
+cd backend && ./gradlew dockerBuild
+
+# Windows (x86_64) - build amd64 image
 cd backend && ./gradlew dockerBuildWindows
-# 2) Property override:
+# Or with property override:
 cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
+```
 
 ## Windows Setup
-- Build image (amd64):
+
+Windows users can now use the same simplified Docker Compose command with profiles:
+
 ```bash
+# Build backend image (amd64)
 cd backend && ./gradlew dockerBuildWindows
-# Alternatively:
-cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
+
+# Start all services with observability profile
+docker compose -f docker-compose.windows.yml --profile observability up -d
+
+# Stop all services
+docker compose -f docker-compose.windows.yml --profile observability down
 ```
 
-- Start services with Windows compose file:
+Alternative build options:
+
 ```bash
-docker-compose -f docker-compose.windows.yml up -d postgres kafka otel-collector jaeger kafka-ui backend
-```
+# Using property override
+cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
 
-- If Gradle can’t find Docker on Windows PowerShell, pass the executable path:
-```powershell
+# If Gradle can't find Docker, pass the executable path
 cd backend; ./gradlew dockerBuildWindows -Djib.dockerClient.executable="$((Get-Command docker).Source)"
 ```
 
-- Verify and access:
-```bash
-docker images | grep shared-services
-# Jaeger:   http://localhost:16686
-# Kafka UI: http://localhost:8081
-# Backend:  http://localhost:8080
-```
+Access URLs (same as macOS/Linux):
 
-Notes (containers):
-- Inside Docker, never use `localhost` to reach other services; use the Compose service names.
-- OTLP endpoints are configured to `http://otel-collector:4318` for the Java agent.
-- Spring Micrometer OTLP can be set via `MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces`.
-- See troubleshooting guide: `.trae/documents/docker-compose-troubleshooting.md`.
-
-## Frontend (Docker)
-
-- Build the frontend image via Compose (uses `frontend/Dockerfile`):
-```bash
-# macOS/Linux
-VITE_API_BASE_URL=http://localhost:8080/api/v1 \
-docker-compose build frontend
-
-# Windows PowerShell
-$env:VITE_API_BASE_URL = "http://localhost:8080/api/v1"; docker-compose -f docker-compose.windows.yml build frontend
-```
-
-- Start frontend with the rest of the stack:
-```bash
-# macOS/Linux
-docker-compose --profile observability up -d otel-collector jaeger kafka-ui backend frontend
-
-# Windows
-docker-compose -f docker-compose.windows.yml up -d postgres kafka otel-collector jaeger kafka-ui backend frontend
-```
-
-- Access URLs:
 ```bash
 Frontend: http://localhost:5173
 Backend:  http://localhost:8080
@@ -228,43 +250,20 @@ Jaeger:   http://localhost:16686
 Kafka UI: http://localhost:8081
 ```
 
-Notes:
-- The frontend image build injects `VITE_API_BASE_URL` at build time (default `http://localhost:8080/api/v1`).
-- You can change it by setting `VITE_API_BASE_URL` before `docker-compose build frontend`.
-  
-Note:
-- Default in-container API base is `http://backend:8080/api/v1` to ensure services communicate within the Compose network. Override it for local non-Docker builds if needed.
+Notes (containers):
 
-### Frontend Local Build and Type Checking
-
-- Local production build now skips TypeScript type checking to avoid blocking on non-critical type errors:
-  ```bash
-  cd frontend
-  npm run build
-  ```
-- Run a dedicated type check when you want strict validation (e.g., CI or local verification):
-  ```bash
-  cd frontend
-  npm run typecheck
-  ```
-- Recommendation: keep strictness in development (`tsconfig.app.json`) and use `npm run typecheck` in CI to enforce type safety without blocking production builds.
-
-# Fallback: build a tarball if Docker CLI is unavailable
-cd backend && ./gradlew dockerBuildTar
-# Then, when Docker CLI is available:
-docker load -i backend/build/jib-image.tar
-
-# Start collectors and backend
-docker-compose --profile observability up -d otel-collector jaeger backend
-
-# Stop services
-docker-compose --profile observability down
+- Inside Docker, never use `localhost` to reach other services; use the Compose service names.
+- OTLP endpoints are configured to `http://otel-collector:4318` for the Java agent.
+- Spring Micrometer OTLP can be set via `MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces`.
+- See troubleshooting guide: `.trae/documents/docker-compose-troubleshooting.md`.
 
 ## Docker Compose Troubleshooting
 
 - Error: `failed to set up container networking: network <id> not found`
+
   - Cause: Named containers (e.g., `sharedservices-backend`, `sharedservices-frontend`, `sharedservices-kafka-ui`) may reference a deleted network.
   - Fix:
+
     ```bash
     # Stop and remove resources and orphans
     docker compose down --remove-orphans
@@ -276,25 +275,11 @@ docker-compose --profile observability down
     docker rm -f sharedservices-backend sharedservices-frontend sharedservices-kafka-ui
 
     # Recreate services (macOS/Linux)
-    docker compose --profile observability up -d postgres kafka otel-collector jaeger kafka-ui backend frontend
+    docker compose --profile observability up -d
 
     # Windows
-    docker compose -f docker-compose.windows.yml up -d postgres kafka otel-collector jaeger kafka-ui backend frontend
+    docker compose -f docker-compose.windows.yml --profile observability up -d
     ```
-
-- Warning: `the attribute version is obsolete`
-  - Compose v2 ignores the `version` field. You can remove `version: '3.9'` from your compose files to suppress the warning.
-  
-- Backend exporting to `localhost:4318` inside container
-  - Cause: Using `localhost` in container resolves to the container itself.
-  - Fix: Set env vars to target the collector by service name:
-    ```bash
-    # docker-compose.yml environment for backend
-    OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-    MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces
-    ```
-  - Reference: `.trae/documents/docker-compose-troubleshooting.md`.
-```
 
 ## 📋 Prerequisites
 
@@ -305,37 +290,126 @@ docker-compose --profile observability down
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+### Option 1: Automated Setup (Recommended)
+
+Use the provided script to build and start all services automatically:
+
+```bash
+git clone <repository-url>
+cd shared-services
+./run-all.sh
+```
+
+The script will:
+
+1. ✅ Build backend Docker image
+2. ✅ Build frontend Docker image
+3. ✅ Start all services with observability profile
+4. ✅ Display access URLs and configuration info
+
+### Option 2: Manual Setup
+
+#### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd shared-services
 ```
 
-### 2. Start the Database
+#### 2. Build Images (Optional)
+
 ```bash
-docker-compose up -d postgres
+# Build backend
+cd backend && ./gradlew dockerBuild && cd ..
+
+# Build frontend
+docker compose build frontend
 ```
 
-### 3. Start the Backend
+#### 3. Start All Services
+
 ```bash
-cd backend
-./gradlew bootRun
+# macOS/Linux
+docker compose --profile observability up -d
+
+# Windows
+docker compose -f docker-compose.windows.yml --profile observability up -d
 ```
 
-The backend will be available at `http://localhost:8080`
+This starts all required services:
 
-### 4. Start the Frontend
-```bash
-cd frontend
-npm install
-npm run dev
+- **PostgreSQL** - Database
+- **Kafka** - Message broker (port 9092 for host, 29092 for container-to-container)
+- **OpenTelemetry Collector** - Trace collection
+- **Jaeger** - Distributed tracing UI
+- **Kafka UI** - Kafka management console
+- **Backend** - Spring Boot application
+- **Frontend** - React application
+
+**Note on Kafka Configuration:**
+
+- Host applications (running on your machine) connect to Kafka at `localhost:9092` (default in `application.yml`)
+- Docker containers connect to Kafka at `kafka:29092` (overridden by `SPRING_KAFKA_BOOTSTRAP_SERVERS` environment variable)
+- This dual-listener setup allows both host and containerized services to communicate with Kafka properly
+
+**Configuration Details:**
+
+```yaml
+# application.yml (default for local development)
+spring:
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+# docker-compose.yml (override for containers)
+environment:
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 ```
 
-The frontend will be available at `http://localhost:5173`
+### 3. Access the Application
+
+```bash
+Frontend:  http://localhost:5173
+Backend:   http://localhost:8080
+Jaeger:    http://localhost:16686
+Kafka UI:  http://localhost:8081
+```
+
+### 4. Running with Karate Mock Server (For Testing)
+
+The backend in Docker is configured to connect to payment gateway mocks running on your host machine:
+
+```bash
+# In a separate terminal, start the Karate mock server
+cd karate-microservices-testing
+./gradlew test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=1000
+```
+
+The Docker container will reach the mock server at `host.docker.internal:8090`. This allows:
+
+- ✅ Backend in Docker to call mock Stripe, PayPal, BankTransfer APIs
+- ✅ Payment gateway integration testing without external API calls
+- ✅ Isolated testing environment
+
+**How it works:**
+
+- The backend uses `MOCK_SERVER_HOST=host.docker.internal` environment variable
+- Mock URLs: `http://host.docker.internal:8090/stripe/*`, `/paypal/*`, `/bank-transfer/*`
+- For local development (not Docker), URLs default to `http://localhost:8090/*`
+
+### 5. Stop All Services
+
+```bash
+# macOS/Linux
+docker compose --profile observability down
+
+# Windows
+docker compose -f docker-compose.windows.yml --profile observability down
+```
 
 ## 🗄️ Database Schema
 
 ### Core Entities
+
 - **Product**: Main product/service definitions
 - **Module**: Product components and features
 - **Role**: System roles with hierarchical structure
@@ -346,6 +420,7 @@ The frontend will be available at `http://localhost:5173`
 - **Organization**: Hierarchical organization structure
 
 ### Key Features
+
 - **Audit Fields**: All entities include created/updated timestamps and user tracking
 - **Status Management**: Comprehensive status system (ACTIVE, INACTIVE, DRAFT, etc.)
 - **Soft Delete**: Safe deletion with recovery options
@@ -354,16 +429,19 @@ The frontend will be available at `http://localhost:5173`
 ## 🔐 Authentication & Authorization
 
 ### JWT Authentication
+
 - **Login Endpoint**: `POST /api/v1/auth/login`
 - **Token Claims**: Includes user info, roles, permissions, and admin flags
 - **Expiration**: 24 hours (configurable)
 
 ### Permission System
+
 - **Format**: `{resource}:{action}` (e.g., `users:read`, `tenants:create`)
 - **Resources**: users, tenants, roles, permissions, modules, products, audit, system
 - **Actions**: read, create, update, delete, admin
 
 ### Sample Permissions
+
 ```
 users:read, users:create, users:update, users:delete, users:admin
 tenants:read, tenants:create, tenants:update, tenants:delete, tenants:admin
@@ -374,6 +452,7 @@ products:read, products:create, products:update, products:delete
 ## 📚 API Documentation
 
 ### Base URLs
+
 - **Authentication**: `/api/v1/auth`
 - **Users**: `/api/v1/users`
 - **User Groups**: `/api/v1/user-groups`
@@ -386,6 +465,7 @@ products:read, products:create, products:update, products:delete
 ### Sample API Calls
 
 #### Authentication
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -393,6 +473,7 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
 ```
 
 #### Get Dashboard Stats
+
 ```bash
 curl -X GET http://localhost:8080/api/v1/dashboard/stats \
   -H "Authorization: Bearer <jwt-token>"
@@ -401,24 +482,28 @@ curl -X GET http://localhost:8080/api/v1/dashboard/stats \
 ## 🏗️ Development
 
 ### Backend Development
+
 ```bash
 cd backend
 ./gradlew bootRun
 ```
 
 ### Frontend Development
+
 ```bash
 cd frontend
 npm run dev
 ```
 
 ### Database Migrations
+
 ```bash
 # Migrations are automatically applied on startup
 # Located in: backend/src/main/resources/db/migration/
 ```
 
 ### Build for Production
+
 ```bash
 # Backend
 cd backend
@@ -432,12 +517,14 @@ npm run build
 ## 🧪 Testing
 
 ### Backend Testing
+
 ```bash
 cd backend
 ./gradlew test
 ```
 
 ### Frontend Testing
+
 ```bash
 cd frontend
 npm run lint
@@ -446,18 +533,78 @@ npm run lint
 ## 📁 Project Structure
 
 ```
-shared-services/
-├── backend/                 # Spring Boot backend
-│   ├── src/main/java/      # Java source code
-│   ├── src/main/resources/ # Configuration and migrations
-│   └── build.gradle        # Gradle build configuration
-├── frontend/               # React frontend
-│   ├── src/                # TypeScript source code
-│   ├── public/             # Static assets
-│   └── package.json        # NPM dependencies
-├── .trae/documents/        # Technical documentation
-├── docker-compose.yml      # Database setup
-└── README.md              # This file
+.
+├── AGENTS.md
+├── backend
+│   ├── build.gradle
+│   ├── gradle
+│   │   └── wrapper
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── KAFKA-TRACING-GUIDE.md
+│   ├── PAYMENT-INTEGRATOR-FACTORY-GUIDE.md
+│   ├── qodana.yaml
+│   ├── settings.gradle
+│   └── src
+│       ├── main
+│       └── test
+├── database_backup_20251006_092451.sql
+├── docker-compose.windows.yml
+├── docker-compose.yml
+├── frontend
+│   ├── components.json
+│   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── README.md
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   ├── components
+│   │   ├── contexts
+│   │   ├── hooks
+│   │   ├── index.css
+│   │   ├── lib
+│   │   ├── main.tsx
+│   │   ├── pages
+│   │   ├── store
+│   │   ├── types
+│   │   └── utils
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.build.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── INTEGRATION-TESTING-GUIDE.md
+├── karate-microservices-testing
+│   ├── build.gradle
+│   ├── CUSTOM-RUNNER-GUIDE.md
+│   ├── DATA-DRIVEN-TESTING-GUIDE.md
+│   ├── gradle
+│   │   └── wrapper
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── Makefile
+│   ├── MOCK-SERVER-RUNNER-GUIDE.md
+│   ├── PAYMENT-METHOD-TYPES.md
+│   ├── README.md
+│   ├── settings.gradle
+│   ├── src
+│   │   ├── gatling
+│   │   └── test
+│   └── test-mock-server.sh
+├── otel-collector-config.yaml
+├── otel-javaagent.jar
+├── payment-request-state-machine.md
+├── pbcopy
+├── README.md
+└── run-all.sh
 ```
 
 ## 🔧 Configuration
@@ -465,6 +612,7 @@ shared-services/
 ### Environment Variables
 
 #### Backend
+
 ```bash
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/sharedservices
 SPRING_DATASOURCE_USERNAME=postgres
@@ -473,6 +621,7 @@ JWT_SECRET=your-secret-key
 ```
 
 #### Frontend
+
 ```bash
 VITE_API_BASE_URL=http://localhost:8080
 ```
@@ -480,46 +629,90 @@ VITE_API_BASE_URL=http://localhost:8080
 ## 🚀 Deployment
 
 ### Docker Deployment
+
 ```bash
-# Start all services
-docker-compose up -d
+# Start all services with observability
+docker compose --profile observability up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
+
+# Stop all services
+docker compose --profile observability down
 ```
 
-### Production Considerations
-- Externalize JWT secret to environment variables
-- Enable proper CORS configuration
-- Implement rate limiting
-- Add comprehensive monitoring and logging
-- Enable HTTPS/TLS
+## 🧰 Docker Operations
 
-## 🤝 Contributing
+Common commands for inspecting and debugging services.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### List Running Services
 
-## 📄 License
+```bash
+# macOS/Linux
+docker compose ps
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+# Windows
+docker compose -f docker-compose.windows.yml ps
+```
 
-## 🆘 Support
+### Tail Logs (Follow)
 
-For support and questions:
-- Create an issue in the repository
-- Check the documentation in `.trae/documents/`
-- Review the API documentation at `/api/swagger-ui.html` (when implemented)
+```bash
+# Specific service via Compose (recommended)
+docker compose logs -f --tail=200 backend
 
-## 🗺️ Roadmap
+# All services
+docker compose logs -f --tail=100
 
-- [ ] Complete Tenant Management Controller implementation
-- [ ] Add comprehensive API documentation (Swagger/OpenAPI)
-- [ ] Implement advanced analytics and reporting
-- [ ] Add comprehensive test coverage
-- [ ] Implement monitoring and health checks
-- [ ] Add integration hub functionality
-- [ ] Enhance security with rate limiting and advanced authentication
+# Filter by timeframe
+docker compose logs -f --since=10m backend
+
+# By container name (if needed)
+docker logs -f --tail=200 sharedservices-backend
+```
+
+### Inspect Processes in Containers
+
+```bash
+# Show running processes per service
+docker compose top
+```
+
+### Exec Into a Container
+
+```bash
+# macOS/Linux
+docker compose exec backend sh
+
+# If bash is available
+docker compose exec backend bash
+
+# Windows
+docker compose -f docker-compose.windows.yml exec backend sh
+```
+
+### Restart or Recreate Services
+
+```bash
+# Restart a single service
+docker compose restart backend
+
+# Recreate a service (useful after config changes)
+docker compose up -d --force-recreate backend
+
+# Recreate all services
+docker compose up -d --force-recreate
+```
+
+### Stop, Remove, and Clean Up
+
+```bash
+# Stop and remove services and networks
+docker compose down --remove-orphans
+
+# Also remove volumes (DANGEROUS: deletes data)
+docker compose down -v --remove-orphans
+
+# Prune dangling networks
+docker network prune -f
+```

@@ -5,11 +5,16 @@ import com.ahss.dto.response.PaymentResponseDto;
 import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.enums.PaymentMethodType;
 import com.ahss.integration.PaymentIntegrator;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate; // Assuming RestTemplate for HTTP requests
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * Implementation of PaymentIntegrator for Bank Transfer channel. Handles conversion of internal
@@ -23,20 +28,21 @@ public class BankTransferIntegrator implements PaymentIntegrator {
   private final RestTemplate restTemplate;
   private final String transferApiUrl;
   private final String verifyApiUrl;
-  private final String apiKey;// Configurable for tests
+  private final String apiKey; // Configurable for tests
 
-  @org.springframework.beans.factory.annotation.Autowired
+  @Autowired
   public BankTransferIntegrator(
-          RestTemplate restTemplate,
-          @Value("${bankTransfer.transferApiUrl:https://api.banktransfer.example.com/v1/transfers}")
+      RestTemplate restTemplate,
+      @Value("${bankTransfer.transferApiUrl:https://api.banktransfer.example.com/v1/transfers}")
           String transferApiUrl,
-          @Value("${bankTransfer.verifyApiUrl:https://api.banktransfer.example.com/v1/transfers/verify}")
+      @Value(
+              "${bankTransfer.verifyApiUrl:https://api.banktransfer.example.com/v1/transfers/verify}")
           String verifyApiUrl,
-          @Value("${bankTransfer.apiKey:defaultApiKey}") String apiKey) {
+      @Value("${bankTransfer.apiKey:defaultApiKey}") String apiKey) {
     this.restTemplate = restTemplate;
     this.transferApiUrl = transferApiUrl;
-      this.verifyApiUrl = verifyApiUrl;
-      this.apiKey = apiKey;
+    this.verifyApiUrl = verifyApiUrl;
+    this.apiKey = apiKey;
   }
 
   @Override
@@ -57,9 +63,14 @@ public class BankTransferIntegrator implements PaymentIntegrator {
     BankTransferRequest externalRequest = convertToBankTransferRequest(request, transaction);
     log.info("Bank Transfer request: {}", externalRequest);
     // Send HTTP request to bank transfer API
-    BankTransferResponse externalResponse =
-        restTemplate.postForObject(transferApiUrl, externalRequest, BankTransferResponse.class);
-    log.info("Bank Transfer response: {}", externalResponse);
+    BankTransferResponse externalResponse = null;
+    try {
+      externalResponse =
+          restTemplate.postForObject(transferApiUrl, externalRequest, BankTransferResponse.class);
+      log.info("Bank Transfer response: {}", externalResponse);
+    } catch (Exception e) {
+      log.error("Error occurred while processing Bank Transfer payment: {}", e.getMessage(), e);
+    }
     // Convert external response to internal PaymentResponseDto
     return convertToPaymentResponse(externalResponse, request, transaction);
   }
@@ -80,7 +91,7 @@ public class BankTransferIntegrator implements PaymentIntegrator {
     resp.setPaymentTransactionId(transaction.getId());
     resp.setAmount(refundAmount);
     resp.setCurrency(transaction.getCurrency());
-    resp.setProcessedAt(java.time.LocalDateTime.now());
+    resp.setProcessedAt(LocalDateTime.now());
     resp.setGatewayResponse(null);
     resp.setMetadata(transaction.getMetadata());
     return resp;
@@ -148,7 +159,7 @@ public class BankTransferIntegrator implements PaymentIntegrator {
     resp.setPaymentTransactionId(transaction.getId());
     resp.setAmount(transaction.getAmount());
     resp.setCurrency(transaction.getCurrency());
-    resp.setProcessedAt(java.time.LocalDateTime.now());
+    resp.setProcessedAt(LocalDateTime.now());
     resp.setGatewayResponse(null);
     resp.setMetadata(request.getMetadata());
 
@@ -161,9 +172,9 @@ public class BankTransferIntegrator implements PaymentIntegrator {
   }
 
   // External request/response classes with Lombok annotations
-  @lombok.Data
-  @lombok.NoArgsConstructor
-  @lombok.AllArgsConstructor
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   static class BankTransferRequest {
     private BigDecimal amount;
     private String currency;
@@ -174,9 +185,9 @@ public class BankTransferIntegrator implements PaymentIntegrator {
     private String fromAccount;
   }
 
-  @lombok.Data
-  @lombok.NoArgsConstructor
-  @lombok.AllArgsConstructor
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   static class BankTransferResponse {
     private String id;
     private String status;
