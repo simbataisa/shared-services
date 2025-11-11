@@ -197,9 +197,10 @@ public class PayPalIntegrator implements PaymentIntegrator {
     PaymentResponseDto resp = new PaymentResponseDto();
 
     if (refundResponse != null && refundResponse.getId() != null) {
-      Boolean isSuccess = "COMPLETED".equalsIgnoreCase(refundResponse.getStatus());
+      String statusUpper = refundResponse.getStatus() != null ? refundResponse.getStatus().toUpperCase() : "REFUNDED";
+      boolean isSuccess = "COMPLETED".equalsIgnoreCase(statusUpper) || "REFUNDED".equalsIgnoreCase(statusUpper);
       resp.setSuccess(isSuccess);
-      resp.setStatus(refundResponse.getStatus() != null ? refundResponse.getStatus().toUpperCase() : "REFUNDED");
+      resp.setStatus(statusUpper);
       resp.setMessage(isSuccess ? "PayPal refund processed successfully" : "PayPal refund pending");
       resp.setExternalRefundId(refundResponse.getId());
 

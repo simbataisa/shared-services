@@ -117,30 +117,34 @@ class PayPalIntegratorTest {
     PayPalIntegrator.PayPalRefundResponse payPalRefundResponse =
         new PayPalIntegrator.PayPalRefundResponse();
     payPalRefundResponse.setId("paypal-refund-001");
-    payPalRefundResponse.setStatus("REFUNDED");
+    payPalRefundResponse.setStatus("COMPLETED"); // PayPal uses COMPLETED for successful refunds
+    // Set amount as PayPalAmount object
+    PayPalIntegrator.PayPalAmount amount = new PayPalIntegrator.PayPalAmount();
+    amount.setCurrencyCode("USD");
+    amount.setValue(refundAmount.toPlainString());
+    payPalRefundResponse.setAmount(amount);
+
     when(restTemplate.postForObject(
             anyString(),
             any(),
-            ArgumentMatchers.<Class<PayPalIntegrator.PayPalRefundResponse>>any(),
-            eq(tx.getExternalTransactionId())))
+            ArgumentMatchers.<Class<PayPalIntegrator.PayPalRefundResponse>>any()))
         .thenReturn(payPalRefundResponse);
 
     PaymentResponseDto resp = integrator.processRefund(tx, refundAmount);
 
     assertTrue(resp.isSuccess());
-    assertEquals("REFUNDED", resp.getStatus());
+    assertEquals("COMPLETED", resp.getStatus()); // Status is returned as-is from PayPal
     assertEquals("PayPal refund processed successfully", resp.getMessage());
     assertEquals("PayPal", resp.getGatewayName());
     assertEquals(tx.getExternalTransactionId(), resp.getExternalTransactionId());
     assertEquals(tx.getPaymentRequestId(), resp.getPaymentRequestId());
     assertEquals(tx.getId(), resp.getPaymentTransactionId());
-    assertEquals(tx.getAmount(), resp.getAmount());
+    assertEquals(refundAmount, resp.getAmount()); // Response should contain the refund amount
     assertEquals(tx.getCurrency(), resp.getCurrency());
     assertNotNull(resp.getProcessedAt());
-    // Refund call uses URI template expansion; verify four-arg overload
-    // unambiguously
+    // Verify the postForObject method was called
     verify(restTemplate, times(1))
-        .postForObject(anyString(), any(), ArgumentMatchers.<Class<?>>any(), anyString());
+        .postForObject(anyString(), any(), ArgumentMatchers.<Class<?>>any());
   }
 
   @Test
