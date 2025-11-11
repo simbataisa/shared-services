@@ -89,7 +89,6 @@ payment:
 
     bankTransfer:
       enabled: true
-      baseUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer}
       transfersUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/transfers}
       verifyUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/accounts/verify}
       apiKey: ${BANK_TRANSFER_API_KEY:mock_bank_api_key}
@@ -111,7 +110,8 @@ paypal:
   clientSecret: ${payment.gateways.paypal.clientSecret}
 
 bankTransfer:
-  baseUrl: ${payment.gateways.bankTransfer.baseUrl}
+  transferApiUrl: ${payment.gateways.bankTransfer.transfersUrl}
+  verifyApiUrl: ${payment.gateways.bankTransfer.verifyUrl}
   apiKey: ${payment.gateways.bankTransfer.apiKey}
 
 logging:

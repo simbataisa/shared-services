@@ -92,20 +92,46 @@ Scenario: pathMatches('/paypal/v2/') && !headerContains('Authorization', 'Bearer
   * def response = result.response
   * def responseStatus = result.responseStatus
 
-# Bank Transfer gateway
-Scenario: pathMatches('/bank-transfer/**')
-  * def callBT = function(tag){ return call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@' + tag) { transfers: bankTransferState.transfers } }
-  * def result = null
-  * if (pathMatches('/bank-transfer/api/v1/transfers') && methodIs('post')) result = callBT('bt_transfers_post')
-  * if (pathMatches('/bank-transfer/api/v1/transfers/{id}') && methodIs('get')) result = callBT('bt_transfers_get')
-  * if (pathMatches('/bank-transfer/api/v1/accounts/verify') && methodIs('post')) result = callBT('bt_accounts_verify_post')
-  * if (pathMatches('/bank-transfer/api/v1/transfers/{id}/cancel') && methodIs('post')) result = callBT('bt_transfers_cancel_post')
-  * if (pathMatches('/bank-transfer/api/v1/transfers') && methodIs('get')) result = callBT('bt_transfers_list_get')
-  * if (pathMatches('/bank-transfer/api/v1/') && !headerContains('Authorization', 'Bearer')) result = callBT('bt_auth_error')
+# Bank Transfer gateway - Initiate Transfer
+Scenario: pathMatches('/bank-transfer/api/v1/transfers') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_transfers_post') { transfers: bankTransferState.transfers }
   * if (result && result.transfers) karate.set('bankTransferState.transfers', result.transfers)
-  * if (result) karate.set('response', result.response)
-  * if (result) karate.set('responseStatus', result.responseStatus)
-  * if (!result) karate.set('responseStatus', 404)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# Bank Transfer gateway - Get Transfer Status
+Scenario: pathMatches('/bank-transfer/api/v1/transfers/{id}') && methodIs('get')
+  * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_transfers_get') { transfers: bankTransferState.transfers }
+  * if (result && result.transfers) karate.set('bankTransferState.transfers', result.transfers)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# Bank Transfer gateway - Verify Account
+Scenario: pathMatches('/bank-transfer/api/v1/accounts/verify') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_accounts_verify_post') { transfers: bankTransferState.transfers }
+  * if (result && result.transfers) karate.set('bankTransferState.transfers', result.transfers)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# Bank Transfer gateway - Cancel Transfer
+Scenario: pathMatches('/bank-transfer/api/v1/transfers/{id}/cancel') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_transfers_cancel_post') { transfers: bankTransferState.transfers }
+  * if (result && result.transfers) karate.set('bankTransferState.transfers', result.transfers)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# Bank Transfer gateway - List Transfers
+Scenario: pathMatches('/bank-transfer/api/v1/transfers') && methodIs('get')
+  * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_transfers_list_get') { transfers: bankTransferState.transfers }
+  * if (result && result.transfers) karate.set('bankTransferState.transfers', result.transfers)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
+# Bank Transfer gateway - Auth Error
+Scenario: pathMatches('/bank-transfer/api/v1/') && !headerContains('Authorization', 'Bearer')
+  * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_auth_error') { transfers: bankTransferState.transfers }
+  * def response = result.response
+  * def responseStatus = result.responseStatus
 
 # OAuth token
 Scenario: pathMatches('/auth/oauth/token') && methodIs('post')

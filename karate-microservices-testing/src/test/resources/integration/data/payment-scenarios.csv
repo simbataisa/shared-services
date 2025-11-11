@@ -1,2 +1,2 @@
 testCase,paymentMethod,gateway,allowedPaymentMethods,paymentMethodDetails,expectedStatus,description
-paypal_credit_card,CREDIT_CARD,PayPal,"[""PAYPAL""]","{""paypalOrderId"":""ORDER123""}",COMPLETED,PayPal credit card payment with order ID
+bank_transfer,BANK_TRANSFER,BankTransfer,"[""BANK_TRANSFER""]","{""accountNumber"":""1234567890"",""routingNumber"":""987654321"",""accountHolderName"":""John Doe""}",COMPLETED,Bank transfer payment with account details
