@@ -11,10 +11,14 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate; // Assuming RestTemplate for HTTP requests
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Implementation of PaymentIntegrator for Bank Transfer channel. Handles conversion of internal
@@ -39,7 +43,8 @@ public class BankTransferIntegrator implements PaymentIntegrator {
       @Value(
               "${bankTransfer.verifyApiUrl:https://api.banktransfer.example.com/v1/transfers/verify}")
           String verifyApiUrl,
-      @Value("${bankTransfer.refundApiUrl:https://api.banktransfer.example.com/v1/transfers/{id}/refund}")
+      @Value(
+              "${bankTransfer.refundApiUrl:https://api.banktransfer.example.com/v1/transfers/{id}/refund}")
           String refundApiUrl,
       @Value("${bankTransfer.apiKey:defaultApiKey}") String apiKey) {
     this.restTemplate = restTemplate;
@@ -82,8 +87,8 @@ public class BankTransferIntegrator implements PaymentIntegrator {
   @Override
   public PaymentResponseDto processRefund(
       PaymentTransactionDto transaction, BigDecimal refundAmount) {
-    log.info("Processing refund for transaction: {} with amount: {}",
-        transaction.getId(), refundAmount);
+    log.info(
+        "Processing refund for transaction: {} with amount: {}", transaction.getId(), refundAmount);
 
     // Build refund request
     BankTransferRefundRequest refundRequest = new BankTransferRefundRequest();
@@ -92,7 +97,8 @@ public class BankTransferIntegrator implements PaymentIntegrator {
     refundRequest.setReason("Customer requested refund");
     refundRequest.setOriginalTransferId(transaction.getExternalTransactionId());
 
-    log.info("Sending refund request to Bank Transfer API for transfer: {}",
+    log.info(
+        "Sending refund request to Bank Transfer API for transfer: {}",
         transaction.getExternalTransactionId());
 
     try {
@@ -100,14 +106,14 @@ public class BankTransferIntegrator implements PaymentIntegrator {
       String refundUrl = refundApiUrl.replace("{id}", transaction.getExternalTransactionId());
 
       // Create headers with API key
-      org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-      headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
       if (apiKey != null && !apiKey.isEmpty()) {
         headers.set("Authorization", "Bearer " + apiKey);
       }
 
-      org.springframework.http.HttpEntity<BankTransferRefundRequest> requestEntity =
-          new org.springframework.http.HttpEntity<>(refundRequest, headers);
+      HttpEntity<BankTransferRefundRequest> requestEntity =
+          new HttpEntity<>(refundRequest, headers);
 
       // Send HTTP request to refund API
       BankTransferRefundResponse externalResponse =
@@ -210,17 +216,31 @@ public class BankTransferIntegrator implements PaymentIntegrator {
       BankTransferRefundResponse externalResponse,
       PaymentTransactionDto transaction,
       BigDecimal refundAmount) {
-    log.info("Mapping Bank Transfer refund response to internal PaymentResponseDto: {}",
+    if (null == externalResponse) {
+      throw new IllegalArgumentException("External response is null");
+    }
+    log.info(
+        "Mapping Bank Transfer refund response to internal PaymentResponseDto: {}",
         externalResponse);
     PaymentResponseDto resp = new PaymentResponseDto();
 
-    if (externalResponse != null && externalResponse.getSuccess() != null && externalResponse.getSuccess()) {
+    if (externalResponse.getSuccess() != null && externalResponse.getSuccess()) {
       resp.setSuccess(true);
-      resp.setStatus(externalResponse.getStatus() != null ? externalResponse.getStatus().toUpperCase() : "REFUNDED");
-      resp.setMessage(externalResponse.getMessage() != null ? externalResponse.getMessage() : "Bank transfer refund processed successfully");
+      resp.setStatus(
+          externalResponse.getStatus() != null
+              ? externalResponse.getStatus().toUpperCase()
+              : "REFUNDED");
+      resp.setMessage(
+          externalResponse.getMessage() != null
+              ? externalResponse.getMessage()
+              : "Bank transfer refund processed successfully");
       resp.setExternalRefundId(externalResponse.getId());
-      resp.setAmount(externalResponse.getAmount() != null ? externalResponse.getAmount() : refundAmount);
-      resp.setCurrency(externalResponse.getCurrency() != null ? externalResponse.getCurrency() : transaction.getCurrency());
+      resp.setAmount(
+          externalResponse.getAmount() != null ? externalResponse.getAmount() : refundAmount);
+      resp.setCurrency(
+          externalResponse.getCurrency() != null
+              ? externalResponse.getCurrency()
+              : transaction.getCurrency());
     } else {
       resp.setSuccess(false);
       resp.setStatus("FAILED");
@@ -232,11 +252,19 @@ public class BankTransferIntegrator implements PaymentIntegrator {
     resp.setGatewayName("BankTransfer");
     resp.setExternalTransactionId(transaction.getExternalTransactionId());
     resp.setPaymentTransactionId(transaction.getId());
+    resp.setPaymentRequestId(transaction.getPaymentRequestId());
+    resp.setMetadata(transaction.getMetadata());
     resp.setProcessedAt(LocalDateTime.now());
-    resp.setGatewayResponse(null);
+    resp.setGatewayResponse(
+        externalResponse.getMessage() != null
+            ? Map.of("message", externalResponse.getMessage())
+            : null);
 
-    log.info("Bank transfer refund response mapped - ID: {}, Status: {}, Success: {}",
-        resp.getExternalRefundId(), resp.getStatus(), resp.isSuccess());
+    log.info(
+        "Bank transfer refund response mapped - ID: {}, Status: {}, Success: {}",
+        resp.getExternalRefundId(),
+        resp.getStatus(),
+        resp.isSuccess());
 
     return resp;
   }
