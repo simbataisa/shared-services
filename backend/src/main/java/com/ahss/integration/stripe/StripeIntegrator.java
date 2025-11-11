@@ -94,9 +94,40 @@ public class StripeIntegrator implements PaymentIntegrator {
   @Override
   public PaymentResponseDto processRefund(
       PaymentTransactionDto transaction, BigDecimal refundAmount) {
-    // Implement refund logic for credit card
-    // Similar to initiatePayment but for refunds
-    return new PaymentResponseDto(); // Placeholder
+    log.info("Processing refund for transaction: {} with amount: {}",
+        transaction.getId(), refundAmount);
+
+    // Build refund request
+    StripeRefundRequest refundRequest = new StripeRefundRequest();
+    refundRequest.setCharge(transaction.getExternalTransactionId());
+    refundRequest.setAmount(refundAmount);
+    refundRequest.setCurrency(transaction.getCurrency());
+    refundRequest.setReason("requested_by_customer");
+
+    log.info("Sending refund request to Stripe: {}", refundRequest);
+
+    // Create headers with authorization
+    HttpHeaders headers = createAuthHeaders();
+    HttpEntity<StripeRefundRequest> requestEntity = new HttpEntity<>(refundRequest, headers);
+
+    try {
+      // Send HTTP request to refund API
+      StripeRefundResponse externalResponse =
+          restTemplate.postForObject(refundApiUrl, requestEntity, StripeRefundResponse.class);
+      log.info("Received refund response from Stripe: {}", externalResponse);
+
+      // Convert external response to internal PaymentResponseDto
+      return convertRefundToPaymentResponse(externalResponse, transaction, refundAmount);
+    } catch (Exception e) {
+      log.error("Error processing Stripe refund: {}", e.getMessage(), e);
+      PaymentResponseDto errorResponse = new PaymentResponseDto();
+      errorResponse.setSuccess(false);
+      errorResponse.setStatus("FAILED");
+      errorResponse.setMessage("Refund failed: " + e.getMessage());
+      errorResponse.setGatewayName("Stripe");
+      errorResponse.setProcessedAt(java.time.LocalDateTime.now());
+      return errorResponse;
+    }
   }
 
   @Override
@@ -193,6 +224,41 @@ public class StripeIntegrator implements PaymentIntegrator {
     return resp;
   }
 
+  private PaymentResponseDto convertRefundToPaymentResponse(
+      StripeRefundResponse externalResponse,
+      PaymentTransactionDto transaction,
+      BigDecimal refundAmount) {
+    log.info("Mapping Stripe refund response to internal PaymentResponseDto: {}", externalResponse);
+    PaymentResponseDto resp = new PaymentResponseDto();
+
+    if (externalResponse != null) {
+      Boolean isSuccess =
+          externalResponse.getSuccess() != null
+              ? externalResponse.getSuccess()
+              : (externalResponse.getId() != null && "succeeded".equals(externalResponse.getStatus()));
+      resp.setSuccess(isSuccess);
+      resp.setStatus(
+          externalResponse.getStatus() != null ? externalResponse.getStatus().toUpperCase() : "REFUNDED");
+      resp.setMessage(
+          isSuccess ? "Refund processed successfully" : "Refund failed");
+      resp.setExternalRefundId(externalResponse.getId());
+      resp.setAmount(externalResponse.getAmount() != null ? externalResponse.getAmount() : refundAmount);
+      resp.setCurrency(externalResponse.getCurrency() != null ? externalResponse.getCurrency() : transaction.getCurrency());
+    } else {
+      // Handle null response (network error, etc.)
+      resp.setSuccess(false);
+      resp.setStatus("FAILED");
+      resp.setMessage("No response received from payment gateway");
+    }
+
+    resp.setGatewayName("Stripe");
+    resp.setExternalTransactionId(transaction.getExternalTransactionId());
+    resp.setPaymentTransactionId(transaction.getId());
+    resp.setProcessedAt(java.time.LocalDateTime.now());
+    resp.setGatewayResponse(null); // Could serialize externalResponse to Map if needed
+    return resp;
+  }
+
   // Define inner classes for external request/response if needed
   @Data
   @NoArgsConstructor
@@ -230,6 +296,26 @@ public class StripeIntegrator implements PaymentIntegrator {
   static class CreditCardTokenResponse {
     private String token;
     private String tokenType;
+    private Boolean success;
+    private String errorMessage;
+  }
+
+  @Data
+  @NoArgsConstructor
+  static class StripeRefundRequest {
+    private String charge;
+    private BigDecimal amount;
+    private String currency;
+    private String reason;
+  }
+
+  @Data
+  @NoArgsConstructor
+  static class StripeRefundResponse {
+    private String id;
+    private String status;
+    private BigDecimal amount;
+    private String currency;
     private Boolean success;
     private String errorMessage;
   }

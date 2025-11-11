@@ -65,10 +65,12 @@ Scenario: pathMatches('/stripe/v1/refunds') && methodIs('post')
   * def charge = charges[chargeId]
   * def now = Math.floor(Date.now() / 1000)
   * def amount = request.amount || (charge ? charge.amount : 10000)
+  * def refundAmount = amount / 100
+  * def refundCurrency = charge ? charge.currency.toUpperCase() : 'USD'
 
   # Success response
   * def refundData = { id: refundId, object: 'refund', amount: amount, charge: chargeId, created: now, currency: charge ? charge.currency : 'usd', status: 'succeeded' }
-  * def response = { id: refundId, status: 'REFUNDED', amount: amount / 100, success: true }
+  * def response = { id: '#(refundId)', status: 'succeeded', amount: #(refundAmount), currency: '#(refundCurrency)', success: true }
   * def responseStatus = 200
 
 # Stripe API Error - Invalid API Key (401)

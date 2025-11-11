@@ -120,6 +120,13 @@ Scenario: pathMatches('/bank-transfer/api/v1/transfers/{id}/cancel') && methodIs
   * def response = result.response
   * def responseStatus = result.responseStatus
 
+# Bank Transfer gateway - Refund Transfer
+Scenario: pathMatches('/bank-transfer/api/v1/transfers/{id}/refund') && methodIs('post')
+  * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_transfers_refund_post') { transfers: bankTransferState.transfers }
+  * if (result && result.transfers) karate.set('bankTransferState.transfers', result.transfers)
+  * def response = result.response
+  * def responseStatus = result.responseStatus
+
 # Bank Transfer gateway - List Transfers
 Scenario: pathMatches('/bank-transfer/api/v1/transfers') && methodIs('get')
   * def result = call read('classpath:mocks/payment-gateways/bank-transfer-mock.feature@bt_transfers_list_get') { transfers: bankTransferState.transfers }

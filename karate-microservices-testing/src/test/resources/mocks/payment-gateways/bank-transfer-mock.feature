@@ -80,6 +80,21 @@ Scenario: pathMatches('/bank-transfer/api/v1/transfers/{id}/cancel') && methodIs
   * def response = canCancel ? { id: id, status: 'CANCELLED', message: 'Transfer cancelled successfully' } : { error: { code: 'CANNOT_CANCEL', message: 'Transfer cannot be cancelled in current state' } }
   * def responseStatus = canCancel ? 200 : 400
 
+# Bank Transfer - Refund Transfer
+@bt_transfers_refund_post
+Scenario: pathMatches('/bank-transfer/api/v1/transfers/{id}/refund') && methodIs('post')
+  * def id = pathParams.id
+  * def transfer = transfers[id]
+  * def refundId = 'REFUND-' + generateTransferId()
+  * def now = new Date().toISOString()
+  * def amount = request.amount || (transfer ? transfer.amount : 100.00)
+  * def currency = request.currency || (transfer ? transfer.currency : 'USD')
+  * def canRefund = transfer && transfer.status == 'COMPLETED'
+
+  # Build refund response
+  * def response = canRefund ? { id: '#(refundId)', status: 'REFUNDED', amount: #(amount), currency: '#(currency)', success: true, externalRefundId: '#(refundId)', message: 'Bank transfer refund processed successfully' } : { error: { code: 'CANNOT_REFUND', message: 'Transfer cannot be refunded in current state' } }
+  * def responseStatus = canRefund ? 200 : 400
+
 # Bank Transfer - List Transfers
 @bt_transfers_list_get
 Scenario: pathMatches('/bank-transfer/api/v1/transfers') && methodIs('get')

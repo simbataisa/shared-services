@@ -83,7 +83,7 @@ payment:
       enabled: true
       tokenUrl: http://${MOCK_SERVER_HOST:localhost}:8090/paypal/v1/oauth2/token
       ordersUrl: http://${MOCK_SERVER_HOST:localhost}:8090/paypal/v2/checkout/orders
-      refundBaseUrl: http://${MOCK_SERVER_HOST:localhost}:8090/paypal/v2/checkout/refunds
+      refundBaseUrl: http://${MOCK_SERVER_HOST:localhost}:8090/paypal/v2/payments/captures/{capture_id}/refund
       clientId: ${PAYPAL_CLIENT_ID:mock_paypal_client_id}
       clientSecret: ${PAYPAL_CLIENT_SECRET:mock_paypal_secret}
       webhookId: ${PAYPAL_WEBHOOK_ID:mock_paypal_webhook_id}
@@ -93,6 +93,7 @@ payment:
       enabled: true
       transfersUrl: http://${MOCK_SERVER_HOST:localhost}:8090/bank-transfer/api/v1/transfers
       verifyUrl: http://${MOCK_SERVER_HOST:localhost}:8090/bank-transfer/api/v1/accounts/verify
+      refundUrl: http://${MOCK_SERVER_HOST:localhost}:8090/bank-transfer/api/v1/transfers/{id}/refund
       apiKey: ${BANK_TRANSFER_API_KEY:mock_bank_api_key}
       webhookId: ${BANK_TRANSFER_WEBHOOK_ID:mock_bank_transfer_webhook_id}
       webhookSecret: ${BANK_TRANSFER_WEBHOOK_SECRET:mock_bank_transfer_webhook_secret}
@@ -114,6 +115,7 @@ paypal:
 bankTransfer:
   transferApiUrl: ${payment.gateways.bankTransfer.transfersUrl}
   verifyApiUrl: ${payment.gateways.bankTransfer.verifyUrl}
+  refundApiUrl: ${payment.gateways.bankTransfer.refundUrl}
   apiKey: ${payment.gateways.bankTransfer.apiKey}
 
 logging:

@@ -1,13 +1,26 @@
 package com.ahss.service.impl;
 
 import com.ahss.dto.request.CreateRefundDto;
-
 import com.ahss.dto.response.PaymentRefundDto;
+import com.ahss.dto.response.PaymentRequestDto;
+import com.ahss.dto.response.PaymentResponseDto;
+import com.ahss.dto.response.PaymentTransactionDto;
 import com.ahss.entity.PaymentRefund;
+import com.ahss.entity.PaymentRequest;
+import com.ahss.entity.PaymentTransaction;
+import com.ahss.enums.PaymentRequestStatus;
 import com.ahss.enums.PaymentTransactionStatus;
+import com.ahss.integration.PaymentIntegrator;
+import com.ahss.integration.PaymentIntegratorFactory;
 import com.ahss.repository.PaymentRefundRepository;
+import com.ahss.repository.PaymentRequestRepository;
+import com.ahss.repository.PaymentTransactionRepository;
 import com.ahss.service.PaymentAuditLogService;
 import com.ahss.service.PaymentRefundService;
+import com.ahss.service.PaymentRequestService;
+import com.ahss.util.SecurityUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,19 +40,162 @@ import java.util.stream.Collectors;
 @Transactional
 public class PaymentRefundServiceImpl implements PaymentRefundService {
 
-    @Autowired
-    private PaymentRefundRepository paymentRefundRepository;
+    private static final Logger log = LoggerFactory.getLogger(PaymentRefundServiceImpl.class);
 
-    @Autowired
-    private PaymentAuditLogService auditLogService;
+    private final PaymentRefundRepository paymentRefundRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
+    private final PaymentRequestRepository paymentRequestRepository;
+    private final PaymentIntegratorFactory integratorFactory;
+    private final PaymentRequestService paymentRequestService;
+    private final PaymentAuditLogService auditLogService;
+
+    public PaymentRefundServiceImpl(
+            PaymentRefundRepository paymentRefundRepository,
+            PaymentTransactionRepository paymentTransactionRepository,
+            PaymentRequestRepository paymentRequestRepository,
+            PaymentIntegratorFactory integratorFactory,
+            PaymentRequestService paymentRequestService,
+            PaymentAuditLogService auditLogService) {
+        this.paymentRefundRepository = paymentRefundRepository;
+        this.paymentTransactionRepository = paymentTransactionRepository;
+        this.paymentRequestRepository = paymentRequestRepository;
+        this.integratorFactory = integratorFactory;
+        this.paymentRequestService = paymentRequestService;
+        this.auditLogService = auditLogService;
+    }
 
     @Override
     public PaymentRefundDto createRefund(CreateRefundDto createDto) {
         PaymentRefund refund = convertToEntity(createDto);
         refund.setRefundStatus(PaymentTransactionStatus.PENDING);
-        
+
         PaymentRefund savedRefund = paymentRefundRepository.save(refund);
         return convertToDto(savedRefund);
+    }
+
+    @Override
+    public PaymentRefundDto processRefund(UUID refundId) {
+        log.info("Processing refund with ID: {}", refundId);
+
+        // Get the refund record
+        PaymentRefund refund = paymentRefundRepository.findById(refundId)
+                .orElseThrow(() -> new RuntimeException("Payment refund not found with id: " + refundId));
+
+        // Validate refund is in PENDING status
+        if (refund.getRefundStatus() != PaymentTransactionStatus.PENDING) {
+            throw new RuntimeException("Refund can only be processed when in PENDING status. Current status: " + refund.getRefundStatus());
+        }
+
+        // Get the original payment transaction
+        PaymentTransaction originalTransaction = paymentTransactionRepository.findById(refund.getPaymentTransactionId())
+                .orElseThrow(() -> new RuntimeException("Original payment transaction not found with id: " + refund.getPaymentTransactionId()));
+
+        // Get the payment request
+        PaymentRequest paymentRequest = paymentRequestRepository.findById(originalTransaction.getPaymentRequestId())
+                .orElseThrow(() -> new RuntimeException("Payment request not found with id: " + originalTransaction.getPaymentRequestId()));
+
+        log.info("Found original transaction: {} for payment request: {}", originalTransaction.getId(), paymentRequest.getId());
+
+        // Determine gateway - use refund's gateway if specified, otherwise use transaction's gateway
+        String gatewayName = refund.getGatewayName() != null ? refund.getGatewayName() : originalTransaction.getGatewayName();
+        if (gatewayName == null) {
+            throw new RuntimeException("Gateway name not specified in refund or original transaction");
+        }
+
+        log.info("Processing refund through gateway: {}", gatewayName);
+
+        // Get the payment integrator
+        PaymentIntegrator integrator = integratorFactory.getIntegrator(originalTransaction.getPaymentMethod(), gatewayName);
+
+        // Convert entities to DTOs for integrator
+        PaymentTransactionDto transactionDto = convertTransactionToDto(originalTransaction);
+
+        try {
+            // Call the payment gateway to process the refund
+            log.info("Calling gateway to process refund of {} {} for transaction {}",
+                    refund.getRefundAmount(), refund.getCurrency(), transactionDto.getId());
+            PaymentResponseDto gatewayResponse = integrator.processRefund(transactionDto, refund.getRefundAmount());
+
+            // Update refund with gateway response
+            if (gatewayResponse.isSuccess()) {
+                refund.setRefundStatus(PaymentTransactionStatus.SUCCESS);
+                refund.setExternalRefundId(gatewayResponse.getExternalRefundId());
+                refund.setGatewayResponse(gatewayResponse.getGatewayResponse());
+                refund.setProcessedAt(LocalDateTime.now());
+                log.info("Refund processed successfully. External refund ID: {}", gatewayResponse.getExternalRefundId());
+            } else {
+                refund.setRefundStatus(PaymentTransactionStatus.FAILED);
+                refund.setErrorMessage(gatewayResponse.getMessage());
+                refund.setProcessedAt(LocalDateTime.now());
+                log.error("Refund processing failed: {}", gatewayResponse.getMessage());
+            }
+
+            PaymentRefund savedRefund = paymentRefundRepository.save(refund);
+
+            // If refund was successful, update payment request status
+            if (gatewayResponse.isSuccess()) {
+                updatePaymentRequestStatusAfterRefund(paymentRequest, refund.getRefundAmount());
+            }
+
+            return convertToDto(savedRefund);
+
+        } catch (Exception e) {
+            log.error("Error processing refund: {}", e.getMessage(), e);
+            refund.setRefundStatus(PaymentTransactionStatus.FAILED);
+            refund.setErrorMessage("Error processing refund: " + e.getMessage());
+            refund.setProcessedAt(LocalDateTime.now());
+            paymentRefundRepository.save(refund);
+            throw new RuntimeException("Failed to process refund: " + e.getMessage(), e);
+        }
+    }
+
+    private void updatePaymentRequestStatusAfterRefund(PaymentRequest paymentRequest, BigDecimal refundAmount) {
+        // Get all transactions for this payment request
+        List<PaymentTransaction> transactions = paymentTransactionRepository.findByPaymentRequestId(paymentRequest.getId());
+
+        // Calculate total successful refunds for all transactions of this payment request
+        BigDecimal totalRefunded = BigDecimal.ZERO;
+        for (PaymentTransaction transaction : transactions) {
+            List<PaymentRefund> successfulRefunds = paymentRefundRepository.findSuccessfulRefundsByTransactionId(transaction.getId());
+            BigDecimal transactionRefunds = successfulRefunds.stream()
+                    .map(PaymentRefund::getRefundAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            totalRefunded = totalRefunded.add(transactionRefunds);
+        }
+
+        log.info("Total refunded for payment request {}: {} (original amount: {})",
+                paymentRequest.getId(), totalRefunded, paymentRequest.getAmount());
+
+        // Determine if it's a full or partial refund
+        if (totalRefunded.compareTo(paymentRequest.getAmount()) >= 0) {
+            // Full refund
+            log.info("Full refund detected, updating payment request status to REFUNDED");
+            paymentRequestService.updateStatus(paymentRequest.getId(), PaymentRequestStatus.REFUNDED,
+                    "Full refund processed: " + totalRefunded);
+        } else {
+            // Partial refund
+            log.info("Partial refund detected, updating payment request status to PARTIAL_REFUND");
+            paymentRequestService.updateStatus(paymentRequest.getId(), PaymentRequestStatus.PARTIAL_REFUND,
+                    "Partial refund processed: " + totalRefunded + " of " + paymentRequest.getAmount());
+        }
+    }
+
+    private PaymentTransactionDto convertTransactionToDto(PaymentTransaction transaction) {
+        PaymentTransactionDto dto = new PaymentTransactionDto();
+        dto.setId(transaction.getId());
+        dto.setPaymentRequestId(transaction.getPaymentRequestId());
+        dto.setAmount(transaction.getAmount());
+        dto.setCurrency(transaction.getCurrency());
+        dto.setPaymentMethod(transaction.getPaymentMethod());
+        dto.setTransactionStatus(transaction.getTransactionStatus());
+        dto.setExternalTransactionId(transaction.getExternalTransactionId());
+        dto.setGatewayName(transaction.getGatewayName());
+        dto.setGatewayResponse(transaction.getGatewayResponse());
+        dto.setProcessedAt(transaction.getProcessedAt());
+        dto.setMetadata(transaction.getMetadata());
+        dto.setCreatedAt(transaction.getCreatedAt());
+        dto.setUpdatedAt(transaction.getUpdatedAt());
+        return dto;
     }
 
     @Override
@@ -365,6 +521,14 @@ public class PaymentRefundServiceImpl implements PaymentRefundService {
         entity.setRefundAmount(dto.getRefundAmount());
         entity.setCurrency(dto.getCurrency());
         entity.setReason(dto.getReason());
+        entity.setGatewayName(dto.getGatewayName());
+        entity.setMetadata(dto.getMetadata());
+
+        // Set createdBy from security context
+        Long currentUserId = SecurityUtil.getCurrentUserId()
+                .orElseThrow(() -> new RuntimeException("User must be authenticated to create a refund"));
+        entity.setCreatedBy(currentUserId);
+
         return entity;
     }
 }

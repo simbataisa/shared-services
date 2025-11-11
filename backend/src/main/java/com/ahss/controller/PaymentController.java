@@ -34,13 +34,24 @@ import java.util.UUID;
 @io.swagger.v3.oas.annotations.security.SecurityRequirement(name = "bearerAuth")
 public class PaymentController {
 
-  @Autowired private PaymentRequestService paymentRequestService;
+  private final PaymentRequestService paymentRequestService;
 
-  @Autowired private PaymentTransactionService paymentTransactionService;
+  private final PaymentTransactionService paymentTransactionService;
 
-  @Autowired private PaymentRefundService paymentRefundService;
+  private final PaymentRefundService paymentRefundService;
 
-  @Autowired private PaymentAuditLogService auditLogService;
+  private final PaymentAuditLogService auditLogService;
+
+  public PaymentController(
+      PaymentRequestService paymentRequestService,
+      PaymentTransactionService paymentTransactionService,
+      PaymentRefundService paymentRefundService,
+      PaymentAuditLogService auditLogService) {
+    this.paymentRequestService = paymentRequestService;
+    this.paymentTransactionService = paymentTransactionService;
+    this.paymentRefundService = paymentRefundService;
+    this.auditLogService = auditLogService;
+  }
 
   // ===== PAYMENT REQUESTS =====
 
@@ -457,6 +468,23 @@ public class PaymentController {
     } catch (RuntimeException e) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body(ApiResponse.notOk(null, e.getMessage(), "/api/v1/payments/refunds"));
+    }
+  }
+
+  @PostMapping("/refunds/{id}/process")
+  public ResponseEntity<ApiResponse<PaymentRefundDto>> processRefund(@PathVariable UUID id) {
+    try {
+      PaymentRefundDto processedRefund = paymentRefundService.processRefund(id);
+      return ResponseEntity.ok(
+          ApiResponse.ok(
+              processedRefund,
+              "Payment refund processed successfully",
+              "/api/v1/payments/refunds/" + id + "/process"));
+    } catch (RuntimeException e) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body(
+              ApiResponse.notOk(
+                  null, e.getMessage(), "/api/v1/payments/refunds/" + id + "/process"));
     }
   }
 

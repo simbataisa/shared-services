@@ -17,6 +17,8 @@ public interface PaymentRefundService {
 
     PaymentRefundDto createRefund(CreateRefundDto createDto);
 
+    PaymentRefundDto processRefund(UUID refundId);
+
     Optional<PaymentRefundDto> getRefundById(UUID id);
 
     Optional<PaymentRefundDto> getRefundByCode(String refundCode);
