@@ -329,12 +329,29 @@ docker compose -f docker-compose.windows.yml --profile observability up -d
 This starts all required services:
 
 - **PostgreSQL** - Database
-- **Kafka** - Message broker
+- **Kafka** - Message broker (port 9092 for host, 29092 for container-to-container)
 - **OpenTelemetry Collector** - Trace collection
 - **Jaeger** - Distributed tracing UI
 - **Kafka UI** - Kafka management console
 - **Backend** - Spring Boot application
 - **Frontend** - React application
+
+**Note on Kafka Configuration:**
+- Host applications (running on your machine) connect to Kafka at `localhost:9092` (default in `application.yml`)
+- Docker containers connect to Kafka at `kafka:29092` (overridden by `SPRING_KAFKA_BOOTSTRAP_SERVERS` environment variable)
+- This dual-listener setup allows both host and containerized services to communicate with Kafka properly
+
+**Configuration Details:**
+```yaml
+# application.yml (default for local development)
+spring:
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+# docker-compose.yml (override for containers)
+environment:
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+```
 
 ### 3. Access the Application
 
