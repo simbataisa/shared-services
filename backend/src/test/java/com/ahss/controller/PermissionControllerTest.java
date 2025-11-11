@@ -79,8 +79,9 @@ class PermissionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(""))
-                .andReturn());
+                .andExpect(jsonPath("$.success", is(false)))
+                .andExpect(jsonPath("$.message", is("Permission name is required")))
+                .andExpect(jsonPath("$.path", is("/api/v1/permissions")))                .andReturn());
         Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE,
                 result.getResponse().getContentAsString());
     }

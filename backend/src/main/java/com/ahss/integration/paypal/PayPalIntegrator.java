@@ -85,16 +85,38 @@ public class PayPalIntegrator implements PaymentIntegrator {
   @Override
   public PaymentResponseDto processRefund(
       PaymentTransactionDto transaction, BigDecimal refundAmount) {
-    // Placeholder refund flow
+    log.info("Processing refund for transaction: {} with amount: {}",
+        transaction.getId(), refundAmount);
+
+    // Build refund request
     PayPalRefundRequest refundRequest = convertToRefundRequest(transaction, refundAmount);
-    // Expand capture_id from transaction external ID when present
-    PayPalRefundResponse refundResponse =
-        restTemplate.postForObject(
-            refundApiUrl,
-            refundRequest,
-            PayPalRefundResponse.class,
-            transaction.getExternalTransactionId());
-    return convertRefundToPaymentResponse(refundResponse, transaction);
+    log.info("Sending refund request to PayPal for capture: {}",
+        transaction.getExternalTransactionId());
+
+    try {
+      // Expand capture_id from transaction external ID when present
+      // PayPal refund endpoint: /v2/payments/captures/{capture_id}/refund
+      String refundUrl = refundApiUrl.replace("{capture_id}", transaction.getExternalTransactionId());
+      PayPalRefundResponse refundResponse =
+          restTemplate.postForObject(
+              refundUrl,
+              refundRequest,
+              PayPalRefundResponse.class);
+      log.info("Received refund response from PayPal: {}", refundResponse);
+
+      return convertRefundToPaymentResponse(refundResponse, transaction, refundAmount);
+    } catch (Exception e) {
+      log.error("Error processing PayPal refund: {}", e.getMessage(), e);
+      PaymentResponseDto errorResponse = new PaymentResponseDto();
+      errorResponse.setSuccess(false);
+      errorResponse.setStatus("FAILED");
+      errorResponse.setMessage("Refund failed: " + e.getMessage());
+      errorResponse.setGatewayName("PayPal");
+      errorResponse.setExternalTransactionId(transaction.getExternalTransactionId());
+      errorResponse.setPaymentTransactionId(transaction.getId());
+      errorResponse.setProcessedAt(java.time.LocalDateTime.now());
+      return errorResponse;
+    }
   }
 
   @Override
@@ -170,28 +192,43 @@ public class PayPalIntegrator implements PaymentIntegrator {
   }
 
   private PaymentResponseDto convertRefundToPaymentResponse(
-      PayPalRefundResponse refundResponse, PaymentTransactionDto transaction) {
+      PayPalRefundResponse refundResponse, PaymentTransactionDto transaction, BigDecimal refundAmount) {
+    log.info("Mapping PayPal refund response to internal PaymentResponseDto: {}", refundResponse);
     PaymentResponseDto resp = new PaymentResponseDto();
 
     if (refundResponse != null && refundResponse.getId() != null) {
-      resp.setSuccess(true);
-      resp.setStatus("REFUNDED");
-      resp.setMessage("PayPal refund processed successfully");
+      String statusUpper = refundResponse.getStatus() != null ? refundResponse.getStatus().toUpperCase() : "REFUNDED";
+      boolean isSuccess = "COMPLETED".equalsIgnoreCase(statusUpper) || "REFUNDED".equalsIgnoreCase(statusUpper);
+      resp.setSuccess(isSuccess);
+      resp.setStatus(statusUpper);
+      resp.setMessage(isSuccess ? "PayPal refund processed successfully" : "PayPal refund pending");
       resp.setExternalRefundId(refundResponse.getId());
+
+      // Use amount from response if available, otherwise use requested refundAmount
+      if (refundResponse.getAmount() != null && refundResponse.getAmount().getValue() != null) {
+        resp.setAmount(new BigDecimal(refundResponse.getAmount().getValue()));
+        resp.setCurrency(refundResponse.getAmount().getCurrencyCode());
+      } else {
+        resp.setAmount(refundAmount);
+        resp.setCurrency(transaction.getCurrency());
+      }
     } else {
       resp.setSuccess(false);
       resp.setStatus("FAILED");
       resp.setMessage("Failed to process PayPal refund");
+      resp.setAmount(refundAmount);
+      resp.setCurrency(transaction.getCurrency());
     }
 
     resp.setGatewayName("PayPal");
     resp.setExternalTransactionId(transaction.getExternalTransactionId());
     resp.setPaymentRequestId(transaction.getPaymentRequestId());
     resp.setPaymentTransactionId(transaction.getId());
-    resp.setAmount(transaction.getAmount());
-    resp.setCurrency(transaction.getCurrency());
     resp.setProcessedAt(java.time.LocalDateTime.now());
     resp.setGatewayResponse(null);
+
+    log.info("PayPal refund response mapped - ID: {}, Status: {}, Success: {}",
+        resp.getExternalRefundId(), resp.getStatus(), resp.isSuccess());
 
     return resp;
   }

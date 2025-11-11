@@ -395,8 +395,8 @@ class UserControllerTest {
             "GET /api/v1/users/inactive with cutoffDate",
             () ->
                 mockMvc
-                    .perform(get("/api/v1/users/inactive")
-                        .param("cutoffDate", "2024-01-01T00:00:00"))
+                    .perform(
+                        get("/api/v1/users/inactive").param("cutoffDate", "2024-01-01T00:00:00"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success", is(true)))
                     .andExpect(jsonPath("$.message", is("Inactive users retrieved successfully")))
@@ -465,9 +465,11 @@ class UserControllerTest {
   void create_user_bad_request_returns_400() throws Exception {
     // Build invalid DTO (empty username, invalid email, empty password)
     CreateUserRequest request = new CreateUserRequest();
-    request.setUsername("");
-    request.setEmail("bad");
-    request.setPassword("");
+    request.setUsername("12");
+    request.setEmail("dennis@test.com");
+    request.setPassword("Strong#Password");
+    request.setFirstName("Dennis");
+    request.setLastName("D");
 
     String json = mapper.writeValueAsString(request);
     Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
@@ -479,7 +481,9 @@ class UserControllerTest {
                     .perform(
                         post("/api/v1/users").contentType(MediaType.APPLICATION_JSON).content(json))
                     .andExpect(status().isBadRequest())
-                    .andExpect(content().string(""))
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", is("Username must be between 3 and 50 characters")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users")))
                     .andReturn());
     Allure.addAttachment(
         "Response Body",
@@ -494,7 +498,9 @@ class UserControllerTest {
     // Build invalid DTO (only username set; missing required fields)
     UpdateUserRequest request =
         Allure.step("Create UpdateUserRequest with username=john", () -> new UpdateUserRequest());
-    Allure.step("Set username=john", () -> request.setUsername("john"));
+    request.setUsername("john");
+    request.setFirstName("john");
+    request.setEmail("john@test.com");
 
     String json = mapper.writeValueAsString(request);
     Allure.addAttachment("Request Body (DTO)", MediaType.APPLICATION_JSON_VALUE, json);
@@ -508,7 +514,9 @@ class UserControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(json))
                     .andExpect(status().isBadRequest())
-                    .andExpect(content().string(""))
+                    .andExpect(jsonPath("$.success", is(false)))
+                    .andExpect(jsonPath("$.message", is("Last name is required")))
+                    .andExpect(jsonPath("$.path", is("/api/v1/users/77")))
                     .andReturn());
     Allure.addAttachment(
         "Response Body",
@@ -686,9 +694,10 @@ class UserControllerTest {
 
     Allure.step(
         "Stub service changePassword to throw not found",
-        () -> doThrow(new IllegalArgumentException("User not found with id: 34"))
-            .when(userService)
-            .changePassword(eq(34L), anyString()));
+        () ->
+            doThrow(new IllegalArgumentException("User not found with id: 34"))
+                .when(userService)
+                .changePassword(eq(34L), anyString()));
 
     var result =
         Allure.step(
@@ -1000,8 +1009,9 @@ class UserControllerTest {
   void assign_roles_service_exception_returns_400() throws Exception {
     Allure.step(
         "Stub service assignRoles to throw exception",
-        () -> when(userService.assignRoles(eq(85L), anyList()))
-            .thenThrow(new IllegalArgumentException("User not found with id: 85")));
+        () ->
+            when(userService.assignRoles(eq(85L), anyList()))
+                .thenThrow(new IllegalArgumentException("User not found with id: 85")));
     String json = mapper.writeValueAsString(java.util.List.of(1L, 2L));
     Allure.addAttachment("Request Body (roleIds)", MediaType.APPLICATION_JSON_VALUE, json);
 
@@ -1066,8 +1076,9 @@ class UserControllerTest {
   void remove_roles_service_exception_returns_400() throws Exception {
     Allure.step(
         "Stub service removeRoles to throw exception",
-        () -> when(userService.removeRoles(eq(86L), anyList()))
-            .thenThrow(new IllegalArgumentException("Role not found")));
+        () ->
+            when(userService.removeRoles(eq(86L), anyList()))
+                .thenThrow(new IllegalArgumentException("Role not found")));
     String json = mapper.writeValueAsString(java.util.List.of(1L));
     Allure.addAttachment("Request Body (roleIds)", MediaType.APPLICATION_JSON_VALUE, json);
 
@@ -1132,8 +1143,9 @@ class UserControllerTest {
   void assign_user_groups_service_exception_returns_400() throws Exception {
     Allure.step(
         "Stub service assignUserGroups to throw exception",
-        () -> when(userService.assignUserGroups(eq(87L), anyList()))
-            .thenThrow(new IllegalArgumentException("User not found with id: 87")));
+        () ->
+            when(userService.assignUserGroups(eq(87L), anyList()))
+                .thenThrow(new IllegalArgumentException("User not found with id: 87")));
     String json = mapper.writeValueAsString(java.util.List.of(10L));
     Allure.addAttachment("Request Body (userGroupIds)", MediaType.APPLICATION_JSON_VALUE, json);
 
@@ -1198,8 +1210,9 @@ class UserControllerTest {
   void remove_user_groups_service_exception_returns_400() throws Exception {
     Allure.step(
         "Stub service removeUserGroups to throw exception",
-        () -> when(userService.removeUserGroups(eq(88L), anyList()))
-            .thenThrow(new IllegalArgumentException("User group not found")));
+        () ->
+            when(userService.removeUserGroups(eq(88L), anyList()))
+                .thenThrow(new IllegalArgumentException("User group not found")));
     String json = mapper.writeValueAsString(java.util.List.of(10L));
     Allure.addAttachment("Request Body (userGroupIds)", MediaType.APPLICATION_JSON_VALUE, json);
 
@@ -1227,7 +1240,8 @@ class UserControllerTest {
   @Story("Create user returns 201 when successful")
   @Severity(SeverityLevel.NORMAL)
   void create_user_success_returns_201() throws Exception {
-    CreateUserRequest request = Allure.step("Create CreateUserRequest", () -> new CreateUserRequest());
+    CreateUserRequest request =
+        Allure.step("Create CreateUserRequest", () -> new CreateUserRequest());
     request.setUsername("newuser");
     request.setEmail("newuser@example.com");
     request.setPassword("Str0ngP@ss!");
@@ -1267,7 +1281,8 @@ class UserControllerTest {
   @Story("Create user with roles returns 201 when successful")
   @Severity(SeverityLevel.NORMAL)
   void create_user_with_roles_success_returns_201() throws Exception {
-    CreateUserRequest request = Allure.step("Create CreateUserRequest with roleIds", () -> new CreateUserRequest());
+    CreateUserRequest request =
+        Allure.step("Create CreateUserRequest with roleIds", () -> new CreateUserRequest());
     request.setUsername("newuser2");
     request.setEmail("newuser2@example.com");
     request.setPassword("Str0ngP@ss!");
@@ -1286,7 +1301,8 @@ class UserControllerTest {
         () -> when(userService.createUser(any())).thenReturn(dto));
     Allure.step(
         "Stub service assignRoles -> dto",
-        () -> when(userService.assignRoles(eq(101L), eq(java.util.List.of(1L, 2L)))).thenReturn(dto));
+        () ->
+            when(userService.assignRoles(eq(101L), eq(java.util.List.of(1L, 2L)))).thenReturn(dto));
 
     var result =
         Allure.step(
@@ -1311,7 +1327,8 @@ class UserControllerTest {
   @Story("Create user with user groups returns 201 when successful")
   @Severity(SeverityLevel.NORMAL)
   void create_user_with_user_groups_success_returns_201() throws Exception {
-    CreateUserRequest request = Allure.step("Create CreateUserRequest with userGroupIds", () -> new CreateUserRequest());
+    CreateUserRequest request =
+        Allure.step("Create CreateUserRequest with userGroupIds", () -> new CreateUserRequest());
     request.setUsername("newuser3");
     request.setEmail("newuser3@example.com");
     request.setPassword("Str0ngP@ss!");
@@ -1330,7 +1347,9 @@ class UserControllerTest {
         () -> when(userService.createUser(any())).thenReturn(dto));
     Allure.step(
         "Stub service assignUserGroups -> dto",
-        () -> when(userService.assignUserGroups(eq(102L), eq(java.util.List.of(10L, 11L)))).thenReturn(dto));
+        () ->
+            when(userService.assignUserGroups(eq(102L), eq(java.util.List.of(10L, 11L))))
+                .thenReturn(dto));
 
     var result =
         Allure.step(
@@ -1355,7 +1374,8 @@ class UserControllerTest {
   @Story("Create user returns 400 when service throws exception")
   @Severity(SeverityLevel.MINOR)
   void create_user_service_exception_returns_400() throws Exception {
-    CreateUserRequest request = Allure.step("Create CreateUserRequest", () -> new CreateUserRequest());
+    CreateUserRequest request =
+        Allure.step("Create CreateUserRequest", () -> new CreateUserRequest());
     request.setUsername("duplicate");
     request.setEmail("duplicate@example.com");
     request.setPassword("Str0ngP@ss!");
@@ -1366,7 +1386,9 @@ class UserControllerTest {
 
     Allure.step(
         "Stub service createUser to throw exception",
-        () -> when(userService.createUser(any())).thenThrow(new IllegalArgumentException("Username already exists")));
+        () ->
+            when(userService.createUser(any()))
+                .thenThrow(new IllegalArgumentException("Username already exists")));
 
     var result =
         Allure.step(
@@ -1390,7 +1412,8 @@ class UserControllerTest {
   @Story("Update user returns 200 when successful")
   @Severity(SeverityLevel.NORMAL)
   void update_user_success_returns_200() throws Exception {
-    UpdateUserRequest request = Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
+    UpdateUserRequest request =
+        Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
@@ -1432,7 +1455,8 @@ class UserControllerTest {
   @Story("Update user returns 400 when service throws IllegalArgumentException")
   @Severity(SeverityLevel.MINOR)
   void update_user_service_exception_returns_400() throws Exception {
-    UpdateUserRequest request = Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
+    UpdateUserRequest request =
+        Allure.step("Create UpdateUserRequest", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
@@ -1470,7 +1494,8 @@ class UserControllerTest {
   @Story("Update user with roles returns 200 when successful")
   @Severity(SeverityLevel.NORMAL)
   void update_user_with_roles_success_returns_200() throws Exception {
-    UpdateUserRequest request = Allure.step("Create UpdateUserRequest with roleIds", () -> new UpdateUserRequest());
+    UpdateUserRequest request =
+        Allure.step("Create UpdateUserRequest with roleIds", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
@@ -1487,10 +1512,8 @@ class UserControllerTest {
     // Mock existing user with current roles
     UserDto existingUser = Allure.step("Create existing UserDto with roles", () -> new UserDto());
     existingUser.setId(78L);
-    existingUser.setRoles(java.util.List.of(
-        createRoleDto(1L, "ROLE_OLD1"),
-        createRoleDto(2L, "ROLE_OLD2")
-    ));
+    existingUser.setRoles(
+        java.util.List.of(createRoleDto(1L, "ROLE_OLD1"), createRoleDto(2L, "ROLE_OLD2")));
 
     Allure.step(
         "Stub service updateUser -> dto",
@@ -1503,7 +1526,8 @@ class UserControllerTest {
         () -> when(userService.removeRoles(eq(78L), anyList())).thenReturn(dto));
     Allure.step(
         "Stub service assignRoles -> dto",
-        () -> when(userService.assignRoles(eq(78L), eq(java.util.List.of(3L, 4L)))).thenReturn(dto));
+        () ->
+            when(userService.assignRoles(eq(78L), eq(java.util.List.of(3L, 4L)))).thenReturn(dto));
 
     var result =
         Allure.step(
@@ -1530,7 +1554,8 @@ class UserControllerTest {
   @Story("Update user with empty roles returns 200 and removes all roles")
   @Severity(SeverityLevel.NORMAL)
   void update_user_with_empty_roles_success_returns_200() throws Exception {
-    UpdateUserRequest request = Allure.step("Create UpdateUserRequest with empty roleIds", () -> new UpdateUserRequest());
+    UpdateUserRequest request =
+        Allure.step("Create UpdateUserRequest with empty roleIds", () -> new UpdateUserRequest());
     request.setUsername("john");
     request.setEmail("john@example.com");
     request.setFirstName("John");
@@ -1547,9 +1572,7 @@ class UserControllerTest {
     // Mock existing user with current roles
     UserDto existingUser = Allure.step("Create existing UserDto with roles", () -> new UserDto());
     existingUser.setId(79L);
-    existingUser.setRoles(java.util.List.of(
-        createRoleDto(1L, "ROLE_OLD1")
-    ));
+    existingUser.setRoles(java.util.List.of(createRoleDto(1L, "ROLE_OLD1")));
 
     Allure.step(
         "Stub service updateUser -> dto",
@@ -1586,7 +1609,8 @@ class UserControllerTest {
   @Story("Update user with user groups returns 200 when successful")
   @Severity(SeverityLevel.NORMAL)
   void update_user_with_user_groups_success_returns_200() throws Exception {
-    UpdateUserRequest request = Allure.step("Create UpdateUserRequest with userGroupIds", () -> new UpdateUserRequest());
+    UpdateUserRequest request =
+        Allure.step("Create UpdateUserRequest with userGroupIds", () -> new UpdateUserRequest());
     request.setUsername("jane");
     request.setEmail("jane@example.com");
     request.setFirstName("Jane");
@@ -1601,12 +1625,12 @@ class UserControllerTest {
     dto.setEmail("jane@example.com");
 
     // Mock existing user with current user groups
-    UserDto existingUser = Allure.step("Create existing UserDto with user groups", () -> new UserDto());
+    UserDto existingUser =
+        Allure.step("Create existing UserDto with user groups", () -> new UserDto());
     existingUser.setId(80L);
-    existingUser.setUserGroups(java.util.List.of(
-        createUserGroupDto(10L, "GROUP_OLD1"),
-        createUserGroupDto(11L, "GROUP_OLD2")
-    ));
+    existingUser.setUserGroups(
+        java.util.List.of(
+            createUserGroupDto(10L, "GROUP_OLD1"), createUserGroupDto(11L, "GROUP_OLD2")));
 
     Allure.step(
         "Stub service updateUser -> dto",
@@ -1619,7 +1643,9 @@ class UserControllerTest {
         () -> when(userService.removeUserGroups(eq(80L), anyList())).thenReturn(dto));
     Allure.step(
         "Stub service assignUserGroups -> dto",
-        () -> when(userService.assignUserGroups(eq(80L), eq(java.util.List.of(20L, 21L)))).thenReturn(dto));
+        () ->
+            when(userService.assignUserGroups(eq(80L), eq(java.util.List.of(20L, 21L))))
+                .thenReturn(dto));
 
     var result =
         Allure.step(

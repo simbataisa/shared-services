@@ -84,7 +84,9 @@ class RoleControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                         .andExpect(status().isBadRequest())
-                        .andExpect(content().string(""))
+                        .andExpect(jsonPath("$.success", is(false)))
+                        .andExpect(jsonPath("$.message", is("Role name is required")))
+                        .andExpect(jsonPath("$.path", is("/api/v1/roles")))
                         .andReturn()
         );
         Allure.addAttachment("Response Body", MediaType.APPLICATION_JSON_VALUE,

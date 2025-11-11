@@ -40,27 +40,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claims = JwtTokenProvider.parse(token);
                 String username = claims.getSubject();
                 log.debug("JWT token parsed successfully. Username: {}", username);
-                
+
+                // Extract userId from token claims
+                Long userId = claims.get("userId") != null ?
+                    ((Number) claims.get("userId")).longValue() : null;
+                log.debug("Extracted userId from token: {}", userId);
+
                 // Extract roles from token claims
                 @SuppressWarnings("unchecked")
                 List<String> roles = (List<String>) claims.get("roles");
                 log.debug("Extracted roles from token: {}", roles);
-                
+
                 // Convert roles to authorities
-                List<SimpleGrantedAuthority> authorities = roles != null ? 
+                List<SimpleGrantedAuthority> authorities = roles != null ?
                     roles.stream()
                         .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase().replace(" ", "_")))
                         .collect(Collectors.toList()) :
                     List.of(new SimpleGrantedAuthority("ROLE_USER"));
-                
+
                 log.debug("Converted authorities: {}", authorities);
-                
-                var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
+
+                // Create UserPrincipal with userId and username
+                UserPrincipal userPrincipal = new UserPrincipal(userId, username);
+                var auth = new UsernamePasswordAuthenticationToken(userPrincipal, null, authorities);
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
-                
-                log.debug("Authentication set in SecurityContext for user: {}", username);
-                
+
+                log.debug("Authentication set in SecurityContext for user: {} (userId: {})", username, userId);
+
             } catch (Exception e) {
                 log.warn("JWT token validation failed: {}", e.getMessage());
                 log.debug("JWT token validation exception details", e);

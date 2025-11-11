@@ -78,7 +78,7 @@ Scenario: pathMatches('/paypal/v2/payments/captures/{id}/refund') && methodIs('p
   * def amount = request.amount || (capture ? capture.amount : { currency_code: 'USD', value: '100.00' })
 
   * def refundData = { id: refundId, status: 'COMPLETED', amount: amount, seller_payable_breakdown: { total_refunded_amount: amount }, create_time: now, update_time: now }
-  * def response = { id: refundId, status: 'REFUNDED', amount: parseFloat(amount.value), currency: amount.currency_code, success: true }
+  * def response = { id: '#(refundId)', status: 'COMPLETED', amount: #(amount) }
   * def responseStatus = 201
 
 # PayPal API Error - Unauthorized (401)

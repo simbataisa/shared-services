@@ -3,11 +3,19 @@ package com.ahss.service.impl;
 import com.ahss.dto.request.CreateRefundDto;
 import com.ahss.dto.response.PaymentRefundDto;
 import com.ahss.entity.PaymentRefund;
+import com.ahss.entity.PaymentTransaction;
 import com.ahss.enums.PaymentTransactionStatus;
+import com.ahss.integration.PaymentIntegratorFactory;
 import com.ahss.repository.PaymentRefundRepository;
+import com.ahss.repository.PaymentRequestRepository;
+import com.ahss.repository.PaymentTransactionRepository;
+import com.ahss.security.UserPrincipal;
 import com.ahss.service.PaymentAuditLogService;
+import com.ahss.service.PaymentRequestService;
 import io.qameta.allure.*;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +23,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
@@ -37,10 +49,35 @@ public class PaymentRefundServiceImplTest {
     @MockBean
     private PaymentRefundRepository refundRepository;
     @MockBean
-    private PaymentAuditLogService auditLogService;
+    private PaymentTransactionRepository transactionRepository;
+    @MockBean
+    private PaymentRequestRepository paymentRequestRepository;
+    @MockBean
+    private PaymentIntegratorFactory integratorFactory;
+    @MockBean
+    private PaymentRequestService paymentRequestService;
+    @MockBean
+    private PaymentAuditLogService paymentAuditLogService;
 
     @Autowired
     private PaymentRefundServiceImpl service;
+
+    @BeforeEach
+    void setUp() {
+        // Set up security context with an authenticated user
+        UserPrincipal principal = new UserPrincipal(1L, "testuser@example.com");
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     @Story("Create refund sets PENDING and returns DTO")
@@ -53,6 +90,17 @@ public class PaymentRefundServiceImplTest {
         dto.setRefundAmount(new BigDecimal("50.00"));
         dto.setCurrency("USD");
         dto.setReason("duplicate charge");
+
+        // Mock original transaction exists with sufficient amount
+        PaymentTransaction originalTx = new PaymentTransaction();
+        originalTx.setId(dto.getPaymentTransactionId());
+        originalTx.setAmount(new BigDecimal("100.00"));
+        when(transactionRepository.findById(eq(dto.getPaymentTransactionId())))
+            .thenReturn(Optional.of(originalTx));
+
+        // No prior successful refunds
+        when(refundRepository.sumRefundAmountByTransactionIdAndStatus(eq(dto.getPaymentTransactionId()),
+            eq(PaymentTransactionStatus.SUCCESS))).thenReturn(null);
 
         Allure.step("Mock refundRepository.save to return a new PaymentRefund with PENDING status",
                 () -> when(refundRepository.save(any(PaymentRefund.class))).thenAnswer(inv -> {
@@ -152,6 +200,12 @@ public class PaymentRefundServiceImplTest {
                 () -> when(refundRepository.sumRefundAmountByTransactionIdAndStatus(eq(txId),
                         eq(PaymentTransactionStatus.SUCCESS)))
                         .thenReturn(new BigDecimal("30.00")));
+
+        // Mock original transaction amount to compute available amount (60 - 30 = 30)
+        com.ahss.entity.PaymentTransaction originalTx = new com.ahss.entity.PaymentTransaction();
+        originalTx.setId(txId);
+        originalTx.setAmount(new BigDecimal("60.00"));
+        when(transactionRepository.findById(eq(txId))).thenReturn(java.util.Optional.of(originalTx));
 
         Allure.step("Verify service canRefund returns true when available amount is sufficient",
                 () -> assertTrue(service.canRefund(txId, new BigDecimal("20.00")))); // available 30 >= 20 -> can
