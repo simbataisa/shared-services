@@ -35,12 +35,27 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Epic("Payment Lifecycle")
 @Feature("Payment Transactions")
 @Owner("backend")
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(classes = {PaymentTransactionServiceImpl.class})
+@SpringBootTest(classes = {PaymentTransactionServiceImpl.class, PaymentTransactionServiceImplTest.TestConfig.class})
 public class PaymentTransactionServiceImplTest {
+
+  @TestConfiguration
+  static class TestConfig {
+    @Bean
+    public ObjectMapper objectMapper() {
+      ObjectMapper mapper = new ObjectMapper();
+      mapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+      mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+      return mapper;
+    }
+  }
 
   @MockBean private PaymentTransactionRepository transactionRepository;
   @MockBean private PaymentAuditLogService auditLogService;
@@ -78,7 +93,7 @@ public class PaymentTransactionServiceImplTest {
 
     // Mock integrator and response
     PaymentIntegrator integrator = mock(PaymentIntegrator.class);
-    when(integratorFactory.getIntegrator(eq(PaymentMethodType.CREDIT_CARD)))
+    when(integratorFactory.getIntegrator(eq(PaymentMethodType.CREDIT_CARD), eq("Stripe")))
         .thenReturn(integrator);
     PaymentResponseDto response = new PaymentResponseDto();
     response.setSuccess(true);
@@ -105,7 +120,7 @@ public class PaymentTransactionServiceImplTest {
     assertEquals(PaymentTransactionStatus.SUCCESS, dto.getTransactionStatus());
     assertEquals("ext_123", dto.getExternalTransactionId());
     verify(transactionRepository, times(2)).save(any(PaymentTransaction.class));
-    verify(integratorFactory).getIntegrator(PaymentMethodType.CREDIT_CARD);
+    verify(integratorFactory).getIntegrator(PaymentMethodType.CREDIT_CARD, "Stripe");
     verify(paymentCallbackProducer).send(any());
   }
 

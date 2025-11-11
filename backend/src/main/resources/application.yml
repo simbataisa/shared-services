@@ -61,27 +61,29 @@ cors:
     - https://api-shared-services.dennisdao.com
 
 # Payment Gateway Mock URLs (Karate Mock Server)
-# Default mock server runs on http://localhost:8090
+# Default mock server runs on http://localhost:8090 for local development
+# For Docker containers, use host.docker.internal to reach host machine
+# Set MOCK_SERVER_HOST environment variable to override (default: localhost)
 payment:
   gateways:
     mock:
       enabled: true
-      baseUrl: ${MOCK_SERVER_URL:http://localhost:8090}
+      baseUrl: ${MOCK_SERVER_URL:http://${MOCK_SERVER_HOST:localhost}:8090}
 
     stripe:
       enabled: true
-      tokenizationApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/tokens}
-      paymentApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/charges}
-      refundApiUrl: ${STRIPE_MOCK_URL:http://localhost:8090/stripe/v1/refunds}
+      tokenizationApiUrl: http://${MOCK_SERVER_HOST:localhost}:8090/stripe/v1/tokens
+      paymentApiUrl: http://${MOCK_SERVER_HOST:localhost}:8090/stripe/v1/charges
+      refundApiUrl: http://${MOCK_SERVER_HOST:localhost}:8090/stripe/v1/refunds
       apiKey: ${STRIPE_API_KEY:mock_stripe_key}
       webhookId: ${STRIPE_WEBHOOK_ID:mock_stripe_webhook_id}
       webhookSecret: ${STRIPE_WEBHOOK_SECRET:mock_stripe_webhook_secret}
 
     paypal:
       enabled: true
-      tokenUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v1/oauth2/token}
-      ordersUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v2/checkout/orders}
-      refundBaseUrl: ${PAYPAL_MOCK_URL:http://localhost:8090/paypal/v2/checkout/refunds}
+      tokenUrl: http://${MOCK_SERVER_HOST:localhost}:8090/paypal/v1/oauth2/token
+      ordersUrl: http://${MOCK_SERVER_HOST:localhost}:8090/paypal/v2/checkout/orders
+      refundBaseUrl: http://${MOCK_SERVER_HOST:localhost}:8090/paypal/v2/checkout/refunds
       clientId: ${PAYPAL_CLIENT_ID:mock_paypal_client_id}
       clientSecret: ${PAYPAL_CLIENT_SECRET:mock_paypal_secret}
       webhookId: ${PAYPAL_WEBHOOK_ID:mock_paypal_webhook_id}
@@ -89,8 +91,8 @@ payment:
 
     bankTransfer:
       enabled: true
-      transfersUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/transfers}
-      verifyUrl: ${BANK_TRANSFER_MOCK_URL:http://localhost:8090/bank-transfer/api/v1/accounts/verify}
+      transfersUrl: http://${MOCK_SERVER_HOST:localhost}:8090/bank-transfer/api/v1/transfers
+      verifyUrl: http://${MOCK_SERVER_HOST:localhost}:8090/bank-transfer/api/v1/accounts/verify
       apiKey: ${BANK_TRANSFER_API_KEY:mock_bank_api_key}
       webhookId: ${BANK_TRANSFER_WEBHOOK_ID:mock_bank_transfer_webhook_id}
       webhookSecret: ${BANK_TRANSFER_WEBHOOK_SECRET:mock_bank_transfer_webhook_secret}

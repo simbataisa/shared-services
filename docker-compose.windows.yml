@@ -84,6 +84,8 @@ services:
       - kafka
     networks:
       - sharedservices-network
+    profiles:
+      - observability
 
   backend:
     image: shared-services:0.0.1-SNAPSHOT
@@ -94,6 +96,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      # Mock server configuration - point to host machine for Karate mock server
+      MOCK_SERVER_HOST: host.docker.internal
       OTEL_SERVICE_NAME: sharedservices-backend
       OTEL_TRACES_EXPORTER: otlp
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
@@ -111,6 +115,8 @@ services:
       - otel-collector
     networks:
       - sharedservices-network
+    profiles:
+      - observability
 
   frontend:
     image: shared-services-frontend:0.0.1-SNAPSHOT
@@ -127,6 +133,8 @@ services:
       - backend
     networks:
       - sharedservices-network
+    profiles:
+      - observability
 volumes:
   pgdata:
 

@@ -31,7 +31,8 @@ import io.qameta.allure.Story;
 
 @SpringBootTest(classes = BankTransferIntegratorWireMockIT.ProxyRestTemplateConfig.class, webEnvironment = SpringBootTest.WebEnvironment.NONE, properties = {
         "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration",
-        "bank.paymentApiUrl=http://localhost:${wiremock.server.port}/v1/transfers"
+        "bankTransfer.transferApiUrl=http://localhost:${wiremock.server.port}/v1/transfers",
+        "bankTransfer.verifyApiUrl=http://localhost:${wiremock.server.port}/v1/accounts/verify"
 })
 @AutoConfigureWireMock(port = 0)
 @ActiveProfiles("test")
@@ -74,7 +75,7 @@ class BankTransferIntegratorWireMockIT {
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"id\":\"bt_tx_789\"}")));
+                        .withBody("{\"id\":\"bt_tx_789\",\"status\":\"TRANSFER.INITIATED\",\"success\":true,\"externalTransactionId\":\"bt_tx_789\"}")));
 
         PaymentRequestDto request = new PaymentRequestDto();
         request.setId(java.util.UUID.randomUUID());
