@@ -38,6 +38,16 @@ This is a full-stack application built with:
 - **Permission Management**: Granular permission system
 - **Advanced RBAC**: Role-based and attribute-based access control
 
+### Payment Management
+
+- **Payment Requests**: Full lifecycle management (DRAFT → APPROVED → PENDING → PROCESSING → COMPLETED/FAILED/CANCELLED; post-payment VOIDED/REFUNDED/PARTIAL_REFUND)
+- **State Machine**: Documented transitions and rules ([technical doc](./payment-request-state-machine.md), [PRD](.trae/documents/payment-prd.md))
+- **Gateway Integrations**: Modular integrator for Stripe, PayPal, Bank Transfer ([guide](backend/PAYMENT-INTEGRATOR-FACTORY-GUIDE.md))
+- **Refunds & Voids**: Supports full and partial refunds, void operations with audit trail
+- **Webhooks & Notifications**: Asynchronous processing and callback handling
+- **Unique Identifiers**: Standardized payment UUIDs and tokenization ([technical guide](.trae/documents/payment-uuid-technical-guide.md))
+- **Testing**: Karate mock server and data‑driven tests ([module](karate-microservices-testing/README.md))
+
 ### Additional Systems
 
 - **Analytics & Reporting**: Business intelligence platform
@@ -523,18 +533,78 @@ npm run lint
 ## 📁 Project Structure
 
 ```
-shared-services/
-├── backend/                 # Spring Boot backend
-│   ├── src/main/java/      # Java source code
-│   ├── src/main/resources/ # Configuration and migrations
-│   └── build.gradle        # Gradle build configuration
-├── frontend/               # React frontend
-│   ├── src/                # TypeScript source code
-│   ├── public/             # Static assets
-│   └── package.json        # NPM dependencies
-├── .trae/documents/        # Technical documentation
-├── docker-compose.yml      # Database setup
-└── README.md              # This file
+.
+├── AGENTS.md
+├── backend
+│   ├── build.gradle
+│   ├── gradle
+│   │   └── wrapper
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── KAFKA-TRACING-GUIDE.md
+│   ├── PAYMENT-INTEGRATOR-FACTORY-GUIDE.md
+│   ├── qodana.yaml
+│   ├── settings.gradle
+│   └── src
+│       ├── main
+│       └── test
+├── database_backup_20251006_092451.sql
+├── docker-compose.windows.yml
+├── docker-compose.yml
+├── frontend
+│   ├── components.json
+│   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── README.md
+│   ├── src
+│   │   ├── App.css
+│   │   ├── App.tsx
+│   │   ├── assets
+│   │   ├── components
+│   │   ├── contexts
+│   │   ├── hooks
+│   │   ├── index.css
+│   │   ├── lib
+│   │   ├── main.tsx
+│   │   ├── pages
+│   │   ├── store
+│   │   ├── types
+│   │   └── utils
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.build.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── INTEGRATION-TESTING-GUIDE.md
+├── karate-microservices-testing
+│   ├── build.gradle
+│   ├── CUSTOM-RUNNER-GUIDE.md
+│   ├── DATA-DRIVEN-TESTING-GUIDE.md
+│   ├── gradle
+│   │   └── wrapper
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── Makefile
+│   ├── MOCK-SERVER-RUNNER-GUIDE.md
+│   ├── PAYMENT-METHOD-TYPES.md
+│   ├── README.md
+│   ├── settings.gradle
+│   ├── src
+│   │   ├── gatling
+│   │   └── test
+│   └── test-mock-server.sh
+├── otel-collector-config.yaml
+├── otel-javaagent.jar
+├── payment-request-state-machine.md
+├── pbcopy
+├── README.md
+└── run-all.sh
 ```
 
 ## 🔧 Configuration
@@ -569,4 +639,80 @@ docker compose logs -f
 
 # Stop all services
 docker compose --profile observability down
+```
+
+## 🧰 Docker Operations
+
+Common commands for inspecting and debugging services.
+
+### List Running Services
+
+```bash
+# macOS/Linux
+docker compose ps
+
+# Windows
+docker compose -f docker-compose.windows.yml ps
+```
+
+### Tail Logs (Follow)
+
+```bash
+# Specific service via Compose (recommended)
+docker compose logs -f --tail=200 backend
+
+# All services
+docker compose logs -f --tail=100
+
+# Filter by timeframe
+docker compose logs -f --since=10m backend
+
+# By container name (if needed)
+docker logs -f --tail=200 sharedservices-backend
+```
+
+### Inspect Processes in Containers
+
+```bash
+# Show running processes per service
+docker compose top
+```
+
+### Exec Into a Container
+
+```bash
+# macOS/Linux
+docker compose exec backend sh
+
+# If bash is available
+docker compose exec backend bash
+
+# Windows
+docker compose -f docker-compose.windows.yml exec backend sh
+```
+
+### Restart or Recreate Services
+
+```bash
+# Restart a single service
+docker compose restart backend
+
+# Recreate a service (useful after config changes)
+docker compose up -d --force-recreate backend
+
+# Recreate all services
+docker compose up -d --force-recreate
+```
+
+### Stop, Remove, and Clean Up
+
+```bash
+# Stop and remove services and networks
+docker compose down --remove-orphans
+
+# Also remove volumes (DANGEROUS: deletes data)
+docker compose down -v --remove-orphans
+
+# Prune dangling networks
+docker network prune -f
 ```
