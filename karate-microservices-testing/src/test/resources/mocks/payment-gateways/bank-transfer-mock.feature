@@ -16,9 +16,32 @@ Scenario: pathMatches('/bank-transfer/api/v1/transfers') && methodIs('post')
   * def currency = request.currency || 'USD'
   * def accountNumber = request.accountNumber || '****1234'
 
-  * def transferData = { id: transferId, referenceNumber: refNumber, status: 'PENDING', amount: amount, currency: currency, fromAccount: request.fromAccount || 'MERCHANT-ACCOUNT', toAccount: accountNumber, bankName: request.bankName || 'Test Bank', routingNumber: request.routingNumber || '021000021', accountHolderName: request.accountHolderName || 'John Doe', createdAt: now, estimatedCompletionDate: now, instructions: 'Transfer will be processed within 1-3 business days' }
+  # Build transfer data object
+  * def transferData = {}
+  * set transferData.id = transferId
+  * set transferData.referenceNumber = refNumber
+  * set transferData.status = 'PENDING'
+  * set transferData.amount = amount
+  * set transferData.currency = currency
+  * set transferData.fromAccount = request.fromAccount || 'MERCHANT-ACCOUNT'
+  * set transferData.toAccount = accountNumber
+  * set transferData.bankName = request.bankName || 'Test Bank'
+  * set transferData.routingNumber = request.routingNumber || '021000021'
+  * set transferData.accountHolderName = request.accountHolderName || 'John Doe'
+  * set transferData.createdAt = now
+  * set transferData.estimatedCompletionDate = now
+  * set transferData.instructions = 'Transfer will be processed within 1-3 business days'
   * eval transfers[transferId] = transferData
-  * def response = { id: transferId, status: 'PENDING', amount: amount, currency: currency, success: true, externalTransactionId: refNumber, message: 'Bank transfer initiated successfully' }
+
+  # Build response object
+  * def response = {}
+  * set response.id = transferId
+  * set response.status = 'PENDING'
+  * set response.amount = amount
+  * set response.currency = currency
+  * set response.success = true
+  * set response.externalTransactionId = refNumber
+  * set response.message = 'Bank transfer initiated successfully'
   * def responseStatus = 201
 
 # Bank Transfer - Check Transfer Status
