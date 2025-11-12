@@ -26,7 +26,7 @@ Feature: Helpers - Create Payment Request
     * def paymentGateway = karate.get('paymentGateway', 'STRIPE')
     * def tenantId = karate.get('tenantId', 1)
     * def metadata = karate.get('metadata', { source: 'karate-e2e' })
-    * def body = read('classpath:integration/helpers/data/request/create-payment-request.json')
+    * def body = read('classpath:common/helpers/data/request/create-payment-request.json')
     Given path '/api/v1/payments/requests'
     And request body
     * print 'Request body:', body

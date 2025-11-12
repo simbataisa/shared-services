@@ -19,7 +19,7 @@ Feature: Helpers - Process Payment Transaction
     * def paymentMethodDetails = karate.get('paymentMethodDetails', { cardNumber: '4111111111111111', expMonth: 12, expYear: 2030, cvv: '123' })
     * def metadata = karate.get('metadata', { source: 'karate-e2e' })
 
-    * def body = read('classpath:integration/helpers/data/request/process-payment-transaction.json')
+    * def body = read('classpath:common/helpers/data/request/process-payment-transaction.json')
     Given path '/api/v1/payments/transactions/process'
     And request body
     * print 'Process transaction payload:', body

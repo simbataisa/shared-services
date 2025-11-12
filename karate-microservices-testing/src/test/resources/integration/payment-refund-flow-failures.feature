@@ -26,9 +26,9 @@ Feature: Payment refund flow failure scenarios
     * def allowedPaymentMethods = ['STRIPE']
     * def preSelectedPaymentMethod = 'CREDIT_CARD'
     * def paymentGateway = 'Stripe'
-    * def createResult = call read('classpath:integration/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
+    * def createResult = call read('classpath:common/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
     * def paymentToken = createResult.response.data.paymentToken
-    * def processResult = call read('classpath:integration/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
+    * def processResult = call read('classpath:common/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
     * def transactionId = processResult.response.data.id
 
     # Try to create a refund without refundAmount
@@ -47,9 +47,9 @@ Feature: Payment refund flow failure scenarios
     * def allowedPaymentMethods = ['STRIPE']
     * def preSelectedPaymentMethod = 'CREDIT_CARD'
     * def paymentGateway = 'Stripe'
-    * def createResult = call read('classpath:integration/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
+    * def createResult = call read('classpath:common/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
     * def paymentToken = createResult.response.data.paymentToken
-    * def processResult = call read('classpath:integration/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
+    * def processResult = call read('classpath:common/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
     * def transactionId = processResult.response.data.id
 
     # Try to create a refund with invalid currency (not 3 characters)
@@ -83,11 +83,11 @@ Feature: Payment refund flow failure scenarios
     * def allowedPaymentMethods = ['STRIPE']
     * def preSelectedPaymentMethod = 'CREDIT_CARD'
     * def paymentGateway = 'Stripe'
-    * def createResult = call read('classpath:integration/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
+    * def createResult = call read('classpath:common/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
     * def paymentToken = createResult.response.data.paymentToken
     * def originalAmount = createResult.response.data.amount
     * def originalCurrency = createResult.response.data.currency || 'USD'
-    * def processResult = call read('classpath:integration/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
+    * def processResult = call read('classpath:common/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
     * def transactionId = processResult.response.data.id
 
     # Try to refund more than the original amount
@@ -107,7 +107,7 @@ Feature: Payment refund flow failure scenarios
     * def allowedPaymentMethods = ['BANK_TRANSFER']
     * def preSelectedPaymentMethod = 'BANK_TRANSFER'
     * def paymentGateway = 'BankTransfer'
-    * def createResult = call read('classpath:integration/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
+    * def createResult = call read('classpath:common/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
     * def paymentRequestId = createResult.response.data.id
     * def paymentToken = createResult.response.data.paymentToken
     * def originalAmount = createResult.response.data.amount
@@ -116,7 +116,7 @@ Feature: Payment refund flow failure scenarios
 
     # Process a payment transaction for the request via Bank Transfer
     * def btDetails = { accountNumber: '12345678', routingNumber: '021000021', accountHolderName: 'Jane Doe', bankName: 'Test Bank' }
-    * def processResult = call read('classpath:integration/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'BANK_TRANSFER', gatewayName: 'BankTransfer', paymentMethodDetails: #(btDetails), auth: #(auth), headers: #(headersPreview) }
+    * def processResult = call read('classpath:common/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'BANK_TRANSFER', gatewayName: 'BankTransfer', paymentMethodDetails: #(btDetails), auth: #(auth), headers: #(headersPreview) }
     * print 'Bank Transfer transaction processed:', processResult.response
     And match processResult.response.data.transactionStatus == 'SUCCESS'
     And match processResult.response.data.paymentRequestId == paymentRequestId

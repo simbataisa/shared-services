@@ -38,13 +38,13 @@ Feature: Reusable Payment E2E Scenario
     * print '========================================='
 
     # Create a payment request via helper
-    * def createResult = call read('classpath:integration/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(paymentMethod), paymentGateway: #(gateway), auth: #(auth), headers: #(headers) }
+    * def createResult = call read('classpath:common/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(paymentMethod), paymentGateway: #(gateway), auth: #(auth), headers: #(headers) }
     * def paymentRequestId = createResult.response.data.id
     * def paymentToken = createResult.response.data.paymentToken
     * print 'Created payment request:', paymentRequestId, 'with token:', paymentToken
 
     # Process a payment transaction for the request
-    * def processResult = call read('classpath:integration/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: #(paymentMethod), gatewayName: #(gateway), paymentMethodDetails: #(paymentMethodDetails), auth: #(auth), headers: #(headers) }
+    * def processResult = call read('classpath:common/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: #(paymentMethod), gatewayName: #(gateway), paymentMethodDetails: #(paymentMethodDetails), auth: #(auth), headers: #(headers) }
     * print 'Payment transaction processed:', processResult.response
     And match processResult.response.data.transactionStatus == 'SUCCESS'
     And match processResult.response.data.paymentRequestId == paymentRequestId

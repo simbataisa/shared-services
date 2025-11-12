@@ -17,7 +17,7 @@ Feature: End-to-end payment full refund flow
     * def allowedPaymentMethods = ['STRIPE']
     * def preSelectedPaymentMethod = 'CREDIT_CARD'
     * def paymentGateway = 'Stripe'
-    * def createResult = call read('classpath:integration/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
+    * def createResult = call read('classpath:common/helpers/create-payment-request.feature') { allowedPaymentMethods: #(allowedPaymentMethods), preSelectedPaymentMethod: #(preSelectedPaymentMethod), paymentGateway: #(paymentGateway), auth: #(auth), headers: #(headersPreview) }
     * def paymentRequestId = createResult.response.data.id
     * def paymentToken = createResult.response.data.paymentToken
     * def originalAmount = createResult.response.data.amount
@@ -25,7 +25,7 @@ Feature: End-to-end payment full refund flow
     * print 'Created payment request:', paymentRequestId, 'token:', paymentToken, 'amount:', originalAmount, 'currency:', originalCurrency
 
     # Process a payment transaction for the request
-    * def processResult = call read('classpath:integration/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
+    * def processResult = call read('classpath:common/helpers/process-payment-transaction.feature') { paymentToken: #(paymentToken), paymentMethod: 'CREDIT_CARD', gatewayName: 'Stripe', paymentMethodDetails: { stripeToken: 'tok_visa' }, auth: #(auth), headers: #(headersPreview) }
     * print 'Payment transaction processed:', processResult.response
     And match processResult.response.data.transactionStatus == 'SUCCESS'
     And match processResult.response.data.paymentRequestId == paymentRequestId
