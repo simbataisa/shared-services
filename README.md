@@ -288,6 +288,75 @@ Notes (containers):
 - **Docker & Docker Compose**
 - **Git**
 
+### Install Java 21
+
+#### Windows
+
+- Using Winget (recommended):
+
+```bash
+winget install --id EclipseAdoptium.Temurin.21.JDK -e
+```
+
+- Using Chocolatey (alternative):
+
+```bash
+choco install temurin21
+```
+
+- Manual download (alternative):
+  - Download the Temurin 21 JDK MSI from: https://adoptium.net/temurin/releases/?version=21
+  - Run the installer and follow the prompts.
+
+- Set `JAVA_HOME` and update `PATH` (if not set by installer):
+
+```powershell
+# Adjust path if your install directory differs
+setx JAVA_HOME "C:\Program Files\Eclipse Adoptium\jdk-21"
+setx PATH "%PATH%;%JAVA_HOME%\bin"
+```
+
+- Verify installation:
+
+```powershell
+java -version
+# Expected: openjdk version "21" ...
+```
+
+#### macOS / Linux (SDKMAN)
+
+- Install SDKMAN:
+
+```bash
+curl -s "https://get.sdkman.io" | bash
+source "$HOME/.sdkman/bin/sdkman-init.sh"
+```
+
+- List available Java 21 distributions and choose Temurin:
+
+```bash
+sdk list java
+```
+
+- Install Temurin 21 (replace with the latest identifier from the list):
+
+```bash
+# Example identifier; use the latest 21.x-tem shown by `sdk list java`
+sdk install java 21.0.5-tem
+sdk default java 21.0.5-tem
+```
+
+- Verify installation:
+
+```bash
+java -version
+# Expected: openjdk version "21" ...
+```
+
+Notes:
+- On macOS with Homebrew, an alternative is `brew install openjdk@21` and adding `export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"` to your shell init file.
+- Ensure your terminal is restarted after changing environment variables.
+
 ## 🚀 Quick Start
 
 ### Option 1: Automated Setup (Recommended)
