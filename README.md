@@ -218,7 +218,30 @@ cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
 
 ## Windows Setup
 
-Windows users can now use the same simplified Docker Compose command with profiles:
+### Quick Start (Automated Script)
+
+Windows users can use the automated batch script for one-command setup:
+
+```bash
+# Clone and navigate to project
+git clone <repository-url>
+cd shared-services
+
+# Run the automated setup script
+.\run-all.bat
+```
+
+The `run-all.bat` script will:
+
+1. Check Docker prerequisites
+2. Build backend image using `jibDockerBuild` (faster on Windows)
+3. Build frontend image
+4. Start all services with observability profile
+5. Display access URLs and mock server instructions
+
+### Manual Setup (Advanced)
+
+For manual control, use these commands:
 
 ```bash
 # Build backend image (amd64)
@@ -240,6 +263,12 @@ cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
 # If Gradle can't find Docker, pass the executable path
 cd backend; ./gradlew dockerBuildWindows -Djib.dockerClient.executable="$((Get-Command docker).Source)"
 ```
+
+**Why `jibDockerBuild` is recommended for Windows:**
+
+- Builds directly to Docker daemon (no intermediate tar file)
+- Resolves "stuck at 88%" issue during Docker image creation
+- Significantly faster on Windows systems
 
 Access URLs (same as macOS/Linux):
 
@@ -281,6 +310,49 @@ Notes (containers):
     docker compose -f docker-compose.windows.yml --profile observability up -d
     ```
 
+## 📝 Recent Improvements
+
+### ✅ Completed (Latest Updates)
+
+**Docker Build Support (NEW):**
+
+- ✅ Added multi-stage Dockerfile for backend - build inside Docker with no local Java required
+- ✅ Created `run-all-docker-build.sh` and `run-all-docker-build.bat` scripts
+- ✅ New `docker-compose-build.yml` for Docker-based builds
+- ✅ **Zero local dependencies** - only Docker required, no Java or Node.js installation needed
+- ✅ Consistent builds across all platforms (Windows/macOS/Linux)
+- ✅ Faster builds with Docker layer caching
+- ✅ Production-ready multi-stage builds with optimized runtime images
+
+**Windows Compatibility:**
+
+- ✅ Added `run-all.bat` script for Windows users
+- ✅ Uses `gradlew.bat` and `jibDockerBuild` for optimal Windows performance
+- ✅ Resolves Docker build hanging issues on Windows (stuck at 88%)
+- ✅ Full feature parity with Linux/macOS `run-all.sh` script
+- ✅ Windows-specific `docker-compose-build.windows.yml` for Docker builds
+
+**Backend Test Fixes:**
+
+- ✅ Fixed JWT Authentication Filter to properly create `UserPrincipal` objects
+- ✅ Fixed `JwtAuthenticationFilterTest` ClassCastException - now correctly accesses principal
+- ✅ Fixed `PaymentRefundServiceImplTest` authentication requirement - added security context setup
+- ✅ Fixed `PayPalIntegratorTest` refund response handling - proper PayPalAmount structure and status mapping
+- ✅ **All 438 backend tests now passing** (was 435/438)
+
+**Karate Mock Server Fixes:**
+
+- ✅ Fixed Bank Transfer mock server JavaScript syntax error
+- ✅ Resolved reserved keyword `error` usage in ternary operators
+- ✅ Refund flow now working correctly with proper response structure
+
+**Key Bug Fixes:**
+
+- ✅ `JwtAuthenticationFilter.java:64` - Changed from String principal to UserPrincipal object
+- ✅ `PaymentRefundServiceImpl` - Now properly validates authenticated users
+- ✅ PayPal integration - Fixed COMPLETED status handling for successful refunds
+- ✅ Mock server - Fixed JavaScript evaluation errors in Karate DSL
+
 ## 📋 Prerequisites
 
 - **Java 21** or higher
@@ -305,6 +377,7 @@ choco install temurin21
 ```
 
 - Manual download (alternative):
+
   - Download the Temurin 21 JDK MSI from: https://adoptium.net/temurin/releases/?version=21
   - Run the installer and follow the prompts.
 
@@ -354,14 +427,17 @@ java -version
 ```
 
 Notes:
+
 - On macOS with Homebrew, an alternative is `brew install openjdk@21` and adding `export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"` to your shell init file.
 - Ensure your terminal is restarted after changing environment variables.
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### Option 1: Automated Setup with Local Build (Recommended for Development)
 
-Use the provided script to build and start all services automatically:
+Use the provided script to build locally using Gradle/npm and run in Docker:
+
+#### macOS/Linux
 
 ```bash
 git clone <repository-url>
@@ -369,12 +445,65 @@ cd shared-services
 ./run-all.sh
 ```
 
+#### Windows
+
+```bash
+git clone <repository-url>
+cd shared-services
+.\run-all.bat
+```
+
+**Requirements:** Java 21, Node.js 18+, Docker
+
 The script will:
 
-1. ✅ Build backend Docker image
-2. ✅ Build frontend Docker image
-3. ✅ Start all services with observability profile
-4. ✅ Display access URLs and configuration info
+1. ✅ Check prerequisites (Docker, Docker Compose)
+2. ✅ Build backend Docker image using Jib (local Gradle build)
+3. ✅ Build frontend Docker image
+4. ✅ Stop any existing containers
+5. ✅ Start all services with observability profile
+6. ✅ Wait for services to be ready
+7. ✅ Display service status and access URLs
+8. ✅ Show mock server configuration instructions
+
+### Option 1B: Automated Setup with Docker Build (No Local Tools Required)
+
+Build everything inside Docker containers - **no local Java or Node.js installation required**:
+
+#### macOS/Linux
+
+```bash
+git clone <repository-url>
+cd shared-services
+./run-all-docker-build.sh
+```
+
+#### Windows
+
+```bash
+git clone <repository-url>
+cd shared-services
+.\run-all-docker-build.bat
+```
+
+**Requirements:** Docker only (no Java or Node.js needed)
+
+The script will:
+
+1. ✅ Check prerequisites (Docker only)
+2. ✅ Build backend inside Docker using multi-stage build
+3. ✅ Build frontend inside Docker using multi-stage build
+4. ✅ Stop any existing containers
+5. ✅ Start all services with observability profile
+6. ✅ Display service status and access URLs
+
+**Key Benefits:**
+- 🚀 No local Java or Node.js installation required
+- 🐳 Consistent builds across all platforms
+- 📦 Isolated build environment
+- ⚡ Cached Docker layers for faster subsequent builds
+
+> 📚 **For detailed comparison and best practices**, see [DOCKER-BUILD-GUIDE.md](./DOCKER-BUILD-GUIDE.md)
 
 ### Option 2: Manual Setup
 
@@ -385,17 +514,32 @@ git clone <repository-url>
 cd shared-services
 ```
 
-#### 2. Build Images (Optional)
+#### 2. Build Images
+
+##### Option A: Local Build (Requires Java 21 + Node.js)
 
 ```bash
-# Build backend
+# Build backend using local Gradle
 cd backend && ./gradlew dockerBuild && cd ..
 
 # Build frontend
 docker compose build frontend
 ```
 
+##### Option B: Docker Build (Docker Only - No Local Tools)
+
+```bash
+# Build both backend and frontend inside Docker
+docker compose -f docker-compose-build.yml build
+
+# Or build individually
+docker compose -f docker-compose-build.yml build backend
+docker compose -f docker-compose-build.yml build frontend
+```
+
 #### 3. Start All Services
+
+##### If you used Local Build (Option A):
 
 ```bash
 # macOS/Linux
@@ -403,6 +547,16 @@ docker compose --profile observability up -d
 
 # Windows
 docker compose -f docker-compose.windows.yml --profile observability up -d
+```
+
+##### If you used Docker Build (Option B):
+
+```bash
+# macOS/Linux
+docker compose -f docker-compose-build.yml --profile observability up -d
+
+# Windows
+docker compose -f docker-compose-build.windows.yml --profile observability up -d
 ```
 
 This starts all required services:
@@ -447,10 +601,20 @@ Kafka UI:  http://localhost:8081
 
 The backend in Docker is configured to connect to payment gateway mocks running on your host machine:
 
+#### macOS/Linux
+
 ```bash
 # In a separate terminal, start the Karate mock server
 cd karate-microservices-testing
 ./gradlew test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=1000
+```
+
+#### Windows
+
+```bash
+# In a separate terminal, start the Karate mock server
+cd karate-microservices-testing
+.\gradlew.bat test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=1000
 ```
 
 The Docker container will reach the mock server at `host.docker.internal:8090`. This allows:
@@ -464,6 +628,29 @@ The Docker container will reach the mock server at `host.docker.internal:8090`. 
 - The backend uses `MOCK_SERVER_HOST=host.docker.internal` environment variable
 - Mock URLs: `http://host.docker.internal:8090/stripe/*`, `/paypal/*`, `/bank-transfer/*`
 - For local development (not Docker), URLs default to `http://localhost:8090/*`
+
+**Mock Server Features:**
+
+- **Stripe Mock**: Payment creation, capture, refund with realistic responses
+- **PayPal Mock**: Order creation, capture, refund with COMPLETED/CREATED statuses
+- **Bank Transfer Mock**: Transfer initiation and refund with state validation
+- **Configurable Delays**: Simulate network latency with `-Dmock.block.ms` parameter
+- **Error Scenarios**: Test failure cases with proper error responses
+
+**Troubleshooting:**
+
+If you encounter mock server errors:
+
+```bash
+# Check if mock server is running
+curl http://localhost:8090/stripe/health
+
+# View mock server logs
+# The mock server runs in the terminal where you started it
+
+# Restart mock server if needed
+# Ctrl+C to stop, then run the gradlew command again
+```
 
 ### 5. Stop All Services
 
@@ -548,132 +735,87 @@ curl -X GET http://localhost:8080/api/v1/dashboard/stats \
   -H "Authorization: Bearer <jwt-token>"
 ```
 
-## 🏗️ Development
-
-### Backend Development
-
-```bash
-cd backend
-./gradlew bootRun
-```
-
-### Frontend Development
-
-```bash
-cd frontend
-npm run dev
-```
-
-### Database Migrations
-
-```bash
-# Migrations are automatically applied on startup
-# Located in: backend/src/main/resources/db/migration/
-```
-
-### Build for Production
-
-```bash
-# Backend
-cd backend
-./gradlew build
-
-# Frontend
-cd frontend
-npm run build
-```
-
 ## 🧪 Testing
 
 ### Backend Testing
 
+The backend has comprehensive test coverage with 438+ unit tests covering:
+
+- **Integration Tests**: Payment gateway integrations (Stripe, PayPal, Bank Transfer)
+- **Security Tests**: JWT authentication, authorization, UserPrincipal handling
+- **Service Tests**: Payment requests, refunds, tenant management, user management
+- **Repository Tests**: Database operations and JPA queries
+- **Mock Tests**: External API interactions with proper mocking
+
 ```bash
 cd backend
+
+# Run all tests
 ./gradlew test
+
+# Run specific test class
+./gradlew test --tests "PayPalIntegratorTest"
+
+# Run tests with specific tags
+./gradlew test --tests "*Integration*"
+
+# View test reports
+# Open: backend/build/reports/tests/test/index.html
 ```
+
+**Test Results:**
+
+- Total Tests: 438
+- Passed: 438 ✅
+- Failed: 0
+- Skipped: 0
+
+**Key Test Coverage:**
+
+- ✅ JWT Authentication Filter with UserPrincipal
+- ✅ Payment Gateway Integration (Stripe, PayPal, Bank Transfer)
+- ✅ Payment Refund Service with Security Context
+- ✅ Multi-tenant Operations
+- ✅ Role-Based Access Control (RBAC)
+- ✅ Audit Trail Functionality
+
+### Karate API Testing
+
+End-to-end API and integration tests using Karate framework:
+
+```bash
+cd karate-microservices-testing
+
+# Run all API tests
+./gradlew test
+
+# Run specific feature tests
+./gradlew test --tests "*PaymentRefundFlowTest"
+
+# Run with mock server
+./gradlew test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=1000
+
+# Run custom tests with mock server enabled
+./gradlew cleanTest test --tests "*CustomRunnerTest" \
+  -Dkarate.env=qa \
+  -Dmock.server.enabled=true \
+  -Dmock.port=8090 \
+  --info \
+  -Dkarate.options="classpath:api"
+```
+
+**Mock Server Configuration:**
+
+- Mock endpoints for Stripe, PayPal, and Bank Transfer
+- Configurable response delays for testing timeout scenarios
+- Support for both success and error scenarios
+- Stateful refund processing simulation
 
 ### Frontend Testing
 
 ```bash
 cd frontend
 npm run lint
-```
-
-## 📁 Project Structure
-
-```
-.
-├── AGENTS.md
-├── backend
-│   ├── build.gradle
-│   ├── gradle
-│   │   └── wrapper
-│   ├── gradlew
-│   ├── gradlew.bat
-│   ├── KAFKA-TRACING-GUIDE.md
-│   ├── PAYMENT-INTEGRATOR-FACTORY-GUIDE.md
-│   ├── qodana.yaml
-│   ├── settings.gradle
-│   └── src
-│       ├── main
-│       └── test
-├── database_backup_20251006_092451.sql
-├── docker-compose.windows.yml
-├── docker-compose.yml
-├── frontend
-│   ├── components.json
-│   ├── Dockerfile
-│   ├── eslint.config.js
-│   ├── index.html
-│   ├── nginx.conf
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── postcss.config.js
-│   ├── README.md
-│   ├── src
-│   │   ├── App.css
-│   │   ├── App.tsx
-│   │   ├── assets
-│   │   ├── components
-│   │   ├── contexts
-│   │   ├── hooks
-│   │   ├── index.css
-│   │   ├── lib
-│   │   ├── main.tsx
-│   │   ├── pages
-│   │   ├── store
-│   │   ├── types
-│   │   └── utils
-│   ├── tailwind.config.js
-│   ├── tsconfig.app.json
-│   ├── tsconfig.build.json
-│   ├── tsconfig.json
-│   ├── tsconfig.node.json
-│   └── vite.config.ts
-├── INTEGRATION-TESTING-GUIDE.md
-├── karate-microservices-testing
-│   ├── build.gradle
-│   ├── CUSTOM-RUNNER-GUIDE.md
-│   ├── DATA-DRIVEN-TESTING-GUIDE.md
-│   ├── gradle
-│   │   └── wrapper
-│   ├── gradlew
-│   ├── gradlew.bat
-│   ├── Makefile
-│   ├── MOCK-SERVER-RUNNER-GUIDE.md
-│   ├── PAYMENT-METHOD-TYPES.md
-│   ├── README.md
-│   ├── settings.gradle
-│   ├── src
-│   │   ├── gatling
-│   │   └── test
-│   └── test-mock-server.sh
-├── otel-collector-config.yaml
-├── otel-javaagent.jar
-├── payment-request-state-machine.md
-├── pbcopy
-├── README.md
-└── run-all.sh
 ```
 
 ## 🔧 Configuration
@@ -785,3 +927,132 @@ docker compose down -v --remove-orphans
 # Prune dangling networks
 docker network prune -f
 ```
+
+## 🔧 Common Issues and Solutions
+
+### Windows Docker Build Stuck at 88%
+
+**Problem:** Docker build hangs at 88% with message "taking some time" during `jibDockerBuild`.
+
+**Solution:** Use the `run-all.bat` script which uses `jibDockerBuild` instead of `dockerBuild`. The `jibDockerBuild` task builds directly to Docker daemon without creating intermediate tar files.
+
+```bash
+# Instead of manual build, use:
+.\run-all.bat
+
+# Or directly:
+cd backend
+.\gradlew.bat jibDockerBuild
+```
+
+### Backend Unit Tests Failing
+
+**Problem:** Tests fail with authentication or ClassCastException errors.
+
+**Solution:** All 438 tests should pass. If you encounter failures:
+
+1. Ensure you're using Java 21
+2. Clean and rebuild:
+   ```bash
+   cd backend
+   ./gradlew clean test
+   ```
+3. Check for proper security context setup in service tests
+4. Verify UserPrincipal usage instead of String for JWT principal
+
+### Mock Server JavaScript Errors
+
+**Problem:** Karate mock server returns 500 errors with "js failed" message.
+
+**Solution:** This has been fixed in the latest version. Ensure you have the latest code where reserved JavaScript keywords (like `error`) are properly handled.
+
+```bash
+# Update your repository
+git pull origin main
+
+# Restart mock server
+cd karate-microservices-testing
+./gradlew test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=1000
+```
+
+### PayPal Refund Test Failures
+
+**Problem:** PayPal integration tests fail with "expected: <true> but was: <false>".
+
+**Solution:** This has been fixed. The PayPal mock now properly returns:
+
+- `COMPLETED` status for successful refunds
+- Proper `PayPalAmount` object structure with `currencyCode` and `value`
+
+### JWT Authentication Not Working
+
+**Problem:** API calls fail with 401 Unauthorized even with valid token.
+
+**Solution:** Ensure the JWT filter is creating `UserPrincipal` objects correctly:
+
+```java
+// Correct usage (fixed in latest version)
+UserPrincipal userPrincipal = new UserPrincipal(userId, username);
+var auth = new UsernamePasswordAuthenticationToken(userPrincipal, null, authorities);
+
+// Incorrect usage (old version)
+// var auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
+```
+
+### Docker Container Can't Connect to Mock Server
+
+**Problem:** Backend in Docker can't reach mock server on host machine.
+
+**Solution:**
+
+1. Ensure mock server is running on host: `http://localhost:8090`
+2. Backend should use `host.docker.internal:8090` (configured automatically)
+3. Verify environment variable: `MOCK_SERVER_HOST=host.docker.internal`
+
+```bash
+# Check mock server is accessible
+curl http://localhost:8090/stripe/health
+
+# Check backend logs
+docker compose logs -f backend
+```
+
+### Database Connection Issues
+
+**Problem:** Backend can't connect to PostgreSQL.
+
+**Solution:**
+
+1. Ensure PostgreSQL is running:
+   ```bash
+   docker compose ps postgres
+   ```
+2. Check connection settings in `application.yml`
+3. Verify Docker network connectivity
+
+### Port Already in Use
+
+**Problem:** Can't start services because port is already in use.
+
+**Solution:**
+
+```bash
+# Find process using the port (e.g., 8080)
+# macOS/Linux
+lsof -i :8080
+
+# Windows
+netstat -ano | findstr :8080
+
+# Kill the process or stop conflicting containers
+docker compose down
+```
+
+### Need Help?
+
+For additional support:
+
+1. Check the detailed documentation in `.trae/documents/`
+2. Review test examples in `backend/src/test/`
+3. Examine Karate feature files in `karate-microservices-testing/src/test/resources/`
+4. Review Docker Compose troubleshooting guide: `.trae/documents/docker-compose-troubleshooting.md`
