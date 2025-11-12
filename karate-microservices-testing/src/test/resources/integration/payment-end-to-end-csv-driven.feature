@@ -16,13 +16,13 @@ Feature: End-to-end payment success flow - CSV Data Driven
     * def testData = read('classpath:integration/data/payment-scenarios.csv')
     * print 'Loaded test scenarios:', testData.length, 'scenarios'
 
-  @e2e @payments @success @csv-driven
+    @e2e @payments @success @csv-driven
   Scenario: Execute all payment scenarios from CSV
     # Loop through each test scenario
     * def executeTest =
       """
       function(scenario) {
-        var result = karate.call('classpath:integration/payment-end-to-end-scenario.feature', {
+        var result = karate.call('classpath:common/helpers/payment-end-to-end-scenario.feature', {
           testCase: scenario.testCase,
           paymentMethod: scenario.paymentMethod,
           gateway: scenario.gateway,

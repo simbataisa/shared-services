@@ -33,26 +33,27 @@ Feature: End-to-end payment partial refund flow
     * print 'Transaction id:', transactionId
 
     # Calculate partial refund amount (50% of original)
-    * def partialRefundAmount = originalAmount / 2
+    * def partialRefundAmount = Math.round((originalAmount / 2) * 100) / 100
     * print 'Partial refund amount:', partialRefundAmount, 'of original:', originalAmount
 
-    # Initiate a partial refund on the payment transaction
-    Given path '/api/v1/payments/refunds'
-    And request { paymentTransactionId: '#(transactionId)', refundAmount: '#(partialRefundAmount)', currency: '#(originalCurrency)', reason: 'Partial refund requested by customer', gatewayName: 'Stripe', metadata: { source: 'karate-e2e', note: 'Partial refund test - 50%' } }
-    And headers headersPreview
-    And header Authorization = 'Bearer ' + auth.token
-    When method post
-    Then status 201
-    * print 'Partial refund response:', response
+    # Initiate a partial refund using helper
+    * def createRefundResult = call read('classpath:common/helpers/create-refund-request.feature') { paymentTransactionId: #(transactionId), refundAmount: #(partialRefundAmount), currency: #(originalCurrency), reason: 'Partial refund requested by customer', gatewayName: 'Stripe', metadata: { source: 'karate-e2e', note: 'Partial refund test - 50%' }, auth: #(auth), headers: #(headersPreview) }
+    * def refundId = createRefundResult.refundId
+    * print 'Partial refund created:', createRefundResult.response
 
+    # Process the partial refund using helper
+    * def processRefundResult = call read('classpath:common/helpers/process-refund.feature') { refundId: #(refundId), auth: #(auth), headers: #(headersPreview) }
+    * print 'Partial refund processed:', processRefundResult.response
+    And match processRefundResult.response.data.refundStatus == 'SUCCESS'
+    
     # Verify the payment request is marked as PARTIAL_REFUND
     Given path '/api/v1/payments/requests/' + paymentRequestId
     And headers headersPreview
     And header Authorization = 'Bearer ' + auth.token
-    And retry until response.data && response.data.status == 'PARTIAL_REFUND'
+    # And retry until response.data && response.data.status == 'PARTIAL_REFUND'
     When method get
-    Then status 200
     * print 'Payment request after partial refund:', response
+    Then status 200
     And match response.data.status == 'PARTIAL_REFUND'
     And match response.data.id == paymentRequestId
     And match response.data.amount == originalAmount

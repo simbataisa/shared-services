@@ -32,27 +32,15 @@ Feature: End-to-end payment full refund flow
     * def transactionId = processResult.response.data.id || processResult.response.id
     * print 'Transaction id:', transactionId
 
-    # Create a refund request
-    Given path '/api/v1/payments/refunds'
-    * def refundReqPayload = { paymentTransactionId: '#(transactionId)', refundAmount: '#(originalAmount)', currency: '#(originalCurrency)', reason: 'Customer requested refund', gatewayName: 'Stripe', metadata: { source: 'karate-e2e', note: 'Full refund test' } }
-    And request refundReqPayload
-    And headers headersPreview
-    And header Authorization = 'Bearer ' + auth.token
-    * print 'Refund request payload:', refundReqPayload
-    When method post
-    * print 'Create refund response:', response
-    Then status 201
-    * def refundId = response.data.id
+    # Create a refund request via helper
+    * def createRefundResult = call read('classpath:common/helpers/create-refund-request.feature') { paymentTransactionId: #(transactionId), refundAmount: #(originalAmount), currency: #(originalCurrency), reason: 'Customer requested refund', gatewayName: 'Stripe', metadata: { source: 'karate-e2e', note: 'Full refund test' }, auth: #(auth), headers: #(headersPreview) }
+    * def refundId = createRefundResult.refundId
     * print 'Created refund ID:', refundId
 
-    # Process the refund through the payment gateway
-    Given path '/api/v1/payments/refunds/' + refundId + '/process'
-    And headers headersPreview
-    And header Authorization = 'Bearer ' + auth.token
-    When method post
-    * print 'Process refund response:', response
-    Then status 200
-    And match response.data.refundStatus == 'SUCCESS'
+    # Process the refund through the payment gateway via helper
+    * def processRefundResult = call read('classpath:common/helpers/process-refund.feature') { refundId: #(refundId), auth: #(auth), headers: #(headersPreview) }
+    * print 'Process refund response:', processRefundResult.response
+    And match processRefundResult.response.data.refundStatus == 'SUCCESS'
 
     # Verify the payment request is marked as REFUNDED
     Given path '/api/v1/payments/requests/' + paymentRequestId

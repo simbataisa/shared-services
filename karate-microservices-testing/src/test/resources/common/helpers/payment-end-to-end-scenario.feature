@@ -5,8 +5,18 @@ Feature: Reusable Payment E2E Scenario
     * url base
     * def utils = karate.get('utils')
     * configure retry = { count: 3, interval: 1000 }
-
+  
     # Get injected parameters
+    # Allow injected auth / headers; else fallback to login + common headers
+    * def providedAuth = karate.get('auth')
+    * def providedHeaders = karate.get('headers')
+    * def hasValidAuth = providedAuth && providedAuth.token && (providedAuth.token + '') != ''
+    * def hasValidHeaders = providedHeaders && providedHeaders.Authorization && (providedHeaders.Authorization + '').startsWith('Bearer ')
+    * print 'providedAuth valid:', hasValidAuth, 'providedHeaders valid:', hasValidHeaders
+    * def login = (!hasValidAuth || !hasValidHeaders) ? karate.callSingle('classpath:common/auth/login.feature') : null
+    * def auth = hasValidAuth ? providedAuth : { token: login.token }
+    * configure headers = (hasValidAuth && hasValidHeaders) ? providedHeaders : read('classpath:common/headers/common-headers.js')
+    * def utils = karate.get('utils')
     * def testCase = karate.get('testCase')
     * def paymentMethod = karate.get('paymentMethod')
     * def gateway = karate.get('gateway')
@@ -14,20 +24,9 @@ Feature: Reusable Payment E2E Scenario
     * def allowedGateways = karate.get('allowedGateways')
     * def paymentMethodDetails = karate.get('paymentMethodDetails')
     * def expectedStatus = karate.get('expectedStatus')
+    * def expectedStatus = (!expectedStatus || expectedStatus == 'COMPLETED') ? 'COMPLETED' : expectedStatus
     * def description = karate.get('description')
-    * def auth = karate.get('auth')
-    * def headers = karate.get('headers')
-    * print 'ProvidedHeaders:', headers
-    * print 'paymentMethod:', paymentMethod
-    * print 'gateway:', gateway
-    * print 'allowedGateways:', allowedGateways
-    * print 'paymentMethodDetails:', paymentMethodDetails
-    * print 'expectedStatus:', expectedStatus
-    * print 'description:', description 
-    * print 'auth:', auth
-    * print 'headers:', headers
-
-
+    
     @reusable
   Scenario: Execute single payment scenario
     * print '========================================='
@@ -53,10 +52,11 @@ Feature: Reusable Payment E2E Scenario
     # Verify the payment request is marked as expected status
     Given path '/api/v1/payments/requests/' + paymentRequestId
     * print 'Verifying payment request:', paymentRequestId
+    * print 'Expected status:', expectedStatus
     And retry until response.data.status == expectedStatus
     When method get
-    Then status 200
     * print 'Payment request details:', response
+    Then status 200
     And match response.data.status == expectedStatus
     And match response.data.paidAt != null
     And match response.data.id == paymentRequestId
