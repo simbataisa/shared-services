@@ -5,11 +5,13 @@ Feature: User Helpers — Create User
     * url base
     # Allow injected auth / headers; else fallback to login + common headers
     * def providedAuth = karate.get('auth')
-    * def login = providedAuth ? null : karate.callSingle('classpath:common/auth/login.feature')
-    * def auth = providedAuth ? providedAuth : { token: login.token }
     * def providedHeaders = karate.get('headers')
-    * print 'ProvidedHeaders:', providedHeaders
-    * configure headers = providedHeaders ? providedHeaders : read('classpath:common/headers/common-headers.js')
+    * def hasValidAuth = providedAuth && providedAuth.token && (providedAuth.token + '') != ''
+    * def hasValidHeaders = providedHeaders && providedHeaders.Authorization && (providedHeaders.Authorization + '').startsWith('Bearer ')
+    * print 'providedAuth valid:', hasValidAuth, 'providedHeaders valid:', hasValidHeaders
+    * def login = (!hasValidAuth || !hasValidHeaders) ? karate.callSingle('classpath:common/auth/login.feature') : null
+    * def auth = hasValidAuth ? providedAuth : { token: login.token }
+    * configure headers = (hasValidAuth && hasValidHeaders) ? providedHeaders : read('classpath:common/headers/common-headers.js')
     * def utils = karate.get('utils')
 
     @createUser

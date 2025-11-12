@@ -32,7 +32,7 @@ Feature: E2E — Create user, assign role, then login
     * def unique = java.util.UUID.randomUUID().toString()
     * print 'ProvidedHeaders:', headersPreview
     * print 'E2E unique id:', unique
-    * def createUser = call read('classpath:integration/helpers/create-user.feature@createUser') { auth: #(auth), headers: #(headersPreview), unique: #(unique) }
+    * def createUser = call read('classpath:common/helpers/create-user.feature@createUser') { auth: #(auth), headers: #(headersPreview), unique: #(unique) }
     * def userId = createUser.userId
     * def username = createUser.username
     * def password = createUser.password
@@ -40,12 +40,12 @@ Feature: E2E — Create user, assign role, then login
     * print 'Created user:', userId, username
 
     # Create a role to assign
-    * def createRole = call read('classpath:integration/helpers/create-role.feature@createRole') { auth: #(auth), headers: #(headersPreview), unique: #(unique) }
+    * def createRole = call read('classpath:common/helpers/create-role.feature@createRole') { auth: #(auth), headers: #(headersPreview), unique: #(unique) }
     * def roleId = createRole.roleId
     * print 'Created role:', createRole
 
     # Assign the role to the newly created user
-    * def assignRes = call read('classpath:integration/helpers/assign-role.feature@assignRoleToUser') { auth: #(auth), headers: #(headersPreview), userId: #(userId), roleId: #(roleId) }
+    * def assignRes = call read('classpath:common/helpers/assign-role.feature@assignRoleToUser') { auth: #(auth), headers: #(headersPreview), userId: #(userId), roleId: #(roleId) }
     * print 'Assigned role to user:', roleId, '->', userId
 
     # Login with the new user's credentials
@@ -55,5 +55,5 @@ Feature: E2E — Create user, assign role, then login
     * assert userLogin.token && userLogin.token.length > 20
 
     # Verify user can access own record using the new token
-    * def verifyRes = call read('classpath:integration/helpers/verify-user-access.feature@verifyUserAccess') { userId: #(userId), username: #(username), password: #(password) }
+    * def verifyRes = call read('classpath:common/helpers/verify-user-access.feature@verifyUserAccess') { userId: #(userId), username: #(username), password: #(password) }
     * print 'Verification completed for user:', userId
