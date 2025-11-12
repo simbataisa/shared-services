@@ -232,6 +232,7 @@ cd shared-services
 ```
 
 The `run-all.bat` script will:
+
 1. Check Docker prerequisites
 2. Build backend image using `jibDockerBuild` (faster on Windows)
 3. Build frontend image
@@ -264,6 +265,7 @@ cd backend; ./gradlew dockerBuildWindows -Djib.dockerClient.executable="$((Get-C
 ```
 
 **Why `jibDockerBuild` is recommended for Windows:**
+
 - Builds directly to Docker daemon (no intermediate tar file)
 - Resolves "stuck at 88%" issue during Docker image creation
 - Significantly faster on Windows systems
@@ -312,13 +314,26 @@ Notes (containers):
 
 ### ✅ Completed (Latest Updates)
 
+**Docker Build Support (NEW):**
+
+- ✅ Added multi-stage Dockerfile for backend - build inside Docker with no local Java required
+- ✅ Created `run-all-docker-build.sh` and `run-all-docker-build.bat` scripts
+- ✅ New `docker-compose-build.yml` for Docker-based builds
+- ✅ **Zero local dependencies** - only Docker required, no Java or Node.js installation needed
+- ✅ Consistent builds across all platforms (Windows/macOS/Linux)
+- ✅ Faster builds with Docker layer caching
+- ✅ Production-ready multi-stage builds with optimized runtime images
+
 **Windows Compatibility:**
+
 - ✅ Added `run-all.bat` script for Windows users
 - ✅ Uses `gradlew.bat` and `jibDockerBuild` for optimal Windows performance
 - ✅ Resolves Docker build hanging issues on Windows (stuck at 88%)
 - ✅ Full feature parity with Linux/macOS `run-all.sh` script
+- ✅ Windows-specific `docker-compose-build.windows.yml` for Docker builds
 
 **Backend Test Fixes:**
+
 - ✅ Fixed JWT Authentication Filter to properly create `UserPrincipal` objects
 - ✅ Fixed `JwtAuthenticationFilterTest` ClassCastException - now correctly accesses principal
 - ✅ Fixed `PaymentRefundServiceImplTest` authentication requirement - added security context setup
@@ -326,11 +341,13 @@ Notes (containers):
 - ✅ **All 438 backend tests now passing** (was 435/438)
 
 **Karate Mock Server Fixes:**
+
 - ✅ Fixed Bank Transfer mock server JavaScript syntax error
 - ✅ Resolved reserved keyword `error` usage in ternary operators
 - ✅ Refund flow now working correctly with proper response structure
 
 **Key Bug Fixes:**
+
 - ✅ `JwtAuthenticationFilter.java:64` - Changed from String principal to UserPrincipal object
 - ✅ `PaymentRefundServiceImpl` - Now properly validates authenticated users
 - ✅ PayPal integration - Fixed COMPLETED status handling for successful refunds
@@ -416,9 +433,9 @@ Notes:
 
 ## 🚀 Quick Start
 
-### Option 1: Automated Setup (Recommended)
+### Option 1: Automated Setup with Local Build (Recommended for Development)
 
-Use the provided script to build and start all services automatically:
+Use the provided script to build locally using Gradle/npm and run in Docker:
 
 #### macOS/Linux
 
@@ -436,16 +453,57 @@ cd shared-services
 .\run-all.bat
 ```
 
+**Requirements:** Java 21, Node.js 18+, Docker
+
 The script will:
 
 1. ✅ Check prerequisites (Docker, Docker Compose)
-2. ✅ Build backend Docker image using Jib
+2. ✅ Build backend Docker image using Jib (local Gradle build)
 3. ✅ Build frontend Docker image
 4. ✅ Stop any existing containers
 5. ✅ Start all services with observability profile
 6. ✅ Wait for services to be ready
 7. ✅ Display service status and access URLs
 8. ✅ Show mock server configuration instructions
+
+### Option 1B: Automated Setup with Docker Build (No Local Tools Required)
+
+Build everything inside Docker containers - **no local Java or Node.js installation required**:
+
+#### macOS/Linux
+
+```bash
+git clone <repository-url>
+cd shared-services
+./run-all-docker-build.sh
+```
+
+#### Windows
+
+```bash
+git clone <repository-url>
+cd shared-services
+.\run-all-docker-build.bat
+```
+
+**Requirements:** Docker only (no Java or Node.js needed)
+
+The script will:
+
+1. ✅ Check prerequisites (Docker only)
+2. ✅ Build backend inside Docker using multi-stage build
+3. ✅ Build frontend inside Docker using multi-stage build
+4. ✅ Stop any existing containers
+5. ✅ Start all services with observability profile
+6. ✅ Display service status and access URLs
+
+**Key Benefits:**
+- 🚀 No local Java or Node.js installation required
+- 🐳 Consistent builds across all platforms
+- 📦 Isolated build environment
+- ⚡ Cached Docker layers for faster subsequent builds
+
+> 📚 **For detailed comparison and best practices**, see [DOCKER-BUILD-GUIDE.md](./DOCKER-BUILD-GUIDE.md)
 
 ### Option 2: Manual Setup
 
@@ -456,17 +514,32 @@ git clone <repository-url>
 cd shared-services
 ```
 
-#### 2. Build Images (Optional)
+#### 2. Build Images
+
+##### Option A: Local Build (Requires Java 21 + Node.js)
 
 ```bash
-# Build backend
+# Build backend using local Gradle
 cd backend && ./gradlew dockerBuild && cd ..
 
 # Build frontend
 docker compose build frontend
 ```
 
+##### Option B: Docker Build (Docker Only - No Local Tools)
+
+```bash
+# Build both backend and frontend inside Docker
+docker compose -f docker-compose-build.yml build
+
+# Or build individually
+docker compose -f docker-compose-build.yml build backend
+docker compose -f docker-compose-build.yml build frontend
+```
+
 #### 3. Start All Services
+
+##### If you used Local Build (Option A):
 
 ```bash
 # macOS/Linux
@@ -474,6 +547,16 @@ docker compose --profile observability up -d
 
 # Windows
 docker compose -f docker-compose.windows.yml --profile observability up -d
+```
+
+##### If you used Docker Build (Option B):
+
+```bash
+# macOS/Linux
+docker compose -f docker-compose-build.yml --profile observability up -d
+
+# Windows
+docker compose -f docker-compose-build.windows.yml --profile observability up -d
 ```
 
 This starts all required services:
@@ -652,41 +735,6 @@ curl -X GET http://localhost:8080/api/v1/dashboard/stats \
   -H "Authorization: Bearer <jwt-token>"
 ```
 
-## 🏗️ Development
-
-### Backend Development
-
-```bash
-cd backend
-./gradlew bootRun
-```
-
-### Frontend Development
-
-```bash
-cd frontend
-npm run dev
-```
-
-### Database Migrations
-
-```bash
-# Migrations are automatically applied on startup
-# Located in: backend/src/main/resources/db/migration/
-```
-
-### Build for Production
-
-```bash
-# Backend
-cd backend
-./gradlew build
-
-# Frontend
-cd frontend
-npm run build
-```
-
 ## 🧪 Testing
 
 ### Backend Testing
@@ -716,12 +764,14 @@ cd backend
 ```
 
 **Test Results:**
+
 - Total Tests: 438
 - Passed: 438 ✅
 - Failed: 0
 - Skipped: 0
 
 **Key Test Coverage:**
+
 - ✅ JWT Authentication Filter with UserPrincipal
 - ✅ Payment Gateway Integration (Stripe, PayPal, Bank Transfer)
 - ✅ Payment Refund Service with Security Context
@@ -755,6 +805,7 @@ cd karate-microservices-testing
 ```
 
 **Mock Server Configuration:**
+
 - Mock endpoints for Stripe, PayPal, and Bank Transfer
 - Configurable response delays for testing timeout scenarios
 - Support for both success and error scenarios
@@ -929,6 +980,7 @@ cd karate-microservices-testing
 **Problem:** PayPal integration tests fail with "expected: <true> but was: <false>".
 
 **Solution:** This has been fixed. The PayPal mock now properly returns:
+
 - `COMPLETED` status for successful refunds
 - Proper `PayPalAmount` object structure with `currencyCode` and `value`
 
@@ -952,6 +1004,7 @@ var auth = new UsernamePasswordAuthenticationToken(userPrincipal, null, authorit
 **Problem:** Backend in Docker can't reach mock server on host machine.
 
 **Solution:**
+
 1. Ensure mock server is running on host: `http://localhost:8090`
 2. Backend should use `host.docker.internal:8090` (configured automatically)
 3. Verify environment variable: `MOCK_SERVER_HOST=host.docker.internal`
@@ -969,6 +1022,7 @@ docker compose logs -f backend
 **Problem:** Backend can't connect to PostgreSQL.
 
 **Solution:**
+
 1. Ensure PostgreSQL is running:
    ```bash
    docker compose ps postgres
@@ -981,6 +1035,7 @@ docker compose logs -f backend
 **Problem:** Can't start services because port is already in use.
 
 **Solution:**
+
 ```bash
 # Find process using the port (e.g., 8080)
 # macOS/Linux
@@ -996,6 +1051,7 @@ docker compose down
 ### Need Help?
 
 For additional support:
+
 1. Check the detailed documentation in `.trae/documents/`
 2. Review test examples in `backend/src/test/`
 3. Examine Karate feature files in `karate-microservices-testing/src/test/resources/`
