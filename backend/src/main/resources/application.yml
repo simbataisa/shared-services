@@ -127,14 +127,14 @@ logging:
     com.ahss: DEBUG
   pattern:
     level: "%5p [traceId=%mdc{traceId}, spanId=%mdc{spanId}]"
- 
+
 springdoc:
   api-docs:
     enabled: true
     path: /v3/api-docs
   swagger-ui:
     enabled: true
-    path: /swagger-ui/index.html
+    path: /index.html
     tagsSorter: alpha
     operationsSorter: alpha
   packages-to-scan: com.ahss.controller
