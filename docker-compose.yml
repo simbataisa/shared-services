@@ -100,7 +100,19 @@ services:
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
-      JAVA_TOOL_OPTIONS: -javaagent:/otel/otel-javaagent.jar
+      # JVM optimization for low-resource environments (8GB droplet)
+      # Adjust -Xms/-Xmx values based on available memory
+      JAVA_TOOL_OPTIONS: >-
+        -javaagent:/otel/otel-javaagent.jar
+        -Xms512m
+        -Xmx1024m
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+ParallelRefProcEnabled
+        -XX:+UnlockExperimentalVMOptions
+        -XX:G1NewSizePercent=20
+        -XX:G1MaxNewSizePercent=40
+        -XX:+UseStringDeduplication
     ports:
       - '8080:8080'
     volumes:
@@ -114,6 +126,13 @@ services:
       - sharedservices-network
     profiles:
       - observability
+    # Resource limits for low-memory environments
+    deploy:
+      resources:
+        limits:
+          memory: 1536M  # Max 1.5GB (includes JVM heap + overhead)
+        reservations:
+          memory: 768M   # Reserve at least 768MB
 
   frontend:
     image: shared-services-frontend:0.0.1-SNAPSHOT

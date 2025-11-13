@@ -26,11 +26,6 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      auto-offset-reset: earliest
-      enable-auto-commit: true
-    producer:
-      retries: 0
 
 # Payment Gateway Mock URLs (Karate Mock Server)
 # Default mock server runs on http://localhost:8090

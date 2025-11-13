@@ -43,6 +43,21 @@ spring:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     template:
       observation-enabled: true
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      # Hardening for low-resource environments (e.g., 8GB droplet)
+      # Increase session timeout to tolerate longer GC pauses
+      properties:
+        session.timeout.ms: 60000           # Default: 45000 (45s) → 60s
+        heartbeat.interval.ms: 5000         # Default: 3000 (3s) → 5s
+        max.poll.interval.ms: 600000        # Default: 300000 (5min) → 10min
+        max.poll.records: 100               # Default: 500 → Reduce to process faster
+    producer:
+      retries: 3                            # Default: 0 → Retry failed sends
+      properties:
+        linger.ms: 10                       # Batch messages for efficiency
+        compression.type: snappy            # Compress messages to reduce network I/O
 
 app:
   kafka:
@@ -125,6 +140,12 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: INFO
     org.postgresql: INFO
     com.ahss: DEBUG
+    com.ahss.kafka: DEBUG           # Debug Kafka producer/consumer issues
+    com.ahss.saga: DEBUG            # Debug saga orchestrator
+    org.springframework.kafka: INFO
+    org.apache.kafka: WARN          # Reduce Kafka noise
+    # Enable to debug consumer rebalancing issues
+    # org.apache.kafka.clients.consumer.internals: DEBUG
   pattern:
     level: "%5p [traceId=%mdc{traceId}, spanId=%mdc{spanId}]"
 
