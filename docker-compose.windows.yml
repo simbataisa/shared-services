@@ -98,8 +98,8 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      # Mock server configuration - point to host machine for Karate mock server
-      MOCK_SERVER_HOST: host.docker.internal
+      # Mock server configuration - point to containerized Karate mock server
+      MOCK_SERVER_HOST: karate-mock-server
       OTEL_SERVICE_NAME: sharedservices-backend
       OTEL_TRACES_EXPORTER: otlp
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
@@ -115,6 +115,7 @@ services:
       - postgres
       - kafka
       - otel-collector
+      - karate-mock-server
     networks:
       - sharedservices-network
     profiles:
@@ -137,6 +138,32 @@ services:
       - sharedservices-network
     profiles:
       - observability
+
+  karate-mock-server:
+    build:
+      context: ./karate-microservices-testing
+      dockerfile: Dockerfile
+    image: karate-mock-server:latest
+    platform: linux/amd64
+    container_name: sharedservices-karate-mock
+    ports:
+      - '8090:8090'
+    environment:
+      MOCK_PORT: 8090
+      MOCK_ENV: qa
+      MOCK_FEATURE_FILE: "src/test/resources/mocks/mock-server.feature"
+      MOCK_BLOCK_MS: 600000  # 10 minutes
+    networks:
+      - sharedservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/stripe/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    profiles:
+      - observability
+
 volumes:
   pgdata:
 

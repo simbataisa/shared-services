@@ -4,12 +4,33 @@ Maintainable, parallel, CI-ready test automation using Karate for a microservice
 
 ## Quick Start
 
-- Prereqs: JDK 21, Gradle (or use wrapper if added)
-- Copy env file: `cp karate-microservices-testing/.env.example .env` (optional)
-- Local dev (auto-mock): `make test env=dev threads=5`
-- QA URLs (with mock server):
-  1. Start mocks: `make mock` (or run in background)
-  2. Run tests pointing to mock as QA: `BASE_URL=http://localhost:8090 AUTH_BASE_URL=http://localhost:8090/auth make test env=qa`
+### Option 1: Docker Mock Server (Recommended) 🐳
+
+No Java installation required! Just Docker:
+
+```bash
+# Build and run mock server
+./docker-build-and-run.sh          # macOS/Linux
+docker-build-and-run.bat           # Windows
+
+# Or use Docker Compose
+docker compose up
+
+# Or manually
+docker build -t karate-mock-server .
+docker run -p 8090:8090 karate-mock-server
+```
+
+Mock server will be available at `http://localhost:8090`
+
+**See [DOCKER-MOCK-SERVER.md](./DOCKER-MOCK-SERVER.md) for complete guide**
+
+### Option 2: Local Development (Requires JDK 21)
+
+- Prereqs: JDK 21, Gradle (or use wrapper)
+- Copy env file: `cp .env.example .env` (optional)
+- Local dev (auto-mock): `./gradlew test -Dkarate.env=dev`
+- Start mock server: `./gradlew test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=600000`
 
 ## Project Structure
 

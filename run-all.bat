@@ -137,14 +137,22 @@ echo   Swagger UI:     http://localhost:8080/swagger-ui/index.html
 echo   Jaeger UI:      http://localhost:16686
 echo   Kafka UI:       http://localhost:8081
 echo   PostgreSQL:     localhost:5432
+echo   Mock Server:    http://localhost:8090
 echo.
-echo [INFO] Mock Server Configuration:
-echo   The backend in Docker will connect to mock servers on host machine
-echo   Make sure to run Karate mock server on port 8090:
+echo [INFO] Mock Server (Running in Docker):
+echo   Stripe Mock:        http://localhost:8090/stripe
+echo   PayPal Mock:        http://localhost:8090/paypal
+echo   Bank Transfer Mock: http://localhost:8090/bank-transfer
+echo   Health Check:       http://localhost:8090/stripe/health
+echo.
+echo [INFO] The Karate mock server is running inside Docker and provides:
+echo   - Payment gateway mocks (Stripe, PayPal, Bank Transfer)
+echo   - Realistic API responses for testing
+echo   - Backend automatically connects to these mocks
+echo.
+echo [INFO] Alternative: Run mock server on host machine:
 echo   cd karate-microservices-testing
-echo   gradlew.bat cleanTest test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=1000
-echo   Run custom tests with mock server:
-echo   gradlew.bat cleanTest test --tests "*CustomRunnerTest" -Dkarate.env=qa -Dmock.server.enabled=true -Dmock.port=8090 --info -Dkarate.options="classpath:api"
+echo   gradlew.bat test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=600000
 echo.
 echo [INFO] To view logs:
 echo   docker compose logs -f
