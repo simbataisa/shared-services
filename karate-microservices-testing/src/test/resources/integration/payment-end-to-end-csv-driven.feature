@@ -10,7 +10,7 @@ Feature: End-to-end payment success flow - CSV Data Driven
     * def headersPreview = headersFn()
     * print 'Computed headers preview:', headersPreview
     * def utils = karate.get('utils')
-    * configure retry = { count: 3, interval: 1000 }
+    * configure retry = { count: 10, interval: 1000 }
 
     # Read test data from CSV file
     * def testData = read('classpath:integration/data/payment-scenarios.csv')

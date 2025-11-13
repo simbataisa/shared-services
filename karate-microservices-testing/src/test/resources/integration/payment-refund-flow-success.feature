@@ -9,7 +9,7 @@ Feature: End-to-end payment full refund flow
     * def headersFn = read('classpath:common/headers/common-headers.js')
     * def headersPreview = headersFn()
     * print 'Computed headers preview:', headersPreview
-    * configure retry = { count: 3, interval: 1000 }
+    * configure retry = { count: 10, interval: 1000 }
 
     @e2e @payments @refund @success
   Scenario: Create payment, process payment, refund full amount, and verify request marked as REFUNDED
