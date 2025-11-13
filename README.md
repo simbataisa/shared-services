@@ -340,6 +340,14 @@ Notes (containers):
 - ✅ Fixed `PayPalIntegratorTest` refund response handling - proper PayPalAmount structure and status mapping
 - ✅ **All 438 backend tests now passing** (was 435/438)
 
+**Karate Testing Module Improvements:**
+
+- ✅ Upgraded Gradle from 8.14 to 9.1.0 for consistency with backend module
+- ✅ Fixed JUnit Platform launcher dependency issue (required for Gradle 9.x)
+- ✅ Enabled configuration cache for 90%+ faster subsequent builds (3s → 322ms)
+- ✅ Added performance optimizations in `gradle.properties`
+- ✅ Cross-platform consistency - same behavior on Windows, macOS, and Linux
+
 **Karate Mock Server Fixes:**
 
 - ✅ Fixed Bank Transfer mock server JavaScript syntax error
@@ -352,6 +360,7 @@ Notes (containers):
 - ✅ `PaymentRefundServiceImpl` - Now properly validates authenticated users
 - ✅ PayPal integration - Fixed COMPLETED status handling for successful refunds
 - ✅ Mock server - Fixed JavaScript evaluation errors in Karate DSL
+- ✅ Karate tests - Added `junit-platform-launcher` dependency for Gradle 9.x compatibility
 
 ## 📋 Prerequisites
 

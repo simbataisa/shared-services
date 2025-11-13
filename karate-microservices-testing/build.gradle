@@ -21,6 +21,7 @@ dependencies {
   testImplementation 'io.karatelabs:karate-junit5:1.5.1'
   testImplementation 'ch.qos.logback:logback-classic:1.4.14'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher' // Required for Gradle 9.x
 
   // Ensure Karate-Gatling is available for compiling tests
   testImplementation 'io.karatelabs:karate-gatling:1.5.2.RC6'
