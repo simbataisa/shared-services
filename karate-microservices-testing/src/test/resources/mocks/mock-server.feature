@@ -10,6 +10,23 @@ Background:
 
   # Payment gateway state is managed locally and delegated via tagged calls
 
+# ==== Health Check ====
+Scenario: pathMatches('/stripe/health') && methodIs('get')
+  * def response = { status: 'UP', message: 'Mock server is running', timestamp: new java.util.Date().toString() }
+  * def responseStatus = 200
+
+Scenario: pathMatches('/paypal/health') && methodIs('get')
+  * def response = { status: 'UP', message: 'Mock server is running', timestamp: new java.util.Date().toString() }
+  * def responseStatus = 200
+
+Scenario: pathMatches('/bank-transfer/health') && methodIs('get')
+  * def response = { status: 'UP', message: 'Mock server is running', timestamp: new java.util.Date().toString() }
+  * def responseStatus = 200
+
+Scenario: pathMatches('/health') && methodIs('get')
+  * def response = { status: 'UP', message: 'Mock server is running', timestamp: new java.util.Date().toString() }
+  * def responseStatus = 200
+
 # ==== Delegate to gateway mock features ====
 
 # Stripe gateway - explicit delegates

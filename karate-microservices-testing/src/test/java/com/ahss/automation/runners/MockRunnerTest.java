@@ -52,7 +52,11 @@ public class MockRunnerTest {
     @Test
     @DisplayName("Start mock server for payment gateways")
     void startMockServer() throws Exception {
-        File featureFile = new File("src/test/resources/mocks/mock-server.feature");
+        // Get feature file path from system property or environment variable
+        String featureFilePath = System.getProperty("mock.feature.file",
+            System.getenv().getOrDefault("MOCK_FEATURE_FILE", "src/test/resources/mocks/mock-server.feature")
+        );
+        File featureFile = new File(featureFilePath);
 
         log.info("Starting mock server with feature: {}", featureFile.getAbsolutePath());
         log.info("=================================================");

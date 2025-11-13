@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  # Karate Mock Server - Payment Gateway Mocks
+  karate-mock-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: karate-mock-server:latest
+    container_name: karate-mock-server
+    ports:
+      - "8090:8090"
+    environment:
+      MOCK_PORT: 8090
+      MOCK_ENV: qa
+      MOCK_FEATURE_FILE: "src/test/resources/mocks/mock-server.feature"
+      MOCK_BLOCK_MS: 600000  # 10 minutes
+    volumes:
+      # Mount custom mock files (optional)
+      # - ./custom-mocks:/app/mocks
+      # Mount test reports directory
+      - ./build/reports:/app/build/reports
+    networks:
+      - karate-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/stripe/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Example: Karate Mock Server with Custom Features
+  karate-mock-custom:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: karate-mock-server:latest
+    container_name: karate-mock-custom
+    ports:
+      - "8091:8091"
+    environment:
+      MOCK_PORT: 8091
+      MOCK_ENV: dev
+      MOCK_FEATURE_FILE: "src/test/resources/mocks/mock-server.feature"
+      MOCK_BLOCK_MS: 3600000  # 1 hour
+    volumes:
+      # Mount your custom feature files here
+      - ./custom-mocks:/app/mocks:ro
+    networks:
+      - karate-network
+    profiles:
+      - custom
+
+networks:
+  karate-network:
+    driver: bridge
