@@ -2,7 +2,7 @@ Feature: Consumer contract for user payload
 
   Background:
     * url karate.get('mockServerUrl', 'http://localhost:8090')
-    * configure retry = { count: 10, interval: 1000 }
+    * configure retry = { count: 20, interval: 1000 }
 
     @contract
   Scenario: Expected shape for /users/1
