@@ -10,7 +10,7 @@ Feature: End-to-end payment success flow - Data Driven
     * def headersPreview = headersFn()
     * print 'Computed headers preview:', headersPreview
     * def utils = karate.get('utils')
-    * configure retry = { count: 10, interval: 1000 }
+    * configure retry = { count: 20, interval: 1000 }
 
     @e2e @payments @success @data-driven
   Scenario Outline: <testCase> - Create payment request with <paymentMethod> via <gateway>
