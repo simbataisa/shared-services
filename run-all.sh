@@ -24,6 +24,17 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Show help and exit
+if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "help" ]]; then
+    echo "Usage: ./run-all.sh [windows|linux|apple-silicon]"
+    echo "If no argument is provided, the script auto-detects the platform."
+    echo "Examples:"
+    echo "  ./run-all.sh windows"
+    echo "  ./run-all.sh linux"
+    echo "  ./run-all.sh apple-silicon"
+    exit 0
+fi
+
 # Function to check if command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -44,35 +55,87 @@ fi
 
 print_success "All prerequisites are met."
 
-# Detect platform
-PLATFORM=$(uname -s)
 COMPOSE_FILE="docker-compose.yml"
 
-if [[ "$PLATFORM" == "Linux" ]]; then
-    ARCH=$(uname -m)
-    if [[ "$ARCH" == "x86_64" ]]; then
-        print_info "Detected platform: Linux (x86_64)"
-    else
-        print_info "Detected platform: Linux ($ARCH)"
-    fi
-elif [[ "$PLATFORM" == "Darwin" ]]; then
-    ARCH=$(uname -m)
-    if [[ "$ARCH" == "arm64" ]]; then
-        print_info "Detected platform: macOS (Apple Silicon)"
-    else
-        print_info "Detected platform: macOS (Intel)"
-    fi
+ARG="$1"
+if [[ -n "$ARG" ]]; then
+    LOWER_ARG=$(echo "$ARG" | tr '[:upper:]' '[:lower:]')
+    case "$LOWER_ARG" in
+        windows)
+            print_info "Using platform override: windows"
+            USER_PLATFORM="windows"
+            ;;
+        linux)
+            print_info "Using platform override: linux"
+            USER_PLATFORM="linux"
+            ;;
+        apple|apple-silicon|mac|darwin)
+            print_info "Using platform override: apple-silicon"
+            USER_PLATFORM="apple"
+            ;;
+        *)
+            print_warning "Unknown platform argument '$ARG'; falling back to auto-detect"
+            USER_PLATFORM=""
+            ;;
+    esac
 else
-    print_warning "Detected platform: $PLATFORM - using default configuration"
+    USER_PLATFORM=""
+fi
+
+if [[ -z "$USER_PLATFORM" ]]; then
+    PLATFORM=$(uname -s)
+    if [[ "$PLATFORM" == "Linux" ]]; then
+        ARCH=$(uname -m)
+        if [[ "$ARCH" == "x86_64" || "$ARCH" == "amd64" ]]; then
+            print_info "Detected platform: Linux (x86_64)"
+        else
+            print_info "Detected platform: Linux ($ARCH)"
+        fi
+    elif [[ "$PLATFORM" == "Darwin" ]]; then
+        ARCH=$(uname -m)
+        if [[ "$ARCH" == "arm64" ]]; then
+            print_info "Detected platform: macOS (Apple Silicon)"
+        else
+            print_info "Detected platform: macOS (Intel)"
+        fi
+    else
+        print_warning "Detected platform: $PLATFORM - using default configuration"
+    fi
 fi
 
 # Step 1: Build backend service
 print_info "Step 1/4: Building backend service..."
 cd backend || exit 1
 
-if [[ "$PLATFORM" == "Linux" ]] && [[ "$ARCH" == "x86_64" ]]; then
-    ./gradlew dockerBuild -PjibTargetArch=amd64
-elif ./gradlew dockerBuild; then
+if [[ -n "$USER_PLATFORM" ]]; then
+    if [[ "$USER_PLATFORM" == "windows" ]]; then
+        BUILD_CMD="./gradlew dockerBuildWindows"
+    elif [[ "$USER_PLATFORM" == "linux" ]]; then
+        BUILD_CMD="./gradlew dockerBuild -PjibTargetArch=amd64"
+    elif [[ "$USER_PLATFORM" == "apple" ]]; then
+        BUILD_CMD="./gradlew dockerBuild -PjibTargetArch=arm64"
+    fi
+else
+    PLATFORM=$(uname -s)
+    ARCH=$(uname -m)
+    if [[ "$PLATFORM" == "Darwin" ]]; then
+        if [[ "$ARCH" == "arm64" ]]; then
+            BUILD_CMD="./gradlew dockerBuild -PjibTargetArch=arm64"
+        else
+            BUILD_CMD="./gradlew dockerBuild -PjibTargetArch=amd64"
+        fi
+    elif [[ "$PLATFORM" == "Linux" ]]; then
+        if [[ "$ARCH" == "x86_64" || "$ARCH" == "amd64" ]]; then
+            BUILD_CMD="./gradlew dockerBuild -PjibTargetArch=amd64"
+        else
+            BUILD_CMD="./gradlew dockerBuild -PjibTargetArch=arm64"
+        fi
+    else
+        BUILD_CMD="./gradlew dockerBuild"
+    fi
+fi
+
+if $BUILD_CMD; then
     print_success "Backend Docker image built successfully."
 else
     print_error "Failed to build backend Docker image."

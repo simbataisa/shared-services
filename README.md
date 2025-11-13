@@ -466,6 +466,40 @@ The script will:
 7. ✅ Display service status and access URLs
 8. ✅ Show mock server configuration instructions
 
+#### Platform Overrides & Help
+
+Use an argument to force the backend container image architecture, or show help:
+
+```bash
+# macOS/Linux
+./run-all.sh --help
+./run-all.sh windows        # linux/amd64 image
+./run-all.sh linux          # linux/amd64 image
+./run-all.sh apple-silicon  # linux/arm64 image
+
+# Windows
+run-all.bat --help
+run-all.bat windows         # linux/amd64 image
+run-all.bat linux           # linux/amd64 image
+run-all.bat apple-silicon   # linux/arm64 image
+```
+
+No argument provided:
+
+- macOS Apple Silicon → builds `linux/arm64`
+- macOS Intel → builds `linux/amd64`
+- Linux x86_64 → builds `linux/amd64`
+- Linux arm64/aarch64 → builds `linux/arm64`
+- Windows batch script defaults to `linux/amd64` (`dockerBuildWindows`)
+
+Advanced overrides (equivalent without using script args):
+
+```bash
+cd backend
+./gradlew dockerBuild -PjibTargetArch=amd64   # force amd64
+./gradlew dockerBuild -PjibTargetArch=arm64   # force arm64
+```
+
 ### Option 1B: Automated Setup with Docker Build (No Local Tools Required)
 
 Build everything inside Docker containers - **no local Java or Node.js installation required**:
