@@ -3,8 +3,24 @@ REM Windows batch script to build and run all services
 
 setlocal enabledelayedexpansion
 
-REM Function to print colored messages (Windows 10+)
 set "ESC="
+
+if /i "%~1"=="--help" goto :showhelp
+if /i "%~1"=="-h" goto :showhelp
+if /i "%~1"=="help" goto :showhelp
+if "%~1"=="/?" goto :showhelp
+
+:showhelp
+echo Usage: run-all.bat ^<windows^|linux^|apple-silicon^>
+echo If no argument is provided, the script auto-detects or defaults appropriately.
+echo Examples:
+echo   run-all.bat windows
+echo   run-all.bat linux
+echo   run-all.bat apple-silicon
+if /i "%~1"=="--help" exit /b 0
+if /i "%~1"=="-h" exit /b 0
+if /i "%~1"=="help" exit /b 0
+if "%~1"=="/?" exit /b 0
 
 REM Check prerequisites
 echo [INFO] Checking prerequisites...
@@ -34,8 +50,32 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-REM Use gradlew.bat for Windows
-call gradlew.bat jibDockerBuild
+set "TARGET="
+if not "%~1"=="" (
+    if /i "%~1"=="windows" (
+        set "TARGET=windows"
+    ) else if /i "%~1"=="linux" (
+        set "TARGET=linux"
+    ) else if /i "%~1"=="apple-silicon" (
+        set "TARGET=apple"
+    ) else if /i "%~1"=="apple" (
+        set "TARGET=apple"
+    ) else if /i "%~1"=="mac" (
+        set "TARGET=apple"
+    ) else (
+        echo [WARNING] Unknown platform argument "%~1"; falling back to auto-detect.
+    )
+)
+
+if "%TARGET%"=="windows" (
+    call gradlew.bat dockerBuildWindows
+) else if "%TARGET%"=="linux" (
+    call gradlew.bat dockerBuild -PjibTargetArch=amd64
+) else if "%TARGET%"=="apple" (
+    call gradlew.bat dockerBuild -PjibTargetArch=arm64
+) else (
+    call gradlew.bat dockerBuildWindows
+)
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to build backend Docker image.
     cd ..
