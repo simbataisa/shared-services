@@ -68,13 +68,13 @@ if not "%~1"=="" (
 )
 
 if "%TARGET%"=="windows" (
-    call gradlew.bat dockerBuildWindows
+    call gradlew.bat dockerBuildWindows -x test -x jacocoTestReport -x jacocoTestCoverageVerification
 ) else if "%TARGET%"=="linux" (
-    call gradlew.bat dockerBuild -PjibTargetArch=amd64
+    call gradlew.bat dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=amd64
 ) else if "%TARGET%"=="apple" (
-    call gradlew.bat dockerBuild -PjibTargetArch=arm64
+    call gradlew.bat dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=arm64
 ) else (
-    call gradlew.bat dockerBuildWindows
+    call gradlew.bat dockerBuildWindows -x test -x jacocoTestReport -x jacocoTestCoverageVerification
 )
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to build backend Docker image.
