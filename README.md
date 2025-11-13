@@ -208,12 +208,12 @@ _Platform-specific builds:_
 
 ```bash
 # Apple Silicon (M1/M2) - defaults to linux/arm64
-cd backend && ./gradlew dockerBuild
+cd backend && ./gradlew dockerBuild -x test
 
 # Windows (x86_64) - build amd64 image
-cd backend && ./gradlew dockerBuildWindows
+cd backend && ./gradlew dockerBuildWindows -x test
 # Or with property override:
-cd backend && ./gradlew dockerBuild -PjibTargetArch=amd64
+cd backend && ./gradlew dockerBuild -x test -PjibTargetArch=amd64
 ```
 
 ## Windows Setup
@@ -505,8 +505,8 @@ Advanced overrides (equivalent without using script args):
 
 ```bash
 cd backend
-./gradlew dockerBuild -PjibTargetArch=amd64   # force amd64
-./gradlew dockerBuild -PjibTargetArch=arm64   # force arm64
+./gradlew dockerBuild -x test -PjibTargetArch=amd64   # force amd64
+./gradlew dockerBuild -x test -PjibTargetArch=arm64   # force arm64
 ```
 
 ### Option 1B: Automated Setup with Docker Build (No Local Tools Required)
@@ -541,6 +541,7 @@ The script will:
 6. ✅ Display service status and access URLs
 
 **Key Benefits:**
+
 - 🚀 No local Java or Node.js installation required
 - 🐳 Consistent builds across all platforms
 - 📦 Isolated build environment
