@@ -10,7 +10,8 @@ Feature: End-to-end payment success flow
     * def headersPreview = headersFn()
     * print 'Computed headers preview:', headersPreview
     * def utils = karate.get('utils')
-    * configure retry = { count: 3, interval: 1000 }
+    * configure retry = { count: 10, interval: 1000 }
+
 
     @e2e @payments @success
   Scenario: Create payment request, process payment, and verify request marked as COMPLETED

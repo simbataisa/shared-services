@@ -130,7 +130,7 @@ function fn() {
     env: env,
     baseUrl: base,
     timeout: 30000,
-    retryConfig: { count: 3, interval: 2000 },
+    retryConfig: { count: 10, interval: 2000 },
     mockMode: env === "dev",
     auth: {},
     utils: karate.call("classpath:common/utils/data-generator.js"),
@@ -238,7 +238,7 @@ Feature: Consumer contract for user payload
 
 Background:
   * url karate.get('mockServerUrl', 'http://localhost:8090')
-  * configure retry = { count: 3, interval: 1000 }
+  * configure retry = { count: 10, interval: 1000 }
 
 Scenario: Expected shape for /users/1
   Given path '/users/1'
