@@ -149,7 +149,7 @@ services:
       MOCK_PORT: 8090
       MOCK_ENV: qa
       MOCK_FEATURE_FILE: "src/test/resources/mocks/mock-server.feature"
-      MOCK_BLOCK_MS: 600000  # 10 minutes
+      MOCK_BLOCK_MS: 31536000000  # 365 days
     networks:
       - sharedservices-network
     healthcheck:
