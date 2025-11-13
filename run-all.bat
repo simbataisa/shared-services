@@ -133,7 +133,7 @@ echo.
 echo [INFO] Access URLs:
 echo   Frontend:       http://localhost:5173
 echo   Backend:        http://localhost:8080
-echo   Swagger UI:     http://localhost:8080/swagger-ui/swagger-ui/index.html
+echo   Swagger UI:     http://localhost:8080/swagger-ui/index.html
 echo   Jaeger UI:      http://localhost:16686
 echo   Kafka UI:       http://localhost:8081
 echo   PostgreSQL:     localhost:5432
