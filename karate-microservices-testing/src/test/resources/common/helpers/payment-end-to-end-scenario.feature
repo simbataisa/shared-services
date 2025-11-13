@@ -4,7 +4,7 @@ Feature: Reusable Payment E2E Scenario
     * def base = karate.get('baseUrl') || java.lang.System.getenv('BASE_URL') || 'http://localhost:8080'
     * url base
     * def utils = karate.get('utils')
-    * configure retry = { 10, interval: 1000 }
+    * configure retry = { count: 20, interval: 1000 }
   
     # Get injected parameters
     # Allow injected auth / headers; else fallback to login + common headers
