@@ -109,29 +109,29 @@ cd backend || exit 1
 
 if [[ -n "$USER_PLATFORM" ]]; then
     if [[ "$USER_PLATFORM" == "windows" ]]; then
-        BUILD_CMD="./gradlew dockerBuildWindows"
+        BUILD_CMD="./gradlew dockerBuildWindows -x test -x jacocoTestReport -x jacocoTestCoverageVerification"
     elif [[ "$USER_PLATFORM" == "linux" ]]; then
-        BUILD_CMD="./gradlew dockerBuild -x test -PjibTargetArch=amd64"
+        BUILD_CMD="./gradlew dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=amd64"
     elif [[ "$USER_PLATFORM" == "apple" ]]; then
-        BUILD_CMD="./gradlew dockerBuild -x test -PjibTargetArch=arm64"
+        BUILD_CMD="./gradlew dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=arm64"
     fi
 else
     PLATFORM=$(uname -s)
     ARCH=$(uname -m)
     if [[ "$PLATFORM" == "Darwin" ]]; then
         if [[ "$ARCH" == "arm64" ]]; then
-            BUILD_CMD="./gradlew dockerBuild -x test -PjibTargetArch=arm64"
+            BUILD_CMD="./gradlew dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=arm64"
         else
-            BUILD_CMD="./gradlew dockerBuild -x test -PjibTargetArch=amd64"
+            BUILD_CMD="./gradlew dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=amd64"
         fi
     elif [[ "$PLATFORM" == "Linux" ]]; then
         if [[ "$ARCH" == "x86_64" || "$ARCH" == "amd64" ]]; then
-            BUILD_CMD="./gradlew dockerBuild -x test -PjibTargetArch=amd64"
+            BUILD_CMD="./gradlew dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=amd64"
         else
-            BUILD_CMD="./gradlew dockerBuild -x test -PjibTargetArch=arm64"
+            BUILD_CMD="./gradlew dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification -PjibTargetArch=arm64"
         fi
     else
-        BUILD_CMD="./gradlew dockerBuild"
+        BUILD_CMD="./gradlew dockerBuild -x test -x jacocoTestReport -x jacocoTestCoverageVerification"
     fi
 fi
 
