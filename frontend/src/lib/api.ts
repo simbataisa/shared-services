@@ -7,7 +7,12 @@ const getApiUrl = () => {
 
   // If accessing from dev tunnel frontend, use dev tunnel backend
   if (currentOrigin === "https://shared-services.dennisdao.com") {
-    return "https://api-shared-services.dennisdao.com/api";
+    return "https://api-shared-services.dennisdao.com/api/v1";
+  }
+
+  // If accessing from workshop frontend, use workshop backend
+  if (currentOrigin === "https://app.workshop.dennisdao.com") {
+    return "https://api.workshop.dennisdao.com/api/v1";
   }
 
   // Otherwise use environment variable or localhost

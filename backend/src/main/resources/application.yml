@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: framework
 
 spring:
   application:
@@ -74,6 +75,11 @@ cors:
     - http://localhost:8080
     - https://shared-services.dennisdao.com
     - https://api-shared-services.dennisdao.com
+    - https://app.workshop.dennisdao.com
+    - https://api.workshop.dennisdao.com
+    - https://jaeger.workshop.dennisdao.com
+    - https://kafka.workshop.dennisdao.com
+    - https://*.workshop.dennisdao.com
 
 # Payment Gateway Mock URLs (Karate Mock Server)
 # Default mock server runs on http://localhost:8090 for local development
@@ -159,6 +165,7 @@ springdoc:
     tagsSorter: alpha
     operationsSorter: alpha
   packages-to-scan: com.ahss.controller
+  use-fqn: true
 
 management:
   endpoints:
