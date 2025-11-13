@@ -71,6 +71,19 @@ MOCK_SERVER_ENABLED=true MOCK_PORT=8090 ./gradlew test --tests "*CustomRunnerTes
   -Dkarate.options="--tags @smoke"
 ```
 
+### Rerun Tests Without Cache
+
+Gradle may cache test tasks and skip execution on subsequent runs. Force a full re-run and disable the build cache:
+
+```bash
+./gradlew test --tests "*CustomRunnerTest" \
+  -Dkarate.options="classpath:integration" \
+  -Dkarate.env=qa \
+  --info \
+  --no-build-cache \
+  --rerun-tasks
+```
+
 ## Configuration Options
 
 | Property | Environment Variable | Default | Description |

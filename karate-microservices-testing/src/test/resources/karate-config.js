@@ -11,7 +11,7 @@ function fn() {
     authBaseUrl: authBase,
     mockServerUrl: mockServerUrl,
     timeout: 30000,
-    retryConfig: { count: 3, interval: 2000 },
+    retryConfig: { count: 5, interval: 2000 },
     mockMode: env === 'dev' || useMockFlag,
     auth: {},
     utils: karate.call('classpath:common/utils/data-generator.js')
