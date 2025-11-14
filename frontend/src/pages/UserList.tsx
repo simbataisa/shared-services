@@ -48,18 +48,8 @@ const UserList: React.FC = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/v1/users", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-
-      const data = await response.json();
-      setUsers(data.data || []);
+      const result = await httpClient.getUsers();
+      setUsers(result || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch users");
     } finally {
@@ -78,16 +68,8 @@ const UserList: React.FC = () => {
 
   const fetchUserGroups = async () => {
     try {
-      const response = await fetch("/api/v1/user-groups", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserGroups(data.data || []);
-      }
+      const page = await httpClient.getUserGroups();
+      setUserGroups(page?.content || []);
     } catch (err) {
       console.error("Failed to fetch user groups:", err);
     }
@@ -99,17 +81,7 @@ const UserList: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/v1/users/${userId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete user");
-      }
-
+      await httpClient.deleteUser(userId);
       fetchUsers();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete user");
