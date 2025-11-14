@@ -19,6 +19,14 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -71,6 +79,14 @@ services:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     networks:
       - sharedservices-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   jaeger:
     image: jaegertracing/all-in-one:1.57
@@ -84,6 +100,14 @@ services:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
     networks:
       - sharedservices-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -100,6 +124,14 @@ services:
       - sharedservices-network
     profiles:
       - observability
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
 
   backend:
     image: shared-services:0.0.1-SNAPSHOT
@@ -171,6 +203,14 @@ services:
       - sharedservices-network
     profiles:
       - observability
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   karate-mock-server:
     build:
@@ -196,6 +236,14 @@ services:
       start_period: 30s
     profiles:
       - observability
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'    # Karate JVM can use CPU under load
+          memory: 1536M  # 1.5GB for Karate mock server (observed ~800MB usage)
+        reservations:
+          cpus: '0.25'
+          memory: 512M
 
 volumes:
   pgdata:
