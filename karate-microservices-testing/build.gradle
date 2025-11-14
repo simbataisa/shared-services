@@ -4,6 +4,10 @@ plugins {
   id 'io.gatling.gradle' version '3.11.5'
 }
 
+ext {
+  reportsDir = file("$buildDir/reports")
+}
+
 java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(21)
