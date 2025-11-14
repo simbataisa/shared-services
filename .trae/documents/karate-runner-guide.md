@@ -29,6 +29,45 @@ Or from inside the module directory:
 - `-DusersPerSec=<n>`: rate for `constant`/`ramp` injections (defaults to `threads`)
 - `-DdurationSeconds=<n>`: duration in seconds for `constant`/`ramp` injections
 
+## Version Compatibility
+
+- Karate, Gatling, and Gradle must be aligned to avoid runtime and build errors.
+- Recommended, validated set for this repository:
+  - `Gradle` wrapper `8.6` (`karate-microservices-testing/gradle/wrapper/gradle-wrapper.properties:3` → `distributionUrl=https://services.gradle.org/distributions/gradle-8.6-bin.zip`)
+  - `Gatling` Gradle plugin `3.11.5` (`karate-microservices-testing/build.gradle:4`)
+  - `Gatling` core libs `3.11.5` (`karate-microservices-testing/build.gradle:33,38`)
+  - `karate-gatling` `1.5.2.RC6` (`karate-microservices-testing/build.gradle:31,36`)
+  - `JDK` 21 (`karate-microservices-testing/build.gradle:11-14`)
+- Known incompatibilities and symptoms:
+  - Gradle `9.x` + Gatling plugin `3.11.x` → build config errors like `Could not find method javaexec()` and `unknown property 'reportsDir'`.
+  - Gatling plugin `3.14.x` + `karate-gatling` `1.5.1/1.5.2.RC6` → runtime `NoSuchMethodError` on `io.gatling.core.CoreComponents.actorSystem()` during simulation startup.
+
+### Compatible Usage Guidance
+
+- Use the validated set above for stable performance runs and CI.
+- If upgrading to Gradle `9.x`:
+  - Upgrade Gatling plugin to `3.14.9` and align Gatling core accordingly.
+  - Ensure `karate-gatling` is updated to a version compatible with Gatling `3.14.x`; otherwise expect `NoSuchMethodError` crashes.
+  - Disable configuration cache for `gatlingRun` if you hit cache-related errors: add `--no-configuration-cache` when invoking the task.
+- If you see `unknown property 'reportsDir'` with older Gatling plugin:
+  - Define a fallback in `build.gradle` (already present): `ext { reportsDir = file("$buildDir/reports") }` (`karate-microservices-testing/build.gradle:7-9`).
+
+### Quick Commands
+
+- Set Gradle wrapper to `8.6`:
+  - `cd karate-microservices-testing && ./gradlew wrapper --gradle-version 8.6`
+- Run Gatling simulation with compatible stack:
+  - `BASE_URL=https://api.workshop.dennisdao.com ./gradlew gatlingRun -PgatlingSimulationClass=performance.simulations.KaratePerformanceSimulation -Dkarate.options="classpath:api/users.feature" -Dkarate.env=qa -Dinjection=ramp -DusersPerSec=5 -DdurationSeconds=60 --info --no-configuration-cache`
+
+### Troubleshooting Compatibility
+
+- `Execution failed for task ':gatlingRun'. Could not find method javaexec()`:
+  - Use Gradle `8.6` and Gatling plugin `3.11.5`, or upgrade both Gatling plugin and `karate-gatling` to compatible versions.
+- `Could not get unknown property 'reportsDir'` while configuring `GatlingRunTask`:
+  - Keep the `ext { reportsDir = file("$buildDir/reports") }` block in `build.gradle` (`karate-microservices-testing/build.gradle:7-9`).
+- `NoSuchMethodError: io.gatling.core.CoreComponents.actorSystem()`:
+  - Indicates Gatling core/plugin version mismatch with `karate-gatling`; align to the recommended set or update `karate-gatling`.
+
 ### `karate.options` syntax (supported by CustomRunnerTest)
 
 The runner supports parsing `karate.options` with:
