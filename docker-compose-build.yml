@@ -38,6 +38,9 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      # JVM tuning for low-resource environments
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
+      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M"
     networks:
       - sharedservices-network
     healthcheck:
@@ -45,6 +48,15 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+    # Resource limits for CPU-constrained environments
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'        # Max 150% CPU (prevent 200% spikes)
+          memory: 768M       # Reduced from default ~1GB
+        reservations:
+          cpus: '0.5'        # Reserve at least 50% CPU
+          memory: 384M
 
   otel-collector:
     image: otel/opentelemetry-collector:0.103.0
@@ -129,12 +141,14 @@ services:
       - sharedservices-network
     profiles:
       - observability
-    # Resource limits for low-memory environments
+    # Resource limits for low-memory and low-CPU environments
     deploy:
       resources:
         limits:
+          cpus: '1.0'    # Max 100% CPU (1 full core)
           memory: 1536M  # Max 1.5GB (includes JVM heap + overhead)
         reservations:
+          cpus: '0.5'    # Reserve at least 50% CPU
           memory: 768M   # Reserve at least 768MB
 
   frontend:
