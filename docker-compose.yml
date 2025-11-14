@@ -18,6 +18,14 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -38,9 +46,9 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      # JVM tuning for low-resource environments
-      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
-      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M"
+      # JVM tuning for 16GB/4CPU environments
+      KAFKA_HEAP_OPTS: "-Xms1024m -Xmx2560m"
+      KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=50 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M"
     networks:
       - sharedservices-network
     healthcheck:
@@ -48,15 +56,15 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-    # Resource limits for CPU-constrained environments
+    # Resource limits for 16GB/4CPU environments
     deploy:
       resources:
         limits:
-          cpus: '1.5'        # Max 150% CPU (prevent 200% spikes)
-          memory: 768M       # Reduced from default ~1GB
+          cpus: '3.0'        # Max 3 CPUs (increased for better throughput)
+          memory: 3G         # 3GB for Kafka broker (increased from 2GB)
         reservations:
-          cpus: '0.5'        # Reserve at least 50% CPU
-          memory: 384M
+          cpus: '1.0'        # Reserve at least 1 CPU
+          memory: 1536M
 
   otel-collector:
     image: otel/opentelemetry-collector:0.103.0
@@ -68,6 +76,14 @@ services:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     networks:
       - sharedservices-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   jaeger:
     image: jaegertracing/all-in-one:1.57
@@ -80,6 +96,14 @@ services:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
     networks:
       - sharedservices-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -95,6 +119,14 @@ services:
       - sharedservices-network
     profiles:
       - observability
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
 
   backend:
     image: shared-services:0.0.1-SNAPSHOT
@@ -112,12 +144,12 @@ services:
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
-      # JVM optimization for low-resource environments (8GB droplet)
+      # JVM optimization for 16GB/4CPU environments
       # Adjust -Xms/-Xmx values based on available memory
       JAVA_TOOL_OPTIONS: >-
         -javaagent:/otel/otel-javaagent.jar
-        -Xms512m
-        -Xmx1024m
+        -Xms2048m
+        -Xmx3072m
         -XX:+UseG1GC
         -XX:MaxGCPauseMillis=200
         -XX:+ParallelRefProcEnabled
@@ -138,15 +170,15 @@ services:
       - sharedservices-network
     profiles:
       - observability
-    # Resource limits for low-memory and low-CPU environments
+    # Resource limits for 16GB/4CPU environments
     deploy:
       resources:
         limits:
-          cpus: '1.0'    # Max 100% CPU (1 full core)
-          memory: 1536M  # Max 1.5GB (includes JVM heap + overhead)
+          cpus: '2.5'    # Max 2.5 CPUs (increased for better performance)
+          memory: 4G     # Max 4GB (includes 3GB JVM heap + 1GB overhead)
         reservations:
           cpus: '0.5'    # Reserve at least 50% CPU
-          memory: 768M   # Reserve at least 768MB
+          memory: 2G     # Reserve at least 2GB
 
   frontend:
     image: shared-services-frontend:0.0.1-SNAPSHOT
@@ -164,6 +196,14 @@ services:
       - sharedservices-network
     profiles:
       - observability
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
 
   karate-mock-server:
     build:
@@ -188,6 +228,14 @@ services:
       start_period: 30s
     profiles:
       - observability
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'    # Karate JVM can use CPU under load (increased for test execution)
+          memory: 2G     # 2GB for Karate mock server (increased from 1.5GB)
+        reservations:
+          cpus: '0.5'
+          memory: 1G
 
 volumes:
   pgdata:
