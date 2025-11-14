@@ -21,11 +21,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1.0'
+          memory: 1G
         reservations:
-          cpus: '0.1'
-          memory: 128M
+          cpus: '0.25'
+          memory: 256M
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -47,7 +47,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       # JVM tuning for 16GB/4CPU environments
-      KAFKA_HEAP_OPTS: "-Xms512m -Xmx1536m"
+      KAFKA_HEAP_OPTS: "-Xms1024m -Xmx2560m"
       KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=50 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M"
     networks:
       - sharedservices-network
@@ -60,11 +60,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.5'        # Max 2.5 CPUs (plenty of headroom on 4 CPU system)
-          memory: 2G         # 2GB for Kafka broker
+          cpus: '3.0'        # Max 3 CPUs (increased for better throughput)
+          memory: 3G         # 3GB for Kafka broker (increased from 2GB)
         reservations:
           cpus: '1.0'        # Reserve at least 1 CPU
-          memory: 1G
+          memory: 1536M
 
   otel-collector:
     image: otel/opentelemetry-collector:0.103.0
@@ -151,8 +151,8 @@ services:
       # Adjust -Xms/-Xmx values based on available memory
       JAVA_TOOL_OPTIONS: >-
         -javaagent:/otel/otel-javaagent.jar
-        -Xms1024m
-        -Xmx2048m
+        -Xms2048m
+        -Xmx3072m
         -XX:+UseG1GC
         -XX:MaxGCPauseMillis=200
         -XX:+ParallelRefProcEnabled
@@ -177,11 +177,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'    # Max 2 CPUs
-          memory: 3G     # Max 3GB (includes 2GB JVM heap + overhead)
+          cpus: '2.5'    # Max 2.5 CPUs (increased for better performance)
+          memory: 4G     # Max 4GB (includes 3GB JVM heap + 1GB overhead)
         reservations:
           cpus: '0.5'    # Reserve at least 50% CPU
-          memory: 1536M  # Reserve at least 1.5GB
+          memory: 2G     # Reserve at least 2GB
 
   frontend:
     image: shared-services-frontend:0.0.1-SNAPSHOT
@@ -234,11 +234,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'    # Karate JVM can use CPU under load
-          memory: 1536M  # 1.5GB for Karate mock server (observed ~800MB usage)
+          cpus: '1.5'    # Karate JVM can use CPU under load (increased for test execution)
+          memory: 2G     # 2GB for Karate mock server (increased from 1.5GB)
         reservations:
-          cpus: '0.25'
-          memory: 512M
+          cpus: '0.5'
+          memory: 1G
 
 volumes:
   pgdata:
