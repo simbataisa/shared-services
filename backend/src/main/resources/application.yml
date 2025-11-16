@@ -20,12 +20,10 @@ spring:
       keepalive-time: 300000               # 5 minutes - ping idle connections to keep them alive
       leak-detection-threshold: 60000      # 60 seconds - detect connection leaks
       # Connection validation and resilience
-      auto-commit: false
+      # auto-commit defaults to true (IMPORTANT: false causes "idle in transaction" leaks)
       connection-test-query: SELECT 1      # Validate connections
       validation-timeout: 5000             # 5 seconds for validation query
       initialization-fail-timeout: -1      # Don't fail fast on startup, keep retrying
-      # Connection init SQL to ensure proper state
-      connection-init-sql: SELECT 1
   jpa:
     hibernate:
       ddl-auto: validate
