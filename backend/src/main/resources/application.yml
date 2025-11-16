@@ -13,15 +13,19 @@ spring:
     hikari:
       # Connection pool settings to prevent thread starvation
       maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-      leak-detection-threshold: 60000
-      # Performance optimizations
+      minimum-idle: 2                      # Reduced from 5 to minimize idle connections
+      connection-timeout: 30000            # 30 seconds to get connection from pool
+      idle-timeout: 600000                 # 10 minutes before idle connection is removed
+      max-lifetime: 1800000                # 30 minutes max lifetime for any connection
+      keepalive-time: 300000               # 5 minutes - ping idle connections to keep them alive
+      leak-detection-threshold: 60000      # 60 seconds - detect connection leaks
+      # Connection validation and resilience
       auto-commit: false
-      connection-test-query: SELECT 1
-      validation-timeout: 5000
+      connection-test-query: SELECT 1      # Validate connections
+      validation-timeout: 5000             # 5 seconds for validation query
+      initialization-fail-timeout: -1      # Don't fail fast on startup, keep retrying
+      # Connection init SQL to ensure proper state
+      connection-init-sql: SELECT 1
   jpa:
     hibernate:
       ddl-auto: validate
