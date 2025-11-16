@@ -52,12 +52,23 @@ if %errorlevel% neq 0 (
 
 echo [SUCCESS] Frontend Docker image built successfully.
 
-REM Step 3: Stop any existing containers
-echo [INFO] Step 3/4: Stopping existing containers (if any)...
+REM Step 3: Build Karate mock server inside Docker
+echo [INFO] Step 3/5: Building Karate mock server in Docker (multi-stage build)...
+
+docker compose -f docker-compose-build.yml build karate-mock-server
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to build Karate mock server Docker image.
+    exit /b 1
+)
+
+echo [SUCCESS] Karate mock server Docker image built successfully.
+
+REM Step 4: Stop any existing containers
+echo [INFO] Step 4/5: Stopping existing containers (if any)...
 docker compose -f docker-compose-build.yml --profile observability down 2>nul
 
-REM Step 4: Start all services
-echo [INFO] Step 4/4: Starting all services with observability profile...
+REM Step 5: Start all services
+echo [INFO] Step 5/5: Starting all services with observability profile...
 
 docker compose -f docker-compose-build.yml --profile observability up -d
 if %errorlevel% neq 0 (

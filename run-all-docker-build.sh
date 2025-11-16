@@ -76,12 +76,24 @@ fi
 
 print_success "Frontend Docker image built successfully."
 
-# Step 3: Stop any existing containers
-print_info "Step 3/4: Stopping existing containers (if any)..."
+# Step 3: Build Karate mock server inside Docker
+print_info "Step 3/5: Building Karate mock server in Docker (multi-stage build)..."
+
+docker compose -f docker-compose-build.yml build karate-mock-server
+
+if [ $? -ne 0 ]; then
+    print_error "Failed to build Karate mock server Docker image."
+    exit 1
+fi
+
+print_success "Karate mock server Docker image built successfully."
+
+# Step 4: Stop any existing containers
+print_info "Step 4/5: Stopping existing containers (if any)..."
 docker compose -f docker-compose-build.yml --profile observability down 2>/dev/null || true
 
-# Step 4: Start all services
-print_info "Step 4/4: Starting all services with observability profile..."
+# Step 5: Start all services
+print_info "Step 5/5: Starting all services with observability profile..."
 
 docker compose -f docker-compose-build.yml --profile observability up -d
 
