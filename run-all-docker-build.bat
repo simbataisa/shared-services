@@ -54,8 +54,9 @@ echo [SUCCESS] Frontend Docker image built successfully.
 
 REM Step 3: Build Karate mock server inside Docker
 echo [INFO] Step 3/5: Building Karate mock server in Docker (multi-stage build)...
+echo [WARNING] This may take several minutes on first build (downloading Gatling dependencies)...
 
-docker compose -f docker-compose-build.yml build karate-mock-server
+docker compose -f docker-compose-build.yml build --progress=plain karate-mock-server
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to build Karate mock server Docker image.
     exit /b 1

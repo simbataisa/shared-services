@@ -8,8 +8,10 @@ services:
       POSTGRES_DB: sharedservices
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - '5432:5432'
+    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
+    # Only accessible from other containers in the same Docker network
+    expose:
+      - '5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -32,10 +34,12 @@ services:
     image: confluentinc/cp-kafka:latest
     platform: linux/amd64
     container_name: sharedservices-kafka
-    ports:
-      - '9092:9092'
-      - '9093:9093'
-      - '29092:29092'
+    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
+    # Only accessible from other containers in the same Docker network
+    expose:
+      - '9092'
+      - '9093'
+      - '29092'
     environment:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
@@ -73,8 +77,10 @@ services:
     platform: linux/amd64
     container_name: sharedservices-otel-collector
     command: ["--config=/etc/otelcol/config.yaml"]
-    ports:
-      - '4318:4318'
+    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
+    # Only accessible from other containers in the same Docker network
+    expose:
+      - '4318'
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     networks:

@@ -159,8 +159,9 @@ fi
 
 # Step 3: Build Karate mock server
 print_info "Step 3/5: Building Karate mock server in Docker..."
+print_warning "This may take several minutes on first build (downloading Gatling dependencies)..."
 
-if docker compose build karate-mock-server; then
+if docker compose build --progress=plain karate-mock-server; then
     print_success "Karate mock server Docker image built successfully."
 else
     print_error "Failed to build Karate mock server Docker image."
