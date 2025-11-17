@@ -314,6 +314,14 @@ Notes (containers):
 
 ### ✅ Completed (Latest Updates)
 
+**PostgreSQL Stability Fix (NEW):**
+
+- ✅ Switched from `postgres:16-alpine` to `postgres:16` (Debian-based)
+- ✅ Resolved Alpine Linux memory accounting incompatibility with Docker cgroup limits
+- ✅ Fixed false OOM kills that occurred despite low memory usage (30MB of 3GB)
+- ✅ PostgreSQL now running stable with proper memory management
+- ✅ Updated all 4 docker-compose files for consistency
+
 **Docker Build Support (NEW):**
 
 - ✅ Added multi-stage Dockerfile for backend - build inside Docker with no local Java required
@@ -364,10 +372,19 @@ Notes (containers):
 
 ## 📋 Prerequisites
 
+### For Option 1B (Docker Build - Recommended for Training)
+
+- **Docker & Docker Compose** (required)
+- **Git** (required)
+
+### For Option 1 (Local Build - Development)
+
 - **Java 21** or higher
 - **Node.js 18** or higher
 - **Docker & Docker Compose**
 - **Git**
+
+> **💡 Tip:** If you're new to this project or attending training, we recommend using **Option 1B** (Docker Build) which only requires Docker and Git.
 
 ### Install Java 21
 
@@ -442,6 +459,9 @@ Notes:
 
 ## 🚀 Quick Start
 
+> **📚 For Training Participants:**
+> If you're attending a training session and want to avoid Java/Node.js installation issues, **skip to Option 1B below** and use the `run-all-docker-build` scripts instead. This requires only Docker and works reliably across all platforms, especially Windows.
+
 ### Option 1: Automated Setup with Local Build (Recommended for Development)
 
 Use the provided script to build locally using Gradle/npm and run in Docker:
@@ -463,6 +483,8 @@ cd shared-services
 ```
 
 **Requirements:** Java 21, Node.js 18+, Docker
+
+**Note:** If you encounter build issues on Windows, use Option 1B instead.
 
 The script will:
 
@@ -509,7 +531,13 @@ cd backend
 ./gradlew dockerBuild -x test -PjibTargetArch=arm64   # force arm64
 ```
 
-### Option 1B: Automated Setup with Docker Build (No Local Tools Required)
+### Option 1B: Automated Setup with Docker Build (Recommended for Training & Windows)
+
+> **✅ Recommended for:**
+> - Training participants (bank trainees)
+> - Windows users
+> - Users who don't want to install Java 21 or Node.js
+> - Consistent, reliable builds across all platforms
 
 Build everything inside Docker containers - **no local Java or Node.js installation required**:
 
@@ -546,6 +574,8 @@ The script will:
 - 🐳 Consistent builds across all platforms
 - 📦 Isolated build environment
 - ⚡ Cached Docker layers for faster subsequent builds
+- 🎯 **Especially reliable on Windows machines**
+- 👥 **Perfect for training environments**
 
 > 📚 **For detailed comparison and best practices**, see [DOCKER-BUILD-GUIDE.md](./DOCKER-BUILD-GUIDE.md)
 
@@ -973,6 +1003,31 @@ docker network prune -f
 ```
 
 ## 🔧 Common Issues and Solutions
+
+### PostgreSQL Container Crashing with OOM Kills (FIXED)
+
+**Problem:** PostgreSQL container crashes and restarts, showing OOMKilled: true and Exit Code 137, even when using very low memory (e.g., 30MB of 3GB).
+
+**Root Cause:** Alpine Linux (postgres:16-alpine) has memory accounting incompatibility with Docker's cgroup limits, causing false OOM kills.
+
+**Solution (FIXED in latest version):** Switched to Debian-based PostgreSQL image (`postgres:16`). The Debian version properly respects Docker memory limits.
+
+```bash
+# Verify you're using the Debian image:
+docker inspect sharedservices-postgres --format='{{.Config.Image}}'
+# Should show: postgres:16 (NOT postgres:16-alpine)
+
+# Check OOM status:
+docker inspect sharedservices-postgres --format='OOMKilled: {{.State.OOMKilled}}'
+# Should show: OOMKilled: false
+```
+
+If you're still on Alpine, pull the latest code and recreate the container:
+```bash
+git pull
+docker compose down
+docker compose --profile observability up -d
+```
 
 ### Windows Docker Build Stuck at 88%
 
