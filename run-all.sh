@@ -157,12 +157,22 @@ else
     exit 1
 fi
 
-# Step 3: Stop any existing containers
-print_info "Step 3/4: Stopping existing containers (if any)..."
+# Step 3: Build Karate mock server
+print_info "Step 3/5: Building Karate mock server in Docker..."
+
+if docker compose build karate-mock-server; then
+    print_success "Karate mock server Docker image built successfully."
+else
+    print_error "Failed to build Karate mock server Docker image."
+    exit 1
+fi
+
+# Step 4: Stop any existing containers
+print_info "Step 4/5: Stopping existing containers (if any)..."
 docker compose --profile observability down 2>/dev/null || true
 
-# Step 4: Start all services
-print_info "Step 4/4: Starting all services with observability profile..."
+# Step 5: Start all services
+print_info "Step 5/5: Starting all services with observability profile..."
 
 if docker compose --profile observability up -d; then
     print_success "All services started successfully!"

@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16
     platform: linux/amd64
     container_name: sharedservices-postgres
     environment:
@@ -23,10 +23,10 @@ services:
       resources:
         limits:
           cpus: '1.5'      # Increased from 1.0
-          memory: 2G       # Increased from 1GB to prevent OOM kills
+          memory: 3G       # Increased to 3GB to prevent OOM kills
         reservations:
           cpus: '0.25'
-          memory: 512M     # Increased from 256M
+          memory: 1G       # Increased reservation
 
   kafka:
     image: confluentinc/cp-kafka:latest
