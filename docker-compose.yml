@@ -7,8 +7,10 @@ services:
       POSTGRES_DB: sharedservices
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    ports:
-      - '5432:5432'
+    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
+    # Only accessible from other containers in the same Docker network
+    expose:
+      - '5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -21,19 +23,21 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.5'      # Increased from 1.0
-          memory: 3G       # Increased to 3GB to prevent OOM kills
+          cpus: '3.0'      # Optimized for 8 CPU system
+          memory: 6G       # Optimized for 32GB/8CPU system
         reservations:
-          cpus: '0.25'
-          memory: 1G       # Increased reservation
+          cpus: '0.5'
+          memory: 2G       # Increased reservation
 
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: sharedservices-kafka
-    ports:
-      - '9092:9092'
-      - '9093:9093'
-      - '29092:29092'
+    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
+    # Only accessible from other containers in the same Docker network
+    expose:
+      - '9092'
+      - '9093'
+      - '29092'
     environment:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
@@ -46,8 +50,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      # JVM tuning for 16GB/4CPU environments
-      KAFKA_HEAP_OPTS: "-Xms1024m -Xmx2560m"
+      # JVM tuning for 32GB/8CPU environments
+      KAFKA_HEAP_OPTS: "-Xms2048m -Xmx5120m"
       KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=50 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M"
     networks:
       - sharedservices-network
@@ -56,22 +60,24 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-    # Resource limits for 16GB/4CPU environments
+    # Resource limits for 32GB/8CPU environments
     deploy:
       resources:
         limits:
-          cpus: '3.0'        # Max 3 CPUs (increased for better throughput)
-          memory: 3G         # 3GB for Kafka broker (increased from 2GB)
+          cpus: '5.0'        # Optimized for 8 CPU system
+          memory: 6G         # Optimized for 32GB/8CPU system
         reservations:
-          cpus: '1.0'        # Reserve at least 1 CPU
-          memory: 1536M
+          cpus: '1.5'        # Reserve at least 1.5 CPUs
+          memory: 3G
 
   otel-collector:
     image: otel/opentelemetry-collector:0.103.0
     container_name: sharedservices-otel-collector
     command: ["--config=/etc/otelcol/config.yaml"]
-    ports:
-      - '4318:4318'
+    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
+    # Only accessible from other containers in the same Docker network
+    expose:
+      - '4318'
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     networks:
@@ -79,11 +85,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 256M
+          cpus: '0.5'        # Optimized for 8 CPU system
+          memory: 512M       # Optimized for 32GB/8CPU system
         reservations:
           cpus: '0.1'
-          memory: 64M
+          memory: 128M
 
   jaeger:
     image: jaegertracing/all-in-one:1.57
@@ -99,11 +105,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1.0'        # Optimized for 8 CPU system
+          memory: 1G         # Optimized for 32GB/8CPU system
         reservations:
           cpus: '0.1'
-          memory: 64M
+          memory: 128M
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -122,11 +128,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '1.0'        # Optimized for 8 CPU system
+          memory: 1G         # Optimized for 32GB/8CPU system
         reservations:
-          cpus: '0.1'
-          memory: 256M
+          cpus: '0.2'
+          memory: 512M
 
   backend:
     image: shared-services:0.0.1-SNAPSHOT
@@ -144,12 +150,12 @@ services:
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
-      # JVM optimization for 16GB/4CPU environments
+      # JVM optimization for 32GB/8CPU environments
       # Adjust -Xms/-Xmx values based on available memory
       JAVA_TOOL_OPTIONS: >-
         -javaagent:/otel/otel-javaagent.jar
-        -Xms2048m
-        -Xmx3072m
+        -Xms3072m
+        -Xmx6144m
         -XX:+UseG1GC
         -XX:MaxGCPauseMillis=200
         -XX:+ParallelRefProcEnabled
@@ -170,15 +176,15 @@ services:
       - sharedservices-network
     profiles:
       - observability
-    # Resource limits for 16GB/4CPU environments
+    # Resource limits for 32GB/8CPU environments
     deploy:
       resources:
         limits:
-          cpus: '2.5'    # Max 2.5 CPUs (increased for better performance)
-          memory: 4G     # Max 4GB (includes 3GB JVM heap + 1GB overhead)
+          cpus: '4.0'    # Optimized for 8 CPU system
+          memory: 8G     # Optimized for 32GB/8CPU system (includes 6GB JVM heap + 2GB overhead)
         reservations:
-          cpus: '0.5'    # Reserve at least 50% CPU
-          memory: 2G     # Reserve at least 2GB
+          cpus: '1.0'    # Reserve at least 1 CPU
+          memory: 4G     # Reserve at least 4GB
 
   frontend:
     image: shared-services-frontend:0.0.1-SNAPSHOT
@@ -199,11 +205,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 256M
+          cpus: '0.5'        # Optimized for 8 CPU system
+          memory: 512M       # Optimized for 32GB/8CPU system
         reservations:
           cpus: '0.1'
-          memory: 64M
+          memory: 128M
 
   karate-mock-server:
     build:
@@ -231,11 +237,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.5'    # Karate JVM can use CPU under load (increased for test execution)
-          memory: 2G     # 2GB for Karate mock server (increased from 1.5GB)
+          cpus: '2.0'    # Optimized for 8 CPU system
+          memory: 4G     # Optimized for 32GB/8CPU system
         reservations:
           cpus: '0.5'
-          memory: 1G
+          memory: 2G
 
   nginx:
     image: nginx:alpine

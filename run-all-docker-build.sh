@@ -78,8 +78,9 @@ print_success "Frontend Docker image built successfully."
 
 # Step 3: Build Karate mock server inside Docker
 print_info "Step 3/5: Building Karate mock server in Docker (multi-stage build)..."
+print_warning "This may take several minutes on first build (downloading Gatling dependencies)..."
 
-docker compose -f docker-compose-build.yml build karate-mock-server
+docker compose -f docker-compose-build.yml build --progress=plain karate-mock-server
 
 if [ $? -ne 0 ]; then
     print_error "Failed to build Karate mock server Docker image."

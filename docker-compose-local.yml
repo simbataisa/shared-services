@@ -2,15 +2,13 @@ version: '3.9'
 services:
   postgres:
     image: postgres:16
-    container_name: sharedservices-postgres
+    container_name: sharedservices-postgres-local
     environment:
       POSTGRES_DB: sharedservices
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
-    # Only accessible from other containers in the same Docker network
-    expose:
-      - '5432'
+    ports:
+      - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -20,24 +18,14 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-    deploy:
-      resources:
-        limits:
-          cpus: '3.0'      # Optimized for 8 CPU system
-          memory: 6G       # Optimized for 32GB/8CPU system
-        reservations:
-          cpus: '0.5'
-          memory: 2G       # Increased reservation
 
   kafka:
     image: confluentinc/cp-kafka:latest
-    container_name: sharedservices-kafka
-    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
-    # Only accessible from other containers in the same Docker network
-    expose:
-      - '9092'
-      - '9093'
-      - '29092'
+    container_name: sharedservices-kafka-local
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+      - '29092:29092'
     environment:
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_NODE_ID: 1
@@ -50,7 +38,6 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      # JVM tuning for 32GB/8CPU environments
       KAFKA_HEAP_OPTS: "-Xms2048m -Xmx5120m"
       KAFKA_JVM_PERFORMANCE_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=50 -XX:InitiatingHeapOccupancyPercent=35 -XX:G1HeapRegionSize=16M"
     networks:
@@ -60,60 +47,33 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
-    # Resource limits for 32GB/8CPU environments
-    deploy:
-      resources:
-        limits:
-          cpus: '5.0'        # Optimized for 8 CPU system
-          memory: 6G         # Optimized for 32GB/8CPU system
-        reservations:
-          cpus: '1.5'        # Reserve at least 1.5 CPUs
-          memory: 3G
 
   otel-collector:
     image: otel/opentelemetry-collector:0.103.0
-    container_name: sharedservices-otel-collector
+    container_name: sharedservices-otel-collector-local
     command: ["--config=/etc/otelcol/config.yaml"]
-    # SECURITY: Use 'expose' instead of 'ports' to prevent public internet access
-    # Only accessible from other containers in the same Docker network
-    expose:
-      - '4318'
+    ports:
+      - '4318:4318'
     volumes:
       - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     networks:
       - sharedservices-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'        # Optimized for 8 CPU system
-          memory: 512M       # Optimized for 32GB/8CPU system
-        reservations:
-          cpus: '0.1'
-          memory: 128M
 
   jaeger:
     image: jaegertracing/all-in-one:1.57
-    container_name: sharedservices-jaeger
+    container_name: sharedservices-jaeger-local
     ports:
-      - '16686:16686' # Jaeger UI
-      - '14250:14250' # gRPC
-      - '14268:14268' # HTTP thrift ingest
+      - '16686:16686'
+      - '14250:14250'
+      - '14268:14268'
     environment:
       - COLLECTOR_ZIPKIN_HOST_PORT=:9411
     networks:
       - sharedservices-network
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'        # Optimized for 8 CPU system
-          memory: 1G         # Optimized for 32GB/8CPU system
-        reservations:
-          cpus: '0.1'
-          memory: 128M
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: sharedservices-kafka-ui
+    container_name: sharedservices-kafka-ui-local
     ports:
       - '8081:8080'
     environment:
@@ -123,39 +83,22 @@ services:
       - kafka
     networks:
       - sharedservices-network
-    profiles:
-      - observability
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'        # Optimized for 8 CPU system
-          memory: 1G         # Optimized for 32GB/8CPU system
-        reservations:
-          cpus: '0.2'
-          memory: 512M
 
   backend:
     image: shared-services:0.0.1-SNAPSHOT
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      # Windows-specific build args if needed
-    container_name: sharedservices-backend
+    container_name: sharedservices-backend-local
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sharedservices
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      # Mock server configuration - point to containerized Karate mock server
-      MOCK_SERVER_HOST: karate-mock-server
+      MOCK_SERVER_HOST: host.docker.internal
       OTEL_SERVICE_NAME: sharedservices-backend
       OTEL_TRACES_EXPORTER: otlp
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://otel-collector:4318/v1/traces
       OTEL_METRICS_EXPORTER: none
       OTEL_LOGS_EXPORTER: none
-      # JVM optimization for 32GB/8CPU environments
-      # Adjust -Xms/-Xmx values based on available memory
       JAVA_TOOL_OPTIONS: >-
         -javaagent:/otel/otel-javaagent.jar
         -Xms3072m
@@ -171,24 +114,10 @@ services:
       - '8080:8080'
     volumes:
       - ./otel-javaagent.jar:/otel/otel-javaagent.jar:ro
-    depends_on:
-      - postgres
-      - kafka
-      - otel-collector
-      - karate-mock-server
     networks:
       - sharedservices-network
-    profiles:
-      - observability
-    # Resource limits for 32GB/8CPU environments
-    deploy:
-      resources:
-        limits:
-          cpus: '4.0'    # Optimized for 8 CPU system
-          memory: 8G     # Optimized for 32GB/8CPU system (includes 6GB JVM heap + 2GB overhead)
-        reservations:
-          cpus: '1.0'    # Reserve at least 1 CPU
-          memory: 4G     # Reserve at least 4GB
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   frontend:
     image: shared-services-frontend:0.0.1-SNAPSHOT
@@ -196,39 +125,26 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://backend:8080/api/v1}
-    container_name: sharedservices-frontend
+        VITE_API_BASE_URL: http://localhost:8080/api/v1
+    container_name: sharedservices-frontend-local
     ports:
       - '5173:80'
-    depends_on:
-      - backend
     networks:
       - sharedservices-network
-    profiles:
-      - observability
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'        # Optimized for 8 CPU system
-          memory: 512M       # Optimized for 32GB/8CPU system
-        reservations:
-          cpus: '0.1'
-          memory: 128M
 
   karate-mock-server:
     build:
       context: ./karate-microservices-testing
       dockerfile: Dockerfile
     image: karate-mock-server:latest
-    platform: linux/amd64
-    container_name: sharedservices-karate-mock
+    container_name: sharedservices-karate-mock-local
     ports:
       - '8090:8090'
     environment:
       MOCK_PORT: 8090
       MOCK_ENV: qa
       MOCK_FEATURE_FILE: "src/test/resources/mocks/mock-server.feature"
-      MOCK_BLOCK_MS: 31536000000  # 365 days
+      MOCK_BLOCK_MS: 31536000000
     networks:
       - sharedservices-network
     healthcheck:
@@ -237,20 +153,10 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    profiles:
-      - observability
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'    # Optimized for 8 CPU system
-          memory: 4G     # Optimized for 32GB/8CPU system
-        reservations:
-          cpus: '0.5'
-          memory: 2G
-
-volumes:
-  pgdata:
 
 networks:
   sharedservices-network:
     driver: bridge
+
+volumes:
+  pgdata:
