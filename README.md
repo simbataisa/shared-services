@@ -1155,3 +1155,21 @@ For additional support:
 2. Review test examples in `backend/src/test/`
 3. Examine Karate feature files in `karate-microservices-testing/src/test/resources/`
 4. Review Docker Compose troubleshooting guide: `.trae/documents/docker-compose-troubleshooting.md`
+
+## Maven Usage
+
+- Backend build and tests:
+  - `mvn -f backend/pom.xml clean verify`
+  - Allure report: `backend/target/allure-report/index.html`
+  - Serve report: `mvn -f backend/pom.xml -Pallure-serve verify`
+- Backend container build:
+  - `mvn -f backend/pom.xml jib:dockerBuild`
+  - Windows Docker arch: `mvn -f backend/pom.xml -Pwindows-docker jib:dockerBuild`
+- Karate tests (module `karate-microservices-testing`):
+  - Run full suite: `mvn -f karate-microservices-testing/pom.xml test -Dkarate.env=qa -Dthreads=5`
+  - API runner: `mvn -f karate-microservices-testing/pom.xml test -Dtest='*ApiRunnerTest' -Dkarate.env=qa`
+  - Custom runner with mock server: `mvn -f karate-microservices-testing/pom.xml test -Dtest='*CustomRunnerTest' -Dkarate.env=qa -Dmock.server.enabled=true -Dmock.port=8090 -Dkarate.options="classpath:api"`
+  - Integration runner without mocks: `mvn -f karate-microservices-testing/pom.xml test -Dtest='*IntegrationRunnerTest' -Duse.mock=false -Dkarate.env=qa`
+  - Mock server only: `mvn -f karate-microservices-testing/pom.xml test -Dtest='*MockRunnerTest' -Dmock.port=8090 -Dmock.block.ms=300000`
+  - Gatling perf: `mvn -f karate-microservices-testing/pom.xml gatling:test -Dgatling.simulationClass=performance.simulations.KaratePerformanceSimulation -Dkarate.options="classpath:api/users.feature" -Dkarate.env=qa -Dthreads=10`
+  - Gatling perf (tagged): `mvn -f karate-microservices-testing/pom.xml gatling:test -Dgatling.simulationClass=performance.simulations.KaratePerformanceSimulation -Dkarate.options="classpath:api --tags @perf" -Dkarate.env=qa -Dthreads=10`

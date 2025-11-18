@@ -70,10 +70,27 @@ karate-microservices-testing/
 - Performance: `make test-perf`
 - Start mock server: `make mock`
 
+### Maven Usage
+
+- Full suite (JUnit runners):
+  - `mvn -f karate-microservices-testing/pom.xml test -Dkarate.env=qa -Dthreads=5`
+- API runner only:
+  - `mvn -f karate-microservices-testing/pom.xml test -Dtest='*ApiRunnerTest' -Dkarate.env=qa`
+- Custom runner with mock server:
+  - `mvn -f karate-microservices-testing/pom.xml test -Dtest='*CustomRunnerTest' -Dkarate.env=qa -Dmock.server.enabled=true -Dmock.port=8090 -Dkarate.options="classpath:api"`
+- Integration runner without mocks:
+  - `mvn -f karate-microservices-testing/pom.xml test -Dtest='*IntegrationRunnerTest' -Duse.mock=false -Dkarate.env=qa`
+- Mock server standalone:
+  - `mvn -f karate-microservices-testing/pom.xml test -Dtest='*MockRunnerTest' -Dmock.port=8090 -Dmock.block.ms=300000`
+- Gatling performance:
+  - `mvn -f karate-microservices-testing/pom.xml gatling:test -Dgatling.simulationClass=performance.simulations.KaratePerformanceSimulation -Dkarate.options="classpath:api/users.feature" -Dkarate.env=qa -Dthreads=10`
+  - `mvn -f karate-microservices-testing/pom.xml gatling:test -Dgatling.simulationClass=performance.simulations.KaratePerformanceSimulation -Dkarate.options="classpath:api --tags @perf" -Dkarate.env=qa -Dthreads=10`
+
 ## Reports
 
 - Karate HTML: `karate-microservices-testing/target/karate-reports/` (open `karate-summary.html`)
 - Cucumber JSON: enabled for performance runner; available under `target/` paths.
+ - Gatling reports: `karate-microservices-testing/target/gatling/`
 
 ## Conventions & Quality Gates
 
