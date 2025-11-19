@@ -25,13 +25,13 @@ if "%~1"=="/?" exit /b 0
 REM Check prerequisites
 echo [INFO] Checking prerequisites...
 
-where docker >nul 2>nul
+where podman >nul 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Docker is not installed. Please install Docker Desktop first.
     exit /b 1
 )
 
-docker compose version >nul 2>nul
+podman compose version >nul 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Docker Compose is not available. Please install Docker Desktop with Compose support.
     exit /b 1
@@ -93,7 +93,7 @@ if not defined VITE_API_BASE_URL (
     set "VITE_API_BASE_URL=http://localhost:8080/api/v1"
 )
 
-docker compose build frontend
+podman compose build frontend
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to build frontend Docker image.
     exit /b 1
@@ -105,7 +105,7 @@ REM Step 3: Build Karate mock server
 echo [INFO] Step 3/5: Building Karate mock server in Docker...
 echo [WARNING] This may take several minutes on first build (downloading Gatling dependencies)...
 
-docker compose build --progress=plain karate-mock-server
+podman compose build --progress=plain karate-mock-server
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to build Karate mock server Docker image.
     exit /b 1
@@ -115,12 +115,12 @@ echo [SUCCESS] Karate mock server Docker image built successfully.
 
 REM Step 4: Stop any existing containers
 echo [INFO] Step 4/5: Stopping existing containers (if any)...
-docker compose --profile observability down 2>nul
+podman compose --profile observability down 2>nul
 
 REM Step 5: Start all services
 echo [INFO] Step 5/5: Starting all services with observability profile...
 
-docker compose --profile observability up -d
+podman compose --profile observability up -d
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to start services.
     exit /b 1
@@ -134,7 +134,7 @@ timeout /t 5 /nobreak >nul
 
 REM Check service health
 echo [INFO] Checking service status...
-docker compose ps
+podman compose ps
 
 REM Display access information
 echo.
@@ -167,10 +167,10 @@ echo   cd karate-microservices-testing
 echo   gradlew.bat test --tests "*MockRunnerTest" -Dkarate.env=qa -Dmock.block.ms=600000
 echo.
 echo [INFO] To view logs:
-echo   docker compose logs -f
+echo   podman compose logs -f
 echo.
 echo [INFO] To stop all services:
-echo   docker compose --profile observability down
+echo   podman compose --profile observability down
 echo.
 
 endlocal
