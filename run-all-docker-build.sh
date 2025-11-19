@@ -32,12 +32,12 @@ print_warning() {
 # Check prerequisites
 print_info "Checking prerequisites..."
 
-if ! command -v docker &> /dev/null; then
+if ! command -v podman &> /dev/null; then
     print_error "Docker is not installed. Please install Docker first."
     exit 1
 fi
 
-if ! docker compose version &> /dev/null; then
+if ! podman compose version &> /dev/null; then
     print_error "Docker Compose is not available. Please install Docker with Compose support."
     exit 1
 fi
@@ -52,7 +52,7 @@ print_info "Detected platform: $PLATFORM"
 print_info "Step 1/4: Building backend service in Docker (multi-stage build)..."
 print_warning "This may take a few minutes on first build as dependencies are downloaded..."
 
-docker compose -f docker-compose-build.yml build backend
+podman compose -f docker-compose-build.yml build backend
 
 if [ $? -ne 0 ]; then
     print_error "Failed to build backend Docker image."
@@ -67,7 +67,7 @@ print_info "Step 2/4: Building frontend service in Docker (multi-stage build)...
 # Set default API URL for containerized environment
 export VITE_API_BASE_URL=${VITE_API_BASE_URL:-http://localhost:8080/api/v1}
 
-docker compose -f docker-compose-build.yml build frontend
+podman compose -f docker-compose-build.yml build frontend
 
 if [ $? -ne 0 ]; then
     print_error "Failed to build frontend Docker image."
@@ -80,7 +80,7 @@ print_success "Frontend Docker image built successfully."
 print_info "Step 3/5: Building Karate mock server in Docker (multi-stage build)..."
 print_warning "This may take several minutes on first build (downloading Gatling dependencies)..."
 
-docker compose -f docker-compose-build.yml build --progress=plain karate-mock-server
+podman compose -f docker-compose-build.yml build --progress=plain karate-mock-server
 
 if [ $? -ne 0 ]; then
     print_error "Failed to build Karate mock server Docker image."
@@ -91,12 +91,12 @@ print_success "Karate mock server Docker image built successfully."
 
 # Step 4: Stop any existing containers
 print_info "Step 4/5: Stopping existing containers (if any)..."
-docker compose -f docker-compose-build.yml --profile observability down 2>/dev/null || true
+podman compose -f docker-compose-build.yml --profile observability down 2>/dev/null || true
 
 # Step 5: Start all services
 print_info "Step 5/5: Starting all services with observability profile..."
 
-docker compose -f docker-compose-build.yml --profile observability up -d
+podman compose -f docker-compose-build.yml --profile observability up -d
 
 if [ $? -ne 0 ]; then
     print_error "Failed to start services."
@@ -111,7 +111,7 @@ sleep 5
 
 # Check service health
 print_info "Checking service status..."
-docker compose -f docker-compose-build.yml ps
+podman compose -f docker-compose-build.yml ps
 
 # Display access information
 echo ""
@@ -140,10 +140,10 @@ echo "  ✓ Realistic API responses for testing"
 echo "  ✓ Backend automatically connects to these mocks"
 echo ""
 print_info "To view logs:"
-echo "  docker compose -f docker-compose-build.yml logs -f"
+echo "  podman compose -f docker-compose-build.yml logs -f"
 echo ""
 print_info "To stop all services:"
-echo "  docker compose -f docker-compose-build.yml --profile observability down"
+echo "  podman compose -f docker-compose-build.yml --profile observability down"
 echo ""
 print_info "Build Information:"
 echo "  ✅ Backend built inside Docker (multi-stage build)"

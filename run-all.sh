@@ -48,7 +48,7 @@ if ! command_exists docker; then
     exit 1
 fi
 
-if ! command_exists docker-compose && ! docker compose version >/dev/null 2>&1; then
+if ! command_exists docker-compose && ! podman compose version >/dev/null 2>&1; then
     print_error "Docker Compose is not installed. Please install Docker Compose first."
     exit 1
 fi
@@ -150,7 +150,7 @@ print_info "Step 2/4: Building frontend service..."
 # Set default API URL for containerized environment
 export VITE_API_BASE_URL="${VITE_API_BASE_URL:-http://localhost:8080/api/v1}"
 
-if docker compose build frontend; then
+if podman compose build frontend; then
     print_success "Frontend Docker image built successfully."
 else
     print_error "Failed to build frontend Docker image."
@@ -161,7 +161,7 @@ fi
 print_info "Step 3/5: Building Karate mock server in Docker..."
 print_warning "This may take several minutes on first build (downloading Gatling dependencies)..."
 
-if docker compose build --progress=plain karate-mock-server; then
+if podman compose build --progress=plain karate-mock-server; then
     print_success "Karate mock server Docker image built successfully."
 else
     print_error "Failed to build Karate mock server Docker image."
@@ -170,12 +170,12 @@ fi
 
 # Step 4: Stop any existing containers
 print_info "Step 4/5: Stopping existing containers (if any)..."
-docker compose --profile observability down 2>/dev/null || true
+podman compose --profile observability down 2>/dev/null || true
 
 # Step 5: Start all services
 print_info "Step 5/5: Starting all services with observability profile..."
 
-if docker compose --profile observability up -d; then
+if podman compose --profile observability up -d; then
     print_success "All services started successfully!"
 else
     print_error "Failed to start services."
@@ -188,7 +188,7 @@ sleep 5
 
 # Check service health
 print_info "Checking service status..."
-docker compose ps
+podman compose ps
 
 # Display access information
 echo ""
@@ -221,8 +221,8 @@ echo "  cd karate-microservices-testing"
 echo "  ./gradlew test --tests \"*MockRunnerTest\" -Dkarate.env=qa -Dmock.block.ms=600000"
 echo ""
 print_info "To view logs:"
-echo "  docker compose logs -f"
+echo "  podman compose logs -f"
 echo ""
 print_info "To stop all services:"
-echo "  docker compose --profile observability down"
+echo "  podman compose --profile observability down"
 echo ""
