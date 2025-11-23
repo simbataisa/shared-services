@@ -16,10 +16,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.context.annotation.Primary;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -45,6 +51,11 @@ class BankTransferIntegratorWireMockIT {
     private BankTransferIntegrator bankTransferIntegrator;
 
     // TestRestTemplate not required when webEnvironment is NONE
+
+    @Autowired
+    private WireMockServer wireMockServer;
+
+    private static final String STUBS_OUTPUT_DIR = "target/stubs/bank";
 
     @Configuration
     static class ProxyRestTemplateConfig {
@@ -96,5 +107,20 @@ class BankTransferIntegratorWireMockIT {
         assertEquals(tx.getCurrency(), resp.getCurrency());
 
         verify(postRequestedFor(urlPathEqualTo("/v1/transfers")));
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void saveContractStubs() throws IOException {
+        Path stubsPath = Paths.get(STUBS_OUTPUT_DIR);
+        Files.createDirectories(stubsPath);
+        var stubMappings = wireMockServer.getStubMappings();
+        int stubIndex = 0;
+        for (StubMapping stub : stubMappings) {
+            String filename = String.format("stub_%d_%s.json", stubIndex++, System.currentTimeMillis());
+            Path stubFile = stubsPath.resolve(filename);
+            String stubJson = com.github.tomakehurst.wiremock.stubbing.StubMapping.buildJsonStringFor(stub);
+            Files.writeString(stubFile, stubJson);
+        }
+        wireMockServer.resetAll();
     }
 }

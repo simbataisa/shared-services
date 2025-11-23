@@ -2,13 +2,14 @@ package com.ahss.integration.stripe;
 
 import com.ahss.dto.response.PaymentRequestDto;
 import com.ahss.dto.response.PaymentTransactionDto;
-import com.ahss.integration.stripe.StripeIntegrator;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -38,7 +43,40 @@ class StripeIntegratorWireMockIT {
     @Autowired
     private StripeIntegrator stripeIntegrator;
 
+    @Autowired
+    private WireMockServer wireMockServer;
+
+    private static final String STUBS_OUTPUT_DIR = "target/stubs/stripe";
+
     // TestRestTemplate not required when webEnvironment is NONE
+
+    @AfterEach
+    void saveContractStubs() throws IOException {
+        Path stubsPath = Paths.get(STUBS_OUTPUT_DIR);
+        Files.createDirectories(stubsPath);
+
+        // Get all stub mappings from WireMock
+        var stubMappings = wireMockServer.getStubMappings();
+
+        int stubIndex = 0;
+        for (StubMapping stub : stubMappings) {
+            // Generate unique filename for each stub
+            String filename = String.format("stub_%d_%s.json",
+                stubIndex++,
+                System.currentTimeMillis());
+
+            Path stubFile = stubsPath.resolve(filename);
+
+            // Write stub mapping as JSON
+            String stubJson = com.github.tomakehurst.wiremock.stubbing.StubMapping.buildJsonStringFor(stub);
+            Files.writeString(stubFile, stubJson);
+        }
+
+        System.out.println("✓ Generated " + stubMappings.size() + " contract stub(s) in: " + stubsPath.toAbsolutePath());
+
+        // Reset WireMock after saving stubs for next test
+        wireMockServer.resetAll();
+    }
 
     @Configuration
     static class ProxyRestTemplateConfig {

@@ -9,6 +9,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import io.qameta.allure.Epic;
@@ -62,5 +70,26 @@ class MessageParserFactoryTest {
         JsonNode root = objectMapper.readTree(json);
         MessageParser parser = MessageParserFactory.forPayload(root);
         assertNull(parser);
+    }
+
+    @Test
+    void generate_contract_stubs_viaWireMock() throws IOException {
+        WireMockServer server = new WireMockServer(WireMockConfiguration.options().dynamicPort());
+        server.start();
+        try {
+            server.stubFor(get(urlPathEqualTo("/contracts/parser-factory"))
+                    .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody("{}")));
+            Path stubsPath = Paths.get("target/stubs/parser-factory");
+            Files.createDirectories(stubsPath);
+            int idx = 0;
+            for (StubMapping stub : server.getStubMappings()) {
+                String filename = String.format("stub_%d_%s.json", idx++, System.currentTimeMillis());
+                Path stubFile = stubsPath.resolve(filename);
+                String stubJson = StubMapping.buildJsonStringFor(stub);
+                Files.writeString(stubFile, stubJson);
+            }
+        } finally {
+            server.stop();
+        }
     }
 }

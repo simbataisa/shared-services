@@ -15,10 +15,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Owner;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.io.IOException;
 
 @Epic("Integration Tests")
 @Feature("User Group Management")
 @Owner("backend")
+@AutoConfigureWireMock(port = 0)
 public class UserGroupControllerIntegrationTest extends BaseIntegrationTest {
 
   @Test
@@ -117,5 +127,31 @@ public class UserGroupControllerIntegrationTest extends BaseIntegrationTest {
                     url, HttpMethod.GET, new HttpEntity<>(headers), String.class));
 
     assertEquals(404, resp.getStatusCode().value());
+  }
+
+  @Autowired
+  private WireMockServer wireMockServer;
+
+  private static final String STUBS_OUTPUT_DIR = "target/stubs/user-group";
+
+  @Test
+  void generate_contract_stubs_viaWireMock() {
+    stubFor(get(urlPathEqualTo("/contracts/user-group"))
+        .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody("{}")));
+    assertTrue(!wireMockServer.getStubMappings().isEmpty());
+  }
+
+  @org.junit.jupiter.api.AfterEach
+  void saveContractStubs() throws IOException {
+    Path stubsPath = Paths.get(STUBS_OUTPUT_DIR);
+    Files.createDirectories(stubsPath);
+    int idx = 0;
+    for (StubMapping stub : wireMockServer.getStubMappings()) {
+      String filename = String.format("stub_%d_%s.json", idx++, System.currentTimeMillis());
+      Path stubFile = stubsPath.resolve(filename);
+      String stubJson = StubMapping.buildJsonStringFor(stub);
+      Files.writeString(stubFile, stubJson);
+    }
+    wireMockServer.resetAll();
   }
 }

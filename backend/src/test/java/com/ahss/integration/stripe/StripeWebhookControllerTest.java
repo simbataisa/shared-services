@@ -18,6 +18,15 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import org.springframework.beans.factory.annotation.Autowired;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.io.IOException;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -28,9 +37,35 @@ import static org.mockito.Mockito.*;
 
 @Epic("Payment Channel Integration")
 @Feature("Stripe Integration")
+@AutoConfigureWireMock(port = 0)
 class StripeWebhookControllerTest extends BaseIntegrationTest {
 
   @MockBean private PaymentCallbackProducer producer;
+
+  @Autowired private WireMockServer wireMockServer;
+
+  private static final String STUBS_OUTPUT_DIR = "target/stubs/stripe-webhook";
+
+  @Test
+  void generate_contract_stubs_viaWireMock() {
+    stubFor(get(urlPathEqualTo("/contracts/stripe-webhook"))
+        .willReturn(aResponse().withStatus(200).withHeader("Content-Type", "application/json").withBody("{}")));
+    assertTrue(!wireMockServer.getStubMappings().isEmpty());
+  }
+
+  @org.junit.jupiter.api.AfterEach
+  void saveContractStubs() throws IOException {
+    Path stubsPath = Paths.get(STUBS_OUTPUT_DIR);
+    Files.createDirectories(stubsPath);
+    int idx = 0;
+    for (StubMapping stub : wireMockServer.getStubMappings()) {
+      String filename = String.format("stub_%d_%s.json", idx++, System.currentTimeMillis());
+      Path stubFile = stubsPath.resolve(filename);
+      String stubJson = StubMapping.buildJsonStringFor(stub);
+      Files.writeString(stubFile, stubJson);
+    }
+    wireMockServer.resetAll();
+  }
 
   @Test
   @DisplayName("Handle Stripe Payment Intent Succeeded Sends Event")
